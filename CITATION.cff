@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Topology-Aware Graph RL Decoding for Quantum Error Correction under Structured Noise"
+authors:
+  - family-names: Huynh
+    given-names: Molena
+    orcid: ""
+version: 0.1.0
+date-released: 2027-01-01
+license: MIT
+repository-code: "https://github.com/thmolena/P2-Topology-Aware-Graph-RL-Decoding-for-QEC"
+keywords:
+  - quantum error correction
+  - decoding
+  - graph neural networks
+  - reinforcement learning
+  - topological machine learning
+  - minimum-weight perfect matching
