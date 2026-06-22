@@ -78,6 +78,39 @@ We are deliberately conservative. On the repetition code and the regimes we stud
     \item \textbf{An honest, reproducible accounting.} A single source-of-truth artifact, analytic confidence intervals that reveal the decoders to be statistically indistinguishable on raw logical error, and a code-level audit gate against fabricated numbers and superiority claims.
 \end{enumerate}
 
+% ============================================================
+\subsection{Theory: selective decoding risk}
+\label{sec:selective_theory}
+
+The risk--coverage view has a simple decision-theoretic guarantee when the
+confidence score is calibrated and monotone in the conditional success
+probability. This is the formal reason calibration is reported alongside error
+rate.
+
+\begin{theorem}[Monotone selective risk under calibrated confidence]
+\label{thm:selective-risk}
+Let $F\in\{0,1\}$ be the logical-failure indicator for a decoder and let
+$C\in[0,1]$ be a confidence score such that
+$\Pr(F=0\mid C=c)=c$ almost surely. For a threshold $\tau$ with
+$\Pr(C\ge\tau)>0$, define committed risk
+$R(\tau)=\Pr(F=1\mid C\ge\tau)$. Then
+$R(\tau)=1-\mathbb{E}[C\mid C\ge\tau]$ and $R(\tau)$ is non-increasing as
+$\tau$ increases.
+\end{theorem}
+
+\begin{proof}
+By calibration, $\Pr(F=1\mid C)=1-C$. Conditioning on $C\ge\tau$ and using the
+tower property gives
+$R(\tau)=\mathbb{E}[\Pr(F=1\mid C)\mid C\ge\tau]=1-\mathbb{E}[C\mid C\ge\tau]$.
+If $\tau_2>\tau_1$, the conditional distribution under $C\ge\tau_2$ is the upper
+tail of the distribution under $C\ge\tau_1$, so its conditional mean cannot be
+smaller. Hence $R(\tau_2)\le R(\tau_1)$.
+\end{proof}
+
+The theorem is not assumed in the experiments; the empirical confidence scores
+are imperfect, so the risk--coverage curves and ECE quantify how far each
+decoder is from this ideal selective-decoding behaviour.
+
 The results are stated conservatively. They are produced on small, fully reproducible simulated benchmarks (a repetition code and a surface-like toy lattice) under simulated structured noise; they are not hardware syndromes, not a full surface code at scale, and not a claim of superiority over production decoders. Those are future targets, not present facts (Sec.~\ref{sec:limitations}).
 
 % ============================================================

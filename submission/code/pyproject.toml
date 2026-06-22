@@ -19,6 +19,9 @@ dependencies = [
 gpu = ["torch>=2.0"]
 dev = ["pytest>=7.0"]
 
+[project.scripts]
+topoqec-reproduce = "topoqec.reproduce:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
