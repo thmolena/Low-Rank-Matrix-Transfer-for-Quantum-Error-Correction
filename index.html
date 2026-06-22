@@ -139,7 +139,7 @@
   </div>
   <p class="lead" style="margin-top:22px"><b>The gap addressed.</b> Existing work studies matching, belief
     propagation, and learned/RL decoders <i>in isolation</i> and <i>under i.i.d. noise</i>, optimizing
-    logical error. No benchmark places a whole decoder family on a single defect-graph interface across
+    logical error. Existing benchmarks stop short of placing a whole decoder family on a single defect-graph interface across
     structured-noise regimes while treating selective decoding and calibration as primary, statistically
     accounted-for axes. That is the gap this work fills &mdash; a measurement methodology, not a new
     state-of-the-art error rate.</p>
@@ -147,13 +147,13 @@
 
 <section id="contributions"><div class="wrap">
   <h2>Contributions &amp; novelty</h2>
-  <p class="lead">The contribution is the framework, the selective/calibrated lens, and the honest
+  <p class="lead">The contribution is the framework, the selective/calibrated lens, and the transparent
     accounting &mdash; not a fractional improvement on an already-saturated error rate.</p>
   <ul class="contrib">
     <li><b>A decoder-family benchmark under structured noise.</b><span>Eight decoders (lookup, majority, matching, BP, neural, topology, fused, RL selector) on one defect-graph interface, evaluated across i.i.d., biased, burst, correlated, and measurement-error regimes, with per-regime breakdowns and threshold curves.</span></li>
-    <li><b>Selective decoding as a primary axis.</b><span>Confidence-gated abstention and risk&ndash;coverage curves for every decoder, quantifying the reliability bought by giving up coverage &mdash; not just a single error number.</span></li>
+    <li><b>Selective decoding as a primary axis.</b><span>Confidence-gated abstention and risk&ndash;coverage curves for every decoder, quantifying the reliability bought by giving up coverage &mdash; not merely a single error number.</span></li>
     <li><b>Calibration as a first-class metric.</b><span>Expected calibration error reported for all decoders with 95% confidence intervals, exposing that calibration is uncorrelated with decoder complexity and not predictable from the logical error rate.</span></li>
-    <li><b>An honest, reproducible accounting.</b><span>A single source-of-truth artifact (<code>summary.json</code>), analytic confidence intervals that reveal the decoders to be statistically indistinguishable on raw logical error, and a code-level audit gate against fabricated numbers and absolute-superiority claims.</span></li>
+    <li><b>An transparent, reproducible accounting.</b><span>A single source-of-truth artifact (<code>summary.json</code>), analytic confidence intervals that reveal the decoders to be statistically indistinguishable on raw logical error, and a code-level audit gate against fabricated numbers and absolute-superiority claims.</span></li>
   </ul>
 </div></section>
 
@@ -194,7 +194,7 @@
     </div>
     <div class="card">
       <h3>Calibration (ECE)</h3>
-      <p>A confidence is only useful for abstention if it is honest about its own accuracy. ECE partitions shots
+      <p>A confidence is only useful for abstention if it is transparent about its own accuracy. ECE partitions shots
         into ten equal-width confidence bins and averages the gap between mean confidence and mean accuracy,
         weighted by bin occupancy:</p>
       <div class="mathblock">$$\mathrm{ECE} \;=\; \sum_{\text{bins}} \frac{n_{\mathrm{bin}}}{n}\,
@@ -265,14 +265,14 @@
 
   <div class="grid3" style="margin-top:22px">
     <div class="card">
-      <h3>Raw error: a statistical tie</h3>
+      <h3>Raw error: a statistical equivalence</h3>
       <p>Logical error rates span only <b>0.1516&ndash;0.1540</b> with every \(\mathrm{ci}_{95}\approx\pm0.0016\).
         The best-to-worst spread (<b>0.0024</b>) is below one full interval width (\(\approx0.0032\)), so the
         decoders are <b>not separated at the 95% level</b>. Even the optimal <code>lookup</code> leader (0.1524)
-        is statistically tied with the heuristics. We report the tie, not a winner.</p>
+        is statistically tied with the heuristics. We report the statistical equivalence, not a superior method.</p>
     </div>
     <div class="card">
-      <h3>Abstention buys reliability</h3>
+      <h3>Abstention confers reliability</h3>
       <p>Sweeping the abstention threshold, <code>matching</code>'s committed error falls monotonically from
         <b>0.1529</b> at full coverage to <b>0.0758</b> at \(\approx0.55\) coverage (~2&times; reduction for
         committing to half the shots) and <b>0.0099</b> at \(\approx0.25\) coverage (&gt;15&times; reduction).
@@ -317,7 +317,7 @@
       Integrity flag <code>automorphism_invariant = true</code>.</p>
   </div>
 
-  <p class="note" style="margin-top:14px">Figures are vector PDFs generated from the same artifact (no images embedded here):
+  <p class="note" style="margin-top:14px">Figures are vector PDFs generated from the same artifact (figures linked rather than embedded here):
     <a href="submission/figures/fig_schematic.pdf">schematic</a> &middot;
     <a href="submission/figures/fig_threshold.pdf">threshold curves</a> &middot;
     <a href="submission/figures/fig_risk_coverage.pdf">risk&ndash;coverage curves</a>.</p>
@@ -365,7 +365,7 @@
           <p class="note">Logical error rate vs physical error rate p, swept live for the selected decoder &amp; noise.</p></div>
       </div>
       <div class="readout">
-        <div class="ro good"><b id="r-ler">–</b><span>logical error rate (selected p)</span></div>
+        <div class="ro high-quality"><b id="r-ler">–</b><span>logical error rate (selected p)</span></div>
         <div class="ro"><b id="r-shot">–</b><span>this shot: corrected?</span></div>
         <div class="ro warn"><b id="r-phys">–</b><span>physical flips this shot</span></div>
         <div class="ro"><b id="r-n">–</b><span>trials run</span></div>
@@ -378,16 +378,16 @@
   <h2>Conclusion &amp; impact</h2>
   <p class="lead">A deployable QEC decoder must do more than minimize an i.i.d. logical error rate: it must
     behave well under structured noise, know when to abstain, and report calibrated confidence. This benchmark
-    measures all three for a full decoder family on one defect-graph interface, and reports &mdash; honestly &mdash;
+    measures all three for a full decoder family on one defect-graph interface, and reports &mdash; transparently &mdash;
     that the decoders are statistically indistinguishable on raw logical error while differing sharply in
-    calibration and in the reliability they buy through abstention.</p>
+    calibration and in the reliability they confer through abstention.</p>
   <div class="grid3">
-    <div class="card"><h3>What is established</h3><p>Parity on raw error (a 0.0024 spread inside a ~0.0032 interval); abstention as a large, monotone lever (committed error cut several-fold for a moderate coverage cost); and calibration decoupled from sophistication &mdash; the best-calibrated decoder is the simplest one, not the most elaborate.</p></div>
-    <div class="card"><h3>Honest limitations</h3>
+    <div class="card"><h3>What is established</h3><p>Parity on raw error (a 0.0024 spread inside a ~0.0032 interval); abstention as a large, monotone mechanism (committed error cut several-fold for a moderate coverage cost); and calibration decoupled from sophistication &mdash; the best-calibrated decoder is the simplest one, not the most elaborate.</p></div>
+    <div class="card"><h3>Transparent limitations</h3>
       <ul>
         <li>Toy codes only (1-D repetition; surface-<i>like</i> toy, not a stabilizer-exact surface code).</li>
         <li>Simulated structured noise, not hardware syndromes.</li>
-        <li>Logical-error differences are within noise; no distance-scaling (sub-threshold) study.</li>
+        <li>Logical-error differences are within noise; the distance-scaling (sub-threshold) study is left for future work.</li>
         <li>Lightweight learned models (logistic regression, contextual bandit), single distance.</li>
         <li>Single author, single CPU environment; independent replication outstanding.</li>
       </ul></div>
