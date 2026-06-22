@@ -1,0 +1,2 @@
+[console_scripts]
+topoqec-reproduce = topoqec.reproduce:main

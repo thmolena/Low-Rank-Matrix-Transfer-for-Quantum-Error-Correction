@@ -117,8 +117,17 @@ The results are stated conservatively. They are produced on small, fully reprodu
 \section{Results}
 \label{sec:results}
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{fig_schematic.pdf}
+    \caption{\textbf{Overview of the selective, calibrated decoding benchmark.} A code word is corrupted by one of five structured-noise regimes (i.i.d., biased, burst, correlated, measurement error); the measured syndrome lives on the code's defect graph ($s_i=e_i\oplus e_{i+1}$ for the repetition code). A single \texttt{decode(syndrome)$\to$(correction, confidence)} interface hosts the whole eight-decoder family (lookup, majority, matching, BP, neural, topology, fused, RL selector), so every decoder is compared on one footing. A confidence threshold $\tau$ gates abstention (selective decoding), and three first-class metrics---logical error rate, expected calibration error, and the full risk--coverage curve---are scored with analytic $95\%$ confidence intervals. Two integrity guarantees underpin the benchmark: all decoders share one defect-graph interface, and an audit gate requires every reported number to trace to the single source-of-truth artifact \texttt{summary.json}, with an automorphism-invariance flag confirming the code's cyclic symmetry is respected.}
+    \label{fig:schematic}
+\end{figure}
+
 \subsection{Benchmark design}
 \label{sec:design}
+
+Figure~\ref{fig:schematic} summarizes the end-to-end pipeline: structured noise corrupts a code word, the resulting syndrome on the defect graph is passed to the shared decoder interface, a confidence threshold gates abstention, and the logical error rate, calibration and risk--coverage metrics are scored with $95\%$ confidence intervals.
 
 \paragraph{Codes and defect graphs.}
 The primary benchmark is the bit-flip repetition code: $d$ data bits over $\F_2$ with $d-1$ weight-two parity checks $Z_iZ_{i+1}$. A syndrome bit $s_i=e_i\oplus e_{i+1}$ fires where an error chain crosses link $i$, so defects live on a one-dimensional line and decoding is a matching/pairing problem on that line. The single logical observable is the global parity, and a correction succeeds iff the residual $e\oplus \hat c$ is a stabilizer (trivial coset). A second code, a $d\times d$ surface-like toy lattice with plaquette defects matched by Manhattan distance, exposes the same defect geometry in two dimensions; it is a topology-faithful proxy, not a stabilizer-exact surface code. Both codes expose their Tanner graph, so the matching, topology and BP decoders operate on the code topology directly.
@@ -149,7 +158,7 @@ This is the expected behaviour for a distance-$d$ repetition code in these regim
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.72\textwidth]{fig_threshold.pdf}
-    \caption{Logical error rate versus physical error rate $p$ for the core decoders on the repetition code under i.i.d.\ noise. All decoders track the optimal \texttt{lookup} leader closely and stay below the break-even line $p_L=p$; the curves overlap, consistent with the statistically indistinguishable logical error rates of Table~\ref{tab:main}. Generated from the run artifact.}
+    \caption{Logical error rate versus physical error rate $p$ for the core decoders on the repetition code under i.i.d.\ noise. All decoders track the optimal \texttt{lookup} leader closely and stay below the break-even line $p_L=p$; the curves overlap, consistent with the statistically indistinguishable logical error rates of Table~\ref{tab:main}. Lines are the mean logical error rate over $n=\sync{40{,}000}$ Monte-Carlo trials per point (reported scale) and shaded bands are analytic $95\%$ Bernoulli confidence intervals ($1.96\sqrt{\hat p(1-\hat p)/n}$); the bands overlap throughout. Generated from the run artifact \texttt{summary.json}.}
     \label{fig:threshold}
 \end{figure}
 
@@ -163,7 +172,7 @@ The per-regime coverage values (Table~\ref{tab:main}, and Methods) make the mech
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.72\textwidth]{fig_risk_coverage.pdf}
-    \caption{Selective decoding. Risk (logical error rate on committed shots) versus coverage (fraction of syndromes decoded) for the fused and matching decoders, obtained by sweeping the abstention threshold (full coverage on the left). Risk falls monotonically as coverage shrinks: abstaining on low-confidence syndromes trades coverage for reliability. Generated from the run artifact.}
+    \caption{Selective decoding. Risk (logical error rate on committed shots) versus coverage (fraction of syndromes decoded) for the fused and matching decoders, obtained by sweeping the abstention threshold (full coverage on the left). Risk falls monotonically as coverage shrinks: abstaining on low-confidence syndromes trades coverage for reliability. Lines are means over the $n=\sync{200{,}000}$ pooled shots per decoder (reported scale) and shaded bands are analytic $95\%$ Bernoulli confidence intervals of the committed error rate, whose effective sample size at each point is (coverage~$\times$~pooled shots). Generated from the run artifact \texttt{summary.json}.}
     \label{fig:risk_coverage}
 \end{figure}
 

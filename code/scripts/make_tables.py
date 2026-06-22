@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Generate LaTeX/Markdown tables from results/summary.json."""
+"""Generate LaTeX tables from results/summary.json."""
 import json
 from pathlib import Path
 
@@ -30,15 +30,8 @@ def main() -> None:
     lines += [r"\bottomrule", r"\end{tabular}"]
     (tables / "main_results.tex").write_text("\n".join(lines) + "\n")
 
-    # Markdown (for the README)
-    md = ["| decoder | logical err. rate | ±95% CI | ECE |",
-          "|---|---|---|---|"]
-    for dec, mean, ci, ece in rows:
-        label = f"**{dec.replace('_',' ')}**" if dec == best else dec.replace("_", " ")
-        md.append(f"| {label} | {mean:.4f} | {ci:.4f} | {ece:.4f} |")
-    (tables / "main_results.md").write_text("\n".join(md) + "\n")
-    print("wrote results/main_results.tex, results/main_results.md")
-    print("\n".join(md))
+    print("wrote results/main_results.tex")
+    print("\n".join(lines))
 
 
 if __name__ == "__main__":

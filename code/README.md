@@ -16,7 +16,7 @@ pip install -r requirements.txt && pip install -e .
 ```bash
 make test        # tests: code identities, decoder ordering, automorphism, metric bounds
 make demo        # smoke config (~1-3 s) -> results/summary.json
-make tables      # results/main_results.{tex,md}
+make tables      # results/main_results.tex
 make figures     # figures/fig_threshold.pdf, figures/fig_risk_coverage.pdf
 make audit       # readiness gate
 make full-run    # reported-scale config (minutes)

@@ -12,9 +12,11 @@ def main() -> None:
     summary = json.loads(Path("results/summary.json").read_text())
     out = Path("figures")
     out.mkdir(exist_ok=True)
+    plotting.fig_schematic(summary, out / "fig_schematic.pdf")
     plotting.fig_threshold(summary, out / "fig_threshold.pdf")
     plotting.fig_risk_coverage(summary, out / "fig_risk_coverage.pdf")
-    print(f"wrote {out}/fig_threshold.pdf, {out}/fig_risk_coverage.pdf")
+    print(f"wrote {out}/fig_schematic.pdf, {out}/fig_threshold.pdf, "
+          f"{out}/fig_risk_coverage.pdf")
 
 
 if __name__ == "__main__":
