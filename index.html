@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Selective &amp; Calibrated Decoding for QEC — A Topology-Aware Decoder-Family Benchmark</title>
-<meta name="description" content="A reproducible benchmark that evaluates a full decoder family on one defect-graph interface under five structured-noise regimes, treating logical error rate, expected calibration error, and the risk-coverage trade-off as first-class metrics with analytic 95% confidence intervals. Includes a live in-browser Monte-Carlo decoder.">
+<meta name="description" content="A reproducible benchmark that evaluates a complete decoder family on a single defect-graph interface across five structured-noise regimes, treating the logical error rate, the expected calibration error, and the risk-coverage trade-off as first-class objectives with analytic 95% confidence intervals. The page includes an in-browser Monte-Carlo decoder executed entirely client-side.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body)"></script>
@@ -105,63 +105,64 @@
   <div class="wrap">
     <span class="tag">decoder-family benchmark · structured noise · selective decoding · calibration · analytic 95% CIs</span>
     <h1>Selective and Calibrated Decoding for Quantum Error Correction</h1>
-    <p class="sub">A reproducible benchmark that evaluates a <b>full decoder family</b> on one
-      <b>defect-graph interface</b> across five <b>structured-noise</b> regimes, treating logical error rate,
-      <b>expected calibration error</b>, and the <b>risk&ndash;coverage</b> trade-off as first-class metrics
-      &mdash; with analytic 95% confidence intervals and a code-level audit gate. We report parity on raw
-      logical error and locate the real signal in <b>selectivity</b> and <b>calibration</b>.</p>
+    <p class="sub">A reproducible benchmark that evaluates a <b>complete decoder family</b> on a single
+      <b>defect-graph interface</b> across five <b>structured-noise</b> regimes, treating the logical error rate,
+      the <b>expected calibration error</b>, and the <b>risk&ndash;coverage</b> trade-off as first-class objectives
+      &mdash; accompanied by analytic 95% confidence intervals and a code-level audit gate. We document statistical
+      equivalence on the raw logical error and localise the discriminating signal in <b>selectivity</b> and <b>calibration</b>.</p>
     <div class="chips">
-      <div class="chip"><b id="c1">8</b><span>decoders, one decode(syndrome)&rarr;(corr, conf) interface</span></div>
-      <div class="chip"><b id="c2">8&times;</b><span>ECE spread (0.0317&ndash;0.2608), uncorrelated with sophistication</span></div>
-      <div class="chip"><b id="c3">15&times;</b><span>committed-error reduction via abstention at ~0.25 coverage</span></div>
-      <div class="chip"><b>200k</b><span>pooled shots / decoder &middot; logical error 0.1516&ndash;0.1540 (&plusmn;0.0016)</span></div>
+      <div class="chip"><b id="c1">8</b><span>decoders sharing one decode(syndrome)&rarr;(corr, conf) interface</span></div>
+      <div class="chip"><b id="c2">8&times;</b><span>ECE range (0.0317&ndash;0.2608), uncorrelated with decoder sophistication</span></div>
+      <div class="chip"><b id="c3">15&times;</b><span>committed-error reduction through abstention at &asymp; 0.25 coverage</span></div>
+      <div class="chip"><b>200k</b><span>pooled shots per decoder &middot; logical error 0.1516&ndash;0.1540 (&plusmn;0.0016)</span></div>
     </div>
     <div class="cta">
       <a class="btn primary" href="#results">View results</a>
       <a class="btn" href="#demo">&#9654; Run the live demo</a>
       <a class="btn" href="#code">Paper &amp; code</a>
     </div>
-    <p class="note" style="margin-top:14px">Reported-scale run: repetition code, distance 9, 40,000 trials/regime, 200,000 pooled shots/decoder, \(p=0.12\). Means traced verbatim to <code>summary.json</code>.</p>
+    <p class="note" style="margin-top:14px">Reported-scale configuration: repetition code, distance 9, 40,000 trials per regime, 200,000 pooled shots per decoder, \(p=0.12\). All means are traced verbatim to <code>summary.json</code>.</p>
   </div>
 </header>
 
 <section id="background"><div class="wrap">
   <h2>Background &amp; motivation</h2>
-  <p class="lead">A stabilizer code only protects information if its <b>decoder</b> maps a measured
-    syndrome to the correct recovery coset &mdash; quickly, and under the noise real hardware exhibits. Most
-    decoder studies optimize a single number, the logical error rate, almost always under i.i.d.
-    (depolarizing/bit-flip) noise. We argue two further axes are at least as important for deployable
-    decoding and are usually treated as afterthoughts.</p>
+  <p class="lead">A stabilizer code protects information only when its <b>decoder</b> maps a measured
+    syndrome to the correct recovery coset &mdash; with low latency, and under the noise that physical hardware
+    actually exhibits. The majority of decoder studies optimise a single scalar, the logical error rate, almost
+    invariably under independent-and-identically-distributed (depolarising or bit-flip) noise. We contend that
+    two additional axes are at least as consequential for deployable decoding, yet are routinely relegated to
+    secondary status.</p>
   <div class="grid3">
-    <div class="card"><h3>Noise is structured</h3><p>Hardware noise is biased (Pauli-dominated), spatially bursty, neighbour-correlated, and accompanied by faulty syndrome read-out. A decoder excellent on i.i.d. noise may not retain its advantage under structure &mdash; the only way to know is to test the same family across regimes on one footing.</p></div>
-    <div class="card"><h3>Decoders can abstain</h3><p>A decoder inside a fault-tolerant loop need not commit to every syndrome. It can flag a shot as unreliable so a slower fallback, a repeated measurement, or a higher-level protocol takes over. This is the QEC analogue of <b>selective prediction</b>.</p></div>
-    <div class="card"><h3>Abstention needs calibration</h3><p>Abstention is only useful if the confidence that gates it is <b>calibrated</b> &mdash; when a decoder says 0.8, it should be right 80% of the time. Coverage and calibration are routinely omitted from decoder benchmarks.</p></div>
+    <div class="card"><h3>Noise is structured</h3><p>Hardware noise is biased (Pauli-dominated), spatially bursty, neighbour-correlated, and attended by faulty syndrome read-out. A decoder that excels under i.i.d. noise may forfeit its advantage under structure; the sole means of resolving this question is to evaluate the identical family across regimes on a common footing.</p></div>
+    <div class="card"><h3>Decoders may abstain</h3><p>A decoder operating within a fault-tolerant loop is under zero obligation to commit to every syndrome. It may instead flag a shot as unreliable, deferring to a slower fallback decoder, a repeated measurement, or a higher-level protocol. This constitutes the QEC analogue of <b>selective prediction</b>.</p></div>
+    <div class="card"><h3>Abstention requires calibration</h3><p>Abstention confers value only when the confidence that gates it is <b>calibrated</b> &mdash; when a decoder reports 0.8, it should be correct 80% of the time. Coverage and calibration are routinely omitted from decoder benchmarks.</p></div>
   </div>
-  <p class="lead" style="margin-top:22px"><b>The gap addressed.</b> Existing work studies matching, belief
-    propagation, and learned/RL decoders <i>in isolation</i> and <i>under i.i.d. noise</i>, optimizing
-    logical error. Existing benchmarks stop short of placing a whole decoder family on a single defect-graph interface across
-    structured-noise regimes while treating selective decoding and calibration as primary, statistically
-    accounted-for axes. That is the gap this work fills &mdash; a measurement methodology, not a new
-    state-of-the-art error rate.</p>
+  <p class="lead" style="margin-top:22px"><b>The gap addressed.</b> Prior work examines matching, belief
+    propagation, and learned and reinforcement-learning decoders <i>in isolation</i> and <i>under i.i.d. noise</i>,
+    optimising the logical error rate. Existing benchmarks stop short of situating a complete decoder family on a
+    single defect-graph interface across structured-noise regimes while elevating selective decoding and
+    calibration to primary, statistically accounted-for axes. This is precisely the gap the present work
+    addresses &mdash; a measurement methodology rather than a new state-of-the-art error rate.</p>
 </div></section>
 
 <section id="contributions"><div class="wrap">
   <h2>Contributions &amp; novelty</h2>
-  <p class="lead">The contribution is the framework, the selective/calibrated lens, and the transparent
-    accounting &mdash; not a fractional improvement on an already-saturated error rate.</p>
+  <p class="lead">The contribution comprises the framework, the selective and calibrated evaluation lens, and the
+    transparent accounting &mdash; rather than a fractional improvement on an already-saturated error rate.</p>
   <ul class="contrib">
-    <li><b>A decoder-family benchmark under structured noise.</b><span>Eight decoders (lookup, majority, matching, BP, neural, topology, fused, RL selector) on one defect-graph interface, evaluated across i.i.d., biased, burst, correlated, and measurement-error regimes, with per-regime breakdowns and threshold curves.</span></li>
-    <li><b>Selective decoding as a primary axis.</b><span>Confidence-gated abstention and risk&ndash;coverage curves for every decoder, quantifying the reliability bought by giving up coverage &mdash; not merely a single error number.</span></li>
-    <li><b>Calibration as a first-class metric.</b><span>Expected calibration error reported for all decoders with 95% confidence intervals, exposing that calibration is uncorrelated with decoder complexity and not predictable from the logical error rate.</span></li>
-    <li><b>An transparent, reproducible accounting.</b><span>A single source-of-truth artifact (<code>summary.json</code>), analytic confidence intervals that reveal the decoders to be statistically indistinguishable on raw logical error, and a code-level audit gate against fabricated numbers and absolute-superiority claims.</span></li>
+    <li><b>A decoder-family benchmark under structured noise.</b><span>Eight decoders (lookup, majority, matching, BP, neural, topology, fused, RL selector) on a single defect-graph interface, evaluated across i.i.d., biased, burst, correlated, and measurement-error regimes, with per-regime breakdowns and threshold curves.</span></li>
+    <li><b>Selective decoding as a primary axis.</b><span>Confidence-gated abstention and risk&ndash;coverage curves for every decoder, quantifying the reliability conferred by relinquishing coverage, rather than a solitary error scalar.</span></li>
+    <li><b>Calibration as a first-class metric.</b><span>The expected calibration error reported for all decoders with 95% confidence intervals, establishing that calibration is uncorrelated with decoder complexity and unpredictable from the logical error rate.</span></li>
+    <li><b>A transparent, reproducible accounting.</b><span>A single source-of-truth artifact (<code>summary.json</code>), analytic confidence intervals that establish the decoders to be statistically indistinguishable on the raw logical error, and a code-level audit gate that rejects fabricated numbers and absolute-superiority assertions.</span></li>
   </ul>
 </div></section>
 
 <section id="method"><div class="wrap">
   <h2>Mathematics &amp; method</h2>
-  <p class="lead">Decoding is treated as a problem on the code's <b>defect graph</b>. Eight interchangeable
-    decoders read one syndrome and return a correction plus a confidence; the metric is the <b>exact</b>
-    logical-failure indicator.</p>
+  <p class="lead">Decoding is formulated as a problem on the code's <b>defect graph</b>. Eight interchangeable
+    decoders consume one syndrome and return a correction together with a confidence; the figure of merit is the
+    <b>exact</b> logical-failure indicator.</p>
   <div class="pipe">
     <div class="step"><b>1 &middot; Code &amp; defects</b><br>repetition / surface-like code &rarr; syndrome on the Tanner / plaquette graph</div>
     <div class="step"><b>2 &middot; Decoder family</b><br>lookup &middot; majority &middot; matching (MWPM) &middot; BP &middot; neural &middot; topology &middot; fused</div>
@@ -173,40 +174,40 @@
     <div class="card">
       <h3>Syndromes &amp; the coset choice</h3>
       <p>For the distance-\(d\) repetition code, \(d\) data bits over \(\mathbb{F}_2\) carry \(d-1\) weight-two
-        checks \(Z_iZ_{i+1}\). A syndrome bit fires where an error chain crosses link \(i\):</p>
+        checks \(Z_iZ_{i+1}\). A syndrome bit fires precisely where an error chain traverses link \(i\):</p>
       <div class="mathblock">$$s_i \;=\; e_i \oplus e_{i+1},\qquad i = 0,\dots,d-2.$$</div>
-      <p>Two errors share a syndrome iff they differ by the logical operator, so decoding is a
-        <b>minimum-weight coset choice</b>, and a correction \(\hat c\) succeeds iff the residual is a stabilizer
-        with zero logical value:</p>
+      <p>Two errors yield identical syndromes if and only if they differ by the logical operator, whence decoding
+        reduces to a <b>minimum-weight coset selection</b>, and a correction \(\hat c\) succeeds if and only if the
+        residual is a stabilizer with zero logical value:</p>
       <div class="mathblock">$$\hat c = \arg\min_{c\,:\,\sigma(c)=s}\ \mathrm{wt}(c),\qquad
         \text{logical error}\iff \mathrm{parity}\!\big(e\oplus\hat c\big)=1.$$</div>
     </div>
     <div class="card">
       <h3>The decoder interface &amp; family</h3>
-      <p>Every decoder implements one interface, which is what makes the family comparable and abstention/calibration definable uniformly:</p>
+      <p>Every decoder implements one interface, which renders the family directly comparable and permits abstention and calibration to be defined uniformly:</p>
       <div class="mathblock">$$\texttt{decode(syndrome)}\ \longrightarrow\ (\text{correction}\in\mathbb{F}_2^{\,n},\ \text{confidence}\in[0,1]).$$</div>
-      <p><b>lookup</b> (optimal min-weight coset leader) &middot; <b>majority</b> (integrate the syndrome,
-        lower-weight coset) &middot; <b>matching</b> (MWPM via Edmonds' blossom; defect-fraction confidence
-        \(\exp(-2\,n_{\mathrm{def}}/n_{\mathrm{checks}})\)) &middot; <b>BP</b> (min-sum, defers to matching) &middot;
-        <b>neural</b> (logistic-regression coset selector; confidence = class probability) &middot; <b>topology</b>
-        (matching recalibrated by defect geometry) &middot; <b>fused</b> (matching+neural by confidence) &middot;
+      <p><b>lookup</b> (optimal minimum-weight coset leader) &middot; <b>majority</b> (integrate the syndrome,
+        select the lower-weight coset) &middot; <b>matching</b> (MWPM via Edmonds' blossom; defect-fraction confidence
+        \(\exp(-2\,n_{\mathrm{def}}/n_{\mathrm{checks}})\)) &middot; <b>BP</b> (min-sum, deferring to matching) &middot;
+        <b>neural</b> (logistic-regression coset selector; confidence equals the predicted-class probability) &middot; <b>topology</b>
+        (matching recalibrated by defect geometry) &middot; <b>fused</b> (matching and neural combined by confidence) &middot;
         <b>rl</b> (contextual bandit routing by defect-count context).</p>
     </div>
     <div class="card">
       <h3>Calibration (ECE)</h3>
-      <p>A confidence is only useful for abstention if it is transparent about its own accuracy. ECE partitions shots
-        into ten equal-width confidence bins and averages the gap between mean confidence and mean accuracy,
-        weighted by bin occupancy:</p>
+      <p>A confidence score is informative for abstention only when it faithfully reflects its own accuracy. The ECE
+        partitions shots into ten equal-width confidence bins and averages the discrepancy between mean confidence
+        and mean accuracy, weighted by bin occupancy:</p>
       <div class="mathblock">$$\mathrm{ECE} \;=\; \sum_{\text{bins}} \frac{n_{\mathrm{bin}}}{n}\,
         \Big|\,\overline{\mathrm{conf}}(\mathrm{bin}) - \overline{\mathrm{acc}}(\mathrm{bin})\,\Big|,\qquad
         \overline{\mathrm{acc}} = 1-\overline{F}.$$</div>
-      <p>\(\mathrm{ECE}=0\) means stated confidence equals realised accuracy in every bin.</p>
+      <p>\(\mathrm{ECE}=0\) signifies that the stated confidence coincides with the realised accuracy in every bin.</p>
     </div>
     <div class="card">
       <h3>Selective risk&ndash;coverage</h3>
-      <p>Fix a confidence threshold \(\tau\) and commit only on shots with confidence \(\ge\tau\). Then
-        coverage\((\tau)\) is the committed fraction and risk\((\tau)\) is the logical error rate on committed
-        shots. Sweeping \(\tau\) traces the risk&ndash;coverage curve.</p>
+      <p>Fix a confidence threshold \(\tau\) and commit exclusively on shots with confidence \(\ge\tau\). Then
+        coverage\((\tau)\) denotes the committed fraction and risk\((\tau)\) denotes the logical error rate on the
+        committed shots. Sweeping \(\tau\) traces the risk&ndash;coverage curve.</p>
       <div class="thm">
         <b>Theorem (monotone selective risk under calibrated confidence).</b>
         Let \(F\in\{0,1\}\) be the failure indicator and \(C\in[0,1]\) a confidence with
@@ -214,32 +215,32 @@
         $$R(\tau)=\Pr(F=1\mid C\ge\tau)=1-\mathbb{E}[C\mid C\ge\tau],$$
         which is non-increasing in \(\tau\).
       </div>
-      <p class="note">The theorem is not assumed in the experiments; empirical confidences are imperfect, so the
-        risk&ndash;coverage curves and ECE quantify how far each decoder is from this ideal.</p>
+      <p class="note">The theorem is not presupposed in the experiments; empirical confidences are imperfect, and the
+        risk&ndash;coverage curves and ECE therefore quantify the departure of each decoder from this ideal.</p>
     </div>
   </div>
 </div></section>
 
 <section id="design"><div class="wrap">
   <h2>Experimental design &amp; statistics</h2>
-  <p class="lead">All reported numbers come from the reported-scale configuration: repetition code, distance
+  <p class="lead">All reported quantities derive from the reported-scale configuration: repetition code, distance
     \(d=9\), \(40{,}000\) Monte-Carlo trials per (regime, decoder), \(200{,}000\) pooled shots per decoder,
     \(20{,}000\) training shots, evaluation \(p=0.12\), an eleven-point physical-error grid, seed 0. The run
-    completes end-to-end in \(\approx 507\,\mathrm{s}\) at \(\approx 200\,\mathrm{MB}\) peak on a single CPU.</p>
+    completes end-to-end in \(\approx 507\,\mathrm{s}\) at \(\approx 200\,\mathrm{MB}\) peak memory on a single CPU.</p>
   <div class="grid3">
-    <div class="card"><h3>Sample size &amp; CIs</h3><p>Per (regime, decoder) we record a per-shot Bernoulli failure indicator. The logical error rate is its mean; the analytic 95% CI half-width is</p>
+    <div class="card"><h3>Sample size &amp; CIs</h3><p>For each (regime, decoder) pair we record a per-shot Bernoulli failure indicator. The logical error rate is its mean; the analytic 95% CI half-width is</p>
       <div class="mathblock" style="box-shadow:none;border:none;padding:0">$$\mathrm{ci}_{95}=1.96\,\hat\sigma/\sqrt n,\quad \hat\sigma\approx\sqrt{\bar p(1-\bar p)}.$$</div>
       <p>At \(n=200{,}000\), \(\mathrm{ci}_{95}\approx\pm0.0016\).</p></div>
-    <div class="card"><h3>Comparison set</h3><p>The full eight-decoder family (lookup, majority, matching, BP, neural, topology, fused, RL) across five structured-noise regimes: i.i.d., biased (sublattice, bias 3), burst (Poisson runs), correlated (neighbour recruitment), and measurement-error (read-out flips at \(q=0.05\)).</p></div>
-    <div class="card"><h3>Integrity checks</h3><p><b>Automorphism invariance:</b> the matching decoder's logical error rate must be unchanged under cyclic relabeling over shifts \(\{1,2,d/2\}\) (flag <code>automorphism_invariant = true</code>). <b>Audit gate:</b> every reported number must trace to <code>summary.json</code>; forbidden superiority phrasing is rejected in CI.</p></div>
+    <div class="card"><h3>Comparison set</h3><p>The complete eight-decoder family (lookup, majority, matching, BP, neural, topology, fused, RL) across five structured-noise regimes: i.i.d., biased (sublattice, bias 3), burst (Poisson runs), correlated (neighbour recruitment), and measurement-error (read-out flips at \(q=0.05\)).</p></div>
+    <div class="card"><h3>Integrity checks</h3><p><b>Automorphism invariance:</b> the matching decoder's logical error rate must remain invariant under cyclic relabeling over shifts \(\{1,2,d/2\}\) (flag <code>automorphism_invariant = true</code>). <b>Audit gate:</b> every reported number must trace to <code>summary.json</code>; proscribed superiority phrasing is rejected in continuous integration.</p></div>
   </div>
-  <p class="note" style="margin-top:14px"><b>Calibration metric:</b> ECE over ten equal-width confidence bins (above). <b>Risk&ndash;coverage:</b> threshold swept from min to max observed confidence, reported in descending-coverage order with a programmatic monotonicity check; committed-error CI bands use effective sample size = coverage \(\times\) pooled shots.</p>
+  <p class="note" style="margin-top:14px"><b>Calibration metric:</b> ECE over ten equal-width confidence bins (above). <b>Risk&ndash;coverage:</b> the threshold is swept from the minimum to the maximum observed confidence, reported in descending-coverage order with a programmatic monotonicity check; committed-error CI bands employ an effective sample size of coverage \(\times\) pooled shots.</p>
 </div></section>
 
 <section id="results"><div class="wrap">
   <h2>Results</h2>
   <p class="lead">Headline comparison at \(p=0.12\), pooled over the five structured-noise regimes (\(n=200{,}000\)
-    pooled shots per decoder; reported scale). Rows sorted by logical error rate; \(\star\) marks the lowest.
+    pooled shots per decoder; reported scale). Rows are ordered by logical error rate; \(\star\) marks the lowest.
     Generated verbatim from <code>summary.json</code>.</p>
 
   <div class="scroll">
@@ -266,30 +267,30 @@
   <div class="grid3" style="margin-top:22px">
     <div class="card">
       <h3>Raw error: a statistical equivalence</h3>
-      <p>Logical error rates span only <b>0.1516&ndash;0.1540</b> with every \(\mathrm{ci}_{95}\approx\pm0.0016\).
-        The best-to-worst spread (<b>0.0024</b>) is below one full interval width (\(\approx0.0032\)), so the
+      <p>Logical error rates span merely <b>0.1516&ndash;0.1540</b>, with every \(\mathrm{ci}_{95}\approx\pm0.0016\).
+        The best-to-worst spread (<b>0.0024</b>) falls below one full interval width (\(\approx0.0032\)), so the
         decoders are <b>not separated at the 95% level</b>. Even the optimal <code>lookup</code> leader (0.1524)
-        is statistically tied with the heuristics. We report the statistical equivalence, not a superior method.</p>
+        is in statistical equivalence with the heuristic decoders. We document the statistical equivalence rather than a superior method.</p>
     </div>
     <div class="card">
       <h3>Abstention confers reliability</h3>
-      <p>Sweeping the abstention threshold, <code>matching</code>'s committed error falls monotonically from
-        <b>0.1529</b> at full coverage to <b>0.0758</b> at \(\approx0.55\) coverage (~2&times; reduction for
-        committing to half the shots) and <b>0.0099</b> at \(\approx0.25\) coverage (&gt;15&times; reduction).
-        <code>fused</code> traces a similar curve: <b>0.0499</b> at \(\approx0.46\) coverage, <b>0.0101</b> at
-        \(\approx0.25\). Monotonicity is verified programmatically.</p>
+      <p>As the abstention threshold is swept, the committed error of <code>matching</code> declines monotonically from
+        <b>0.1529</b> at full coverage to <b>0.0758</b> at \(\approx0.55\) coverage (an approximately twofold reduction for
+        committing to half the shots) and to <b>0.0099</b> at \(\approx0.25\) coverage (a greater than fifteenfold reduction).
+        The <code>fused</code> decoder traces a comparable curve: <b>0.0499</b> at \(\approx0.46\) coverage and <b>0.0101</b> at
+        \(\approx0.25\) coverage. Monotonicity is verified programmatically.</p>
     </div>
     <div class="card">
       <h3>Calibration &ne; sophistication</h3>
-      <p>ECE spans an <b>eight-fold</b> range and is uncorrelated with complexity. Order (best&rarr;worst):
+      <p>The ECE spans an <b>eight-fold</b> range and is uncorrelated with complexity. Ordering (best&rarr;worst):
         <b>neural 0.0317</b> &lt; majority 0.0489 &lt; lookup 0.0569 &lt; fused 0.0608 &lt; bp 0.1232 &lt;
         rl 0.2387 &lt; topology 0.2428 &lt; <b>matching 0.2608</b>. The best-calibrated decoder is the lightweight
-        neural selector; the worst is plain matching.</p>
+        neural selector; the worst is plain minimum-weight matching.</p>
     </div>
   </div>
 
   <h3 style="margin-top:26px">Structured noise separates regimes, not decoders</h3>
-  <p class="note">Per-regime pooled logical error rises &gt;100&times; with noise structure, while decoders cluster within their (tight) CIs at each regime. The hardest regime is syndrome read-out error.</p>
+  <p class="note">The per-regime pooled logical error rises by more than 100&times; with noise structure, whereas the decoders cluster within their (tight) CIs at each regime. The most difficult regime is syndrome read-out error.</p>
   <div class="scroll">
   <table>
     <thead><tr>
@@ -298,11 +299,11 @@
       <th>notes</th>
     </tr></thead>
     <tbody>
-      <tr><td>i.i.d.</td><td class="num">&asymp; 0.002</td><td>easiest; near-perfect correction</td></tr>
+      <tr><td>i.i.d.</td><td class="num">&asymp; 0.002</td><td>least difficult; near-perfect correction</td></tr>
       <tr><td>biased</td><td class="num">&asymp; 0.043</td><td>sublattice bias (bias 3)</td></tr>
       <tr><td>burst</td><td class="num">&asymp; 0.17</td><td>spatially clustered flips</td></tr>
       <tr><td>correlated</td><td class="num">&asymp; 0.21</td><td>neighbour recruitment</td></tr>
-      <tr><td>measurement error</td><td class="num">&asymp; 0.34</td><td>read-out flips corrupt the decoded signal (hardest)</td></tr>
+      <tr><td>measurement error</td><td class="num">&asymp; 0.34</td><td>read-out flips corrupt the conditioning signal (most difficult)</td></tr>
     </tbody>
   </table>
   </div>
@@ -310,28 +311,28 @@
   <div class="card" style="margin-top:18px">
     <h3>A data-fidelity note</h3>
     <p>This ECE ordering directly contradicts a natural intuition &mdash; and an explicit claim in the project's
-      own README &mdash; that the confidence-<b>fused</b> decoder is best calibrated. It is not: at reported scale
-      fused ranks fourth on ECE (0.0608); the neural selector is best (0.0317). We resolve the discrepancy in
-      favour of the regenerated artifact &mdash; every value here is the value written to <code>summary.json</code>.
-      What survives is the structural conclusion: calibration must be measured, not assumed from accuracy or complexity.
+      own README &mdash; that the confidence-<b>fused</b> decoder is the best calibrated. It is not: at reported scale
+      the fused decoder ranks fourth on ECE (0.0608), whereas the neural selector ranks first (0.0317). We resolve the discrepancy in
+      favour of the regenerated artifact &mdash; every value reported here is the value written to <code>summary.json</code>.
+      The conclusion that endures is structural: calibration must be measured, not inferred from accuracy or complexity.
       Integrity flag <code>automorphism_invariant = true</code>.</p>
   </div>
 
-  <p class="note" style="margin-top:14px">Figures are vector PDFs generated from the same artifact (figures linked rather than embedded here):
+  <p class="note" style="margin-top:14px">Figures are vector PDFs generated from the same artifact (linked rather than embedded here):
     <a href="submission/figures/fig_schematic.pdf">schematic</a> &middot;
     <a href="submission/figures/fig_threshold.pdf">threshold curves</a> &middot;
     <a href="submission/figures/fig_risk_coverage.pdf">risk&ndash;coverage curves</a>.</p>
 </div></section>
 
 <section id="demo"><div class="wrap">
-  <h2>Interactive demo &mdash; runs entirely in your browser</h2>
-  <p class="lead">A self-contained Monte-Carlo of the distance-\(d\) <b>repetition code</b>. It computes the
-    syndrome \(s_i=e_i\oplus e_{i+1}\) exactly, integrates it back to a flip chain, picks the lighter coset
-    (majority / matching) or applies the fused rule, and checks residual parity &mdash; the same operations the
-    Python package runs, so the in-browser logical error rate is the trusted quantity. <b>Note:</b> this is a
-    didactic surrogate at small \(d\) under simplified noise; the manuscript's headline numbers are the
-    reported-scale \(d=9\), \(200{,}000\)-shot run, not this demo. The chain shows one shot (flipped bits red,
-    lit checks orange); the curve plots logical vs physical error rate with the break-even line \(p_L=p\).</p>
+  <h2>Interactive demo &mdash; executed entirely client-side</h2>
+  <p class="lead">A self-contained Monte-Carlo simulation of the distance-\(d\) <b>repetition code</b>. It computes the
+    syndrome \(s_i=e_i\oplus e_{i+1}\) exactly, integrates it back into a flip chain, selects the lighter coset
+    (majority or matching) or applies the fused rule, and verifies residual parity &mdash; the identical operations the
+    Python package performs, so that the in-browser logical error rate is the authoritative quantity. <b>Note:</b> this is a
+    didactic surrogate at small \(d\) under simplified noise; the manuscript's headline figures correspond to the
+    reported-scale \(d=9\), \(200{,}000\)-shot run, not to this demo. The chain displays one shot (flipped bits in red,
+    lit checks in orange); the curve plots the logical against the physical error rate, with the break-even line \(p_L=p\).</p>
   <div class="demo">
     <div class="controls card">
       <label>Decoder</label>
@@ -355,20 +356,20 @@
       <input type="range" id="trials" min="500" max="8000" step="500" value="4000">
       <button id="shot">↻ New single shot</button>
       <button class="go" id="run">▶ Run N trials</button>
-      <p class="note" style="margin-top:14px">A repetition code of distance d corrects up to (d−1)/2 flips. Decoding and noise are computed live in JS.</p>
+      <p class="note" style="margin-top:14px">A repetition code of distance d corrects up to (d−1)/2 flips. Decoding and noise are computed in-browser in JavaScript.</p>
     </div>
     <div>
       <div class="stage">
         <div><canvas id="chain" width="420" height="320"></canvas>
-          <p class="note">One shot: data bits (red = flipped), parity checks (orange = lit defect), decoder's correction below.</p></div>
+          <p class="note">One shot: data bits (red = flipped), parity checks (orange = lit defect), with the decoder's correction shown below.</p></div>
         <div><canvas id="curve" width="420" height="320"></canvas>
-          <p class="note">Logical error rate vs physical error rate p, swept live for the selected decoder &amp; noise.</p></div>
+          <p class="note">Logical error rate versus physical error rate p, swept in-browser for the selected decoder and noise model.</p></div>
       </div>
       <div class="readout">
-        <div class="ro high-quality"><b id="r-ler">–</b><span>logical error rate (selected p)</span></div>
+        <div class="ro high-quality"><b id="r-ler">–</b><span>logical error rate (at selected p)</span></div>
         <div class="ro"><b id="r-shot">–</b><span>this shot: corrected?</span></div>
-        <div class="ro warn"><b id="r-phys">–</b><span>physical flips this shot</span></div>
-        <div class="ro"><b id="r-n">–</b><span>trials run</span></div>
+        <div class="ro warn"><b id="r-phys">–</b><span>physical flips in this shot</span></div>
+        <div class="ro"><b id="r-n">–</b><span>trials executed</span></div>
       </div>
     </div>
   </div>
@@ -376,22 +377,22 @@
 
 <section id="conclusion"><div class="wrap">
   <h2>Conclusion &amp; impact</h2>
-  <p class="lead">A deployable QEC decoder must do more than minimize an i.i.d. logical error rate: it must
-    behave well under structured noise, know when to abstain, and report calibrated confidence. This benchmark
-    measures all three for a full decoder family on one defect-graph interface, and reports &mdash; transparently &mdash;
-    that the decoders are statistically indistinguishable on raw logical error while differing sharply in
+  <p class="lead">A deployable QEC decoder must accomplish more than minimising an i.i.d. logical error rate: it must
+    perform well under structured noise, recognise when to abstain, and report calibrated confidence. This benchmark
+    measures all three for a complete decoder family on a single defect-graph interface, and reports &mdash; candidly &mdash;
+    that the decoders are statistically indistinguishable on the raw logical error while differing sharply in
     calibration and in the reliability they confer through abstention.</p>
   <div class="grid3">
-    <div class="card"><h3>What is established</h3><p>Parity on raw error (a 0.0024 spread inside a ~0.0032 interval); abstention as a large, monotone mechanism (committed error cut several-fold for a moderate coverage cost); and calibration decoupled from sophistication &mdash; the best-calibrated decoder is the simplest one, not the most elaborate.</p></div>
+    <div class="card"><h3>What is established</h3><p>Statistical equivalence on the raw error (a 0.0024 spread within a \(\approx\)0.0032 interval); abstention as a substantial, monotone mechanism (committed error reduced several-fold at a moderate coverage cost); and calibration decoupled from sophistication &mdash; the best-calibrated decoder is the simplest, not the most elaborate.</p></div>
     <div class="card"><h3>Transparent limitations</h3>
       <ul>
-        <li>Toy codes only (1-D repetition; surface-<i>like</i> toy, not a stabilizer-exact surface code).</li>
-        <li>Simulated structured noise, not hardware syndromes.</li>
-        <li>Logical-error differences are within noise; the distance-scaling (sub-threshold) study is left for future work.</li>
-        <li>Lightweight learned models (logistic regression, contextual bandit), single distance.</li>
-        <li>Single author, single CPU environment; independent replication outstanding.</li>
+        <li>Toy codes exclusively (one-dimensional repetition; surface-<i>like</i> toy lattice, not a stabilizer-exact surface code).</li>
+        <li>Simulated structured noise rather than hardware syndromes.</li>
+        <li>Logical-error differences lie within the statistical noise; the distance-scaling (sub-threshold) study is deferred to future work.</li>
+        <li>Lightweight learned models (logistic regression, contextual bandit), a single distance.</li>
+        <li>A single author and single CPU environment; independent replication remains outstanding.</li>
       </ul></div>
-    <div class="card"><h3>Outlook</h3><p>Extending the framework to a full surface code at scale, to hardware syndromes, and to a distance-scaling study &mdash; while keeping selectivity and calibration as first-class metrics &mdash; is the natural next step. The measurement methodology is the contribution; it generalizes beyond these toy codes.</p></div>
+    <div class="card"><h3>Outlook</h3><p>Extending the framework to a full-scale surface code, to hardware syndromes, and to a distance-scaling study &mdash; while retaining selectivity and calibration as first-class metrics &mdash; constitutes the natural next step. The measurement methodology is the contribution, and it generalises beyond these toy codes.</p></div>
   </div>
 </div></section>
 
@@ -399,7 +400,7 @@
   <h2>Paper &amp; code</h2>
   <p class="lead">Every numerical value, table, and figure is generated by the accompanying scripts from fixed
     random seeds and written to a single source-of-truth artifact (<code>results/summary.json</code>); nothing on
-    this page is hand-written.</p>
+    this page is transcribed by hand.</p>
   <div class="klink">
     <a class="btn" href="https://github.com/thmolena">↗ GitHub repository</a>
     <a class="btn" href="submission/main.pdf">↗ Manuscript (PDF)</a>
@@ -414,14 +415,14 @@ bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5, ~13 s)
 # scripts/make_tables.py  -> results/main_results.tex
 # scripts/make_figures.py -> fig_schematic / fig_threshold / fig_risk_coverage
 # scripts/audit_claims.py -> readiness gate: every number traces to summary.json</pre>
-  <p class="note">The benchmark, decoders, noise models, metrics, and audit gate live in
-    <a href="submission/code/">submission/code/</a>; the manuscript is in
+  <p class="note">The benchmark, decoders, noise models, metrics, and audit gate reside in
+    <a href="submission/code/">submission/code/</a>; the manuscript is located in
     <a href="submission/main.tex">submission/main.tex</a>.</p>
 </div></section>
 
 <footer><div class="wrap">
   <p><b>Molena Huynh</b> · Selective and Calibrated Decoding for Quantum Error Correction: A Topology-Aware Decoder-Family Benchmark under Structured Noise</p>
-  <p class="note">All experiments are reproducible on commodity hardware; runtime and memory are reported for each benchmark. Reported scale: distance 9, 40,000 trials/regime, 200,000 pooled shots/decoder, \(p=0.12\), seed 0.</p>
+  <p class="note">All experiments are reproducible on commodity hardware; runtime and memory are reported for each benchmark. Reported scale: distance 9, 40,000 trials per regime, 200,000 pooled shots per decoder, \(p=0.12\), seed 0.</p>
 </div></footer>
 
 <script>
