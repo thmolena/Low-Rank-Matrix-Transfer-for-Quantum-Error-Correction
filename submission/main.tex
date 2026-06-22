@@ -54,7 +54,6 @@ A quantum error-correcting code only protects information if its \emph{decoder} 
 \end{abstract}
 
 % ============================================================
-\section{Introduction}
 \label{sec:introduction}
 
 Quantum error correction (QEC) protects logical information by encoding it redundantly across many physical qubits and repeatedly measuring stabilizer operators, whose outcomes form a \emph{syndrome}~\cite{shor1995scheme,nielsen2010quantum,terhal2015quantum}. Topological codes---most prominently Kitaev's toric and surface codes~\cite{kitaev2003fault,dennis2002topological,fowler2012surface}---are the leading candidates for scalable fault tolerance, and recent hardware has demonstrated that scaling such a code can suppress the logical error rate below the physical one~\cite{google2023suppressing}. The component that turns a syndrome into a correction is the \emph{decoder}, and it is the part of the stack where classical algorithms and, increasingly, machine learning meet the physics of the device.
@@ -267,5 +266,328 @@ All experiments are reproducible on commodity hardware; runtime and memory are r
 % ============================================================
 \bibliographystyle{unsrtnat}
 \bibliography{refs}
+
+% ============================================================
+\clearpage
+\appendix
+\section*{Supplementary Information}
+\addcontentsline{toc}{section}{Supplementary Information}
+\label{sec:si}
+
+\renewcommand{\thesection}{S\arabic{section}}
+\setcounter{section}{0}
+
+This Supplementary Information is a self-contained, from-first-principles
+derivation of every concept the accompanying code implements. It is written to
+be read top-to-bottom by someone who has seen linear algebra and basic
+probability but \emph{not} quantum error correction, stabilizer codes,
+minimum-weight matching, belief propagation, calibration, or selective
+prediction. Every symbol used in the code is defined, and each section names the
+source file (under \texttt{submission/code/src/topoqec/}) it maps to, so theory
+and implementation can be read side by side. It expands on, rather than repeats,
+the Methods (Sec.~\ref{sec:methods}); where a definition already appears there we
+cross-reference it.
+
+\subsection{The problem in one paragraph}
+\label{sec:si_problem}
+A quantum error-correcting (QEC) code stores one logical bit redundantly across
+many physical bits. Noise flips some physical bits; we are not allowed to look at
+the bits directly (that would destroy the quantum state), so instead we measure a
+few parity checks whose outcomes form a \emph{syndrome}. A \emph{decoder} takes
+the syndrome and guesses a correction. It succeeds if (correction $\oplus$ error)
+is a ``do-nothing'' operator (a stabilizer); it fails if that residual flips the
+logical bit. The usual figure of merit is the \emph{logical error rate}. This
+project argues that two further axes matter just as much and are usually ignored:
+(i)~\emph{selective decoding}---letting the decoder \emph{abstain} when unsure, so
+a slower fallback can take over; and (ii)~\emph{calibration}---whether the
+decoder's stated confidence actually matches how often it is right. We build one
+benchmark that measures all three (logical error, calibration, risk--coverage)
+for eight decoders across five structured-noise regimes, with honest $95\%$
+confidence intervals. The deliberately conservative headline: on this code the
+eight decoders are statistically \emph{tied} on raw logical error, but they
+differ sharply in calibration and in the reliability that abstention buys.
+
+\subsection{Codes, syndromes, and logical failure (\texttt{codes.py})}
+\label{sec:si_codes}
+\paragraph{Repetition code (\texttt{RepetitionCode}).}
+The primary benchmark. A logical bit is encoded in $d$ data bits over
+$\F_2=\{0,1\}$ (the field of integers mod $2$; XOR is ``$+$''). The code has
+$d-1$ weight-two parity checks of the form $Z_iZ_{i+1}$. An error is a vector
+$e\in\F_2^d$ ($e_i=1$ means data bit $i$ is flipped). The syndrome of $e$ is
+\begin{equation}
+  s_i = e_i \oplus e_{i+1}, \qquad i = 0,\dots,d-2 \qquad \texttt{(.syndrome())}.
+\end{equation}
+Intuitively $s_i$ fires exactly where an error \emph{chain} crosses link $i$, so
+the lit syndrome bits sit at the \emph{endpoints} of error chains. Decoding is
+therefore a matching/pairing problem on a one-dimensional line of links. The
+single logical observable is the global parity $L(e)=\bigl(\sum_i e_i\bigr)\bmod
+2$ (\texttt{.logical\_value()}). A correction $\hat c$ is a \emph{logical failure}
+(\texttt{.logical\_error()}) unless the residual $r=e\oplus\hat c$ both
+(a)~reproduces zero syndrome ($r$ is a stabilizer, acting trivially) and (b)~has
+zero logical value; a correction that does not even reproduce the measured
+syndrome is automatically a failure. This is the precise definition used in
+Methods (Sec.~\ref{sec:methods_codes}) of ``the code protected the bit''.
+
+\paragraph{Lookup table.}
+For small $d$ we enumerate all $2^d$ errors (\texttt{.all\_errors()}) and, for
+every syndrome, store the minimum-weight error that produces it---the ``coset
+leader''. This optimal table is the gold-standard decoder for small $d$ and the
+yardstick everything else is compared against (Sec.~\ref{sec:si_family},
+\texttt{LookupDecoder}).
+
+\paragraph{Surface-like code (\texttt{SurfaceLikeCode}).}
+A second, two-dimensional code: $d\times d$ data bits on a grid with $(d-1)^2$
+weight-four plaquette checks; a lit plaquette is a \emph{defect}, and defects are
+paired by Manhattan ($L_1$) distance. The logical observable is the parity of the
+left column. It exposes the same defect geometry in 2-D so the
+matching/topology decoders generalise, but it is a topology-\emph{faithful} toy,
+\emph{not} a stabilizer-exact CSS surface code---we say so honestly
+(Sec.~\ref{sec:limitations}). Both codes expose a bipartite Tanner graph via
+\texttt{networkx} (\texttt{.tanner\_graph()}) so graph-based decoders operate on
+the code topology directly.
+
+\subsection{Structured noise: why i.i.d.\ is not enough (\texttt{noise.py})}
+\label{sec:si_noise}
+Real hardware noise is \emph{not} independent-and-identically-distributed. Five
+seeded samplers, each taking a \texttt{numpy} \texttt{Generator} and returning a
+$0/1$ error vector, model the structure that matters (\texttt{noise.sample()}
+dispatches on the regime name; see Methods Sec.~\ref{sec:methods_noise} for the
+parameters):
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{iid}: each bit flips independently with probability $p$
+        (\texttt{sample\_iid}).
+  \item \texttt{biased}: even-index bits flip at $\min(1,\mathrm{bias}\cdot p)$,
+        odd-index at $p$ (default $\mathrm{bias}=3$)---a coarse Pauli-bias
+        surrogate (\texttt{sample\_biased}).
+  \item \texttt{burst}: scanning the line, with probability $p$ flip a contiguous
+        run of length $1+\mathrm{Poisson}(\mathrm{burst\_len}-1)$ (default
+        $\mathrm{burst\_len}=3$)---spatially clustered errors
+        (\texttt{sample\_burst}).
+  \item \texttt{correlated}: an i.i.d.\ seed pattern recruits each neighbour with
+        probability $\mathrm{corr}$ (default $0.5$) over two sweeps---neighbour
+        correlations (\texttt{sample\_\allowbreak correlated}).
+  \item \texttt{measurement\_error}: i.i.d.\ data noise at rate $p$ \emph{plus} a
+        per-check syndrome read-out flip mask at rate $q$ (default $0.05$); the
+        runner XORs that mask into the \emph{measured} syndrome, so the decoder
+        conditions on a corrupted signal (\texttt{sample\_\allowbreak measurement\_\allowbreak error}).
+\end{itemize}
+These are precisely the regimes where topology- or read-out-aware decoding might
+beat a memoryless majority vote---and the regimes turn out to dominate the
+difficulty far more than the choice of decoder (Sec.~\ref{sec:si_regimes}).
+
+\subsection{What a decoder returns: the unified interface (\texttt{decoders.py})}
+\label{sec:si_interface}
+Every decoder implements one interface,
+\begin{equation}
+  \texttt{decode(syndrome)} \;\longrightarrow\; (\text{correction},\,\text{confidence}),
+\end{equation}
+with correction in $\F_2^n$ and confidence in $[0,1]$. The single interface is
+what makes the eight decoders comparable on one footing and what makes abstention
+(Sec.~\ref{sec:si_selective}) and calibration (Sec.~\ref{sec:si_calibration})
+definable uniformly. Two helpers recur: \texttt{\_chain\_\allowbreak from\_\allowbreak defects()} turns a
+set of paired defect endpoints into a flip chain, and
+$\texttt{\_defect\_confidence}(n_{\mathrm{def}},n_{\mathrm{checks}})=
+\exp(-2\,n_{\mathrm{def}}/n_{\mathrm{checks}})$ is the defect-fraction confidence
+heuristic (more lit checks $\Rightarrow$ less sure).
+
+\subsection{The decoder family: textbook to learned (\texttt{decoders.py})}
+\label{sec:si_family}
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{LookupDecoder}: the optimal minimum-weight coset leader from the
+        enumerated table; confidence boosted toward $1$ since the leader is
+        exact. The gold standard for small $d$.
+  \item \texttt{MajorityDecoder}: cumulative XOR (prefix sum mod $2$) of the
+        syndrome recovers a flip chain up to a global offset; pick the
+        lower-weight of the two cosets; confidence is the normalised majority
+        margin.
+  \item \texttt{MatchingDecoder}: minimum-weight perfect matching of defects. On
+        the line, pair lit syndrome bits left-to-right (with a boundary closure
+        for an odd count) and return the lighter coset. On the surface, build a
+        complete graph on lit plaquettes weighted by negative Manhattan distance
+        and call \texttt{networkx max\_weight\_matching} (Edmonds' blossom
+        algorithm~\cite{edmonds1965paths}), then flip an L-shaped path between
+        matched pairs. Confidence is the defect-fraction heuristic, damped when a
+        defect is unpaired. This is the standard surface-code decoder, in toy
+        form.
+  \item \texttt{BPDecoder}: a few rounds of min-sum belief propagation (message
+        passing) on the Tanner graph with log-likelihood priors; if the
+        thresholded beliefs do not reproduce the syndrome, defer to matching. (BP
+        underpins quantum LDPC decoding~\cite{poulin2008iterative,roffe2020decoding}.)
+  \item \texttt{NeuralDecoder}: a learned two-stage coset selector. Stage 1: a
+        syndrome-determined base chain (always syndrome-consistent). Stage 2: a
+        \texttt{scikit-learn} \texttt{LogisticRegression} that predicts the
+        logical coset ($0/1$) of the true correction relative to that base chain.
+        The output is therefore always syndrome-valid and the confidence is the
+        predicted-class probability---which is exactly why it tends to be well
+        calibrated (Sec.~\ref{sec:si_calibration}). It is fit on a mixed-regime
+        training stream.
+  \item \texttt{TopologyDecoder}: matching, but with confidence \emph{recalibrated}
+        by defect-geometry features (count, span, gap structure).
+  \item \texttt{FusedDecoder}: matching and neural both propose; agreement boosts
+        confidence, disagreement defers to the more confident proposal with
+        damped confidence (confidence fusion).
+  \item \texttt{RLDecoder}: a contextual bandit (reinforcement learning). Context
+        $=$ a coarse defect-count bucket; actions $=$ candidate decoders. It keeps
+        per-context running success estimates, plays $\eps$-greedy during a
+        warm-up stream, and at evaluation picks the highest-value decoder per
+        context.
+\end{itemize}
+\texttt{build\_decoders()} wires the family together for a given code; the same
+list is summarised in Methods Sec.~\ref{sec:methods_decoders}.
+
+\subsection{Metric 1: logical error rate and honest intervals (\texttt{metrics.py})}
+\label{sec:si_ler}
+For each (regime, decoder) we Monte-Carlo many shots and record a per-shot
+failure indicator $F\in\{0,1\}$. The logical error rate is
+$\hat p=\mathrm{mean}(F)$ (\texttt{logical\_error\_rate()}). Because $F$ is
+Bernoulli, its sample standard deviation is $s=\sqrt{\hat p(1-\hat p)}$ and a
+$95\%$ confidence-interval half-width is
+\begin{equation}
+  \mathrm{ci}_{95} = 1.96\,\frac{s}{\sqrt{n}} \qquad \texttt{(summarize())},
+\end{equation}
+with $n$ the number of shots. This is the whole point of honesty: two decoders
+whose means differ by \emph{less} than a CI width are \emph{not} separated at
+$95\%$. At reported scale ($n=200{,}000$ pooled shots) the eight decoders span
+only $0.1516$--$0.1540$ with $\mathrm{ci}_{95}\approx0.0016$, so the $0.0024$
+best-to-worst spread is below one interval width: the decoders are statistically
+\emph{tied} (Sec.~\ref{sec:headline}). We report the tie, not a winner.
+
+\subsection{Metric 2: selective decoding and the risk--coverage curve (\texttt{metrics.py})}
+\label{sec:si_selective}
+A decoder inside a fault-tolerant loop need not commit to every syndrome: it can
+\emph{abstain} (flag a shot unreliable) so a fallback handles it. This is the QEC
+analogue of \emph{selective prediction} in machine
+learning~\cite{chow1970optimum,geifman2017selective}. Fix a confidence threshold
+$\tau$ and commit only on shots with confidence $\ge\tau$. Then
+\begin{align}
+  \mathrm{coverage}(\tau) &= \text{fraction of shots committed},\\
+  \mathrm{risk}(\tau)     &= \text{logical error rate on the committed shots}.
+\end{align}
+Sweeping $\tau$ from the smallest to the largest observed confidence traces the
+\emph{risk--coverage curve} (\texttt{risk\_\allowbreak coverage\_\allowbreak curve()}), reported in
+descending-coverage order. As we abstain more (coverage shrinks), risk should
+fall: we drop the shots we were least sure about.
+\texttt{is\_\allowbreak monotone\_\allowbreak risk\_\allowbreak coverage()} programmatically verifies risk is (weakly)
+non-increasing as coverage shrinks. Empirically the effect is large: matching's
+committed error falls from $0.1529$ at full coverage to $0.0758$ at $\approx0.55$
+coverage and $0.0099$ at $\approx0.25$ coverage (Sec.~\ref{sec:risk_coverage}).
+The formal reason this works is Theorem~\ref{thm:selective-risk}: under perfectly
+calibrated confidence $C$ (so $\Pr(\text{success}\mid C=c)=c$), the committed risk
+is $1-\mathbb{E}[C\mid C\ge\tau]$, which can only decrease as $\tau$ rises---but
+\emph{only} to the extent that confidence is calibrated. Hence
+Sec.~\ref{sec:si_calibration}.
+
+\subsection{Metric 3: calibration (expected calibration error) (\texttt{metrics.py})}
+\label{sec:si_calibration}
+A confidence score is only useful for abstention if it is \emph{honest} about its
+own accuracy. The expected calibration error
+(\texttt{expected\_calibration\_error()}) partitions the shots into ten
+equal-width confidence bins; within each bin it compares the mean stated
+confidence to the mean realised accuracy ($=1-$failure), takes the absolute gap,
+and averages those gaps weighted by bin occupancy:
+\begin{equation}
+  \mathrm{ECE} = \sum_{\text{bins}} \frac{n_{\mathrm{bin}}}{n}\,
+  \bigl\lvert \overline{\mathrm{conf}}(\mathrm{bin}) - \overline{\mathrm{acc}}(\mathrm{bin}) \bigr\rvert .
+\end{equation}
+$\mathrm{ECE}=0$ means ``when the decoder says $0.8$, it is right $80\%$ of the
+time''. The paper's most counterintuitive finding lives here: across the family
+ECE spans an eight-fold range ($0.0317$--$0.2608$) and is \emph{uncorrelated} with
+sophistication (Sec.~\ref{sec:calibration}). The best calibrated is the
+lightweight \texttt{neural} selector (its confidence is literally a
+predicted-class probability, Sec.~\ref{sec:si_family}); the worst is plain
+\texttt{matching} (its defect-fraction heuristic tracks accuracy poorly).
+Calibration must be \emph{measured}, not assumed from accuracy or complexity.
+This even contradicts the project's own README intuition that ``fused'' is best
+calibrated---we report the artifact's number, with fused ranking fourth at
+$0.0608$, not the intuition.
+
+\subsection{Structured noise separates regimes, not decoders (\texttt{runner.by\_regime})}
+\label{sec:si_regimes}
+The per-(regime, decoder) breakdown shows the dominant axis of variation is the
+\emph{noise regime}, not the decoder (Sec.~\ref{sec:per_regime},
+Sec.~\ref{sec:methods_perregime}). Logical error rises $\approx100$-fold from
+$\approx0.002$ (i.i.d.) to $\approx0.043$ (biased), $\approx0.17$ (burst),
+$\approx0.21$ (correlated) and $\approx0.34$ (measurement error, the
+hardest---read-out flips corrupt the very signal decoders condition on). Within
+each regime the decoders again cluster inside their (now tight) CIs, while
+coverage varies strongly: matching/topology/RL abstain heavily under structure,
+whereas majority/lookup/neural/fused commit fully.
+
+\subsection{Integrity: automorphism invariance and the audit gate
+            (\texttt{symmetry.py}, \texttt{audit.py})}
+\label{sec:si_integrity}
+\paragraph{Automorphism invariance.}
+The repetition code is invariant under cyclic relabeling of its data bits (a ring
+symmetry). \texttt{cyclic\_relabel(error, shift)} rotates an error;
+\texttt{logical\_\allowbreak error\_\allowbreak rate\_\allowbreak under\_\allowbreak relabeling()} and
+\texttt{is\_\allowbreak automorphism\_\allowbreak invariant()} check that the matching decoder yields the
+\emph{same} logical error rate on rotated errors (over shifts $\{1,2,d/2\}$,
+within a statistical tolerance). A faithful decoder must respect the code's
+symmetry; the run exposes this as the \texttt{automorphism\_invariant} integrity
+flag (true at scale; Sec.~\ref{sec:methods_audit}).
+
+\paragraph{Audit gate.}
+\texttt{audit.py} enforces scientific hygiene: \texttt{audit\_numbers()} checks
+every claimed number traces to a value in the generated \texttt{summary.json} (the
+single source of truth); \texttt{audit\_\allowbreak reproducibility\_\allowbreak phrase()} checks the
+mandated reproducibility statement is present;
+\texttt{audit\_\allowbreak forbidden\_\allowbreak claims()} rejects forbidden absolute-superiority
+phrasing. \texttt{scripts/\allowbreak audit\_\allowbreak claims.py} runs these in continuous integration
+and exits non-zero on any violation---so the paper cannot drift from the artifact.
+
+\subsection{The single source of truth and how to reproduce (\texttt{runner.py})}
+\label{sec:si_reproduce}
+\texttt{runner.run()} ties it all together: build the code; fit the neural decoder
+on a mixed-regime training stream; warm up the RL bandit on its own Monte-Carlo
+stream; for each (regime, decoder) Monte-Carlo \texttt{trials} shots at
+$p_{\mathrm{eval}}$ and record per-shot failure/confidence; sweep $p$ over a grid
+(i.i.d.) for the threshold curves; build the risk--coverage curve from the fused
+and matching confidences; check automorphism invariance. It writes
+\texttt{results/summary.json}---the single source of truth from which every table,
+figure and reported number is generated. Nothing is typed by hand. Then:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{scripts/make\_tables.py}: \texttt{summary.json} $\to$
+        \texttt{results/main\_results.tex} (\texttt{booktabs}).
+  \item \texttt{scripts/make\_figures.py}: \texttt{summary.json} $\to$ the three
+        figure PDFs \texttt{fig\_\allowbreak schematic}, \texttt{fig\_\allowbreak threshold}
+        and \texttt{fig\_\allowbreak risk\_\allowbreak coverage}, in Nature Machine
+        Intelligence house style (vector PDF, embedded editable text via
+        \texttt{pdf.\allowbreak fonttype=42}, sans-serif with mathtext
+        \texttt{dejavusans}, the colour-blind-safe Okabe--Ito palette, no in-plot
+        titles, despined, with $95\%$ CI bands).
+  \item \texttt{scripts/\allowbreak audit\_\allowbreak claims.py}: the readiness gate of
+        Sec.~\ref{sec:si_integrity}.
+\end{itemize}
+To reproduce everything:
+\begin{verbatim}
+pip install -e .                      # installs topoqec from pyproject.toml
+export KMP_DUPLICATE_LIB_OK=TRUE      # conda + pip OpenMP runtimes on macOS
+bash scripts/reproduce_all.sh full    # reported scale (d=9, 40k trials/regime)
+bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)
+\end{verbatim}
+Reported run: repetition code, distance $9$, five regimes, $40{,}000$
+trials/regime ($200{,}000$ pooled shots/decoder), $20{,}000$ training shots,
+$p_{\mathrm{eval}}=0.12$, seed $0$ (Methods, Sec.~\ref{sec:methods_protocol}). The
+figure/table artifacts are copied verbatim into \texttt{submission/} to build the
+paper.
+
+\subsection{What the result means (and what it does not)}
+\label{sec:si_meaning}
+The eight decoders are statistically \emph{indistinguishable} on raw logical error
+for a distance-$d$ repetition code in these regimes---as expected, since every
+reasonable decoder is close to the optimal coset leader and finite-sample noise
+dominates the residual gaps. We therefore make \emph{no} accuracy-superiority
+claim. The genuine, separable contributions are: (i)~the framework---a whole
+decoder family on one defect-graph interface under structured noise with honest
+CIs; (ii)~selective decoding---abstention cuts committed logical error
+several-fold for a moderate coverage cost; and (iii)~calibration as a first-class
+metric---ECE spans $8\times$ and is decoupled from sophistication. Limitations are
+stated plainly in Sec.~\ref{sec:limitations}: toy codes only (repetition code;
+surface-\emph{like} toy, not a stabilizer-exact surface code), simulated
+structured noise (not hardware syndromes), differences within noise on raw error,
+a single distance, lightweight learned models, and a single author/environment.
+Extending to a full surface code at scale, to hardware syndromes, and to a
+distance-scaling (sub-threshold) study---while keeping selectivity and calibration
+first-class---is the natural next step.
 
 \end{document}

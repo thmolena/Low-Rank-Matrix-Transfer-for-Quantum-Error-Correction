@@ -1,4 +1,11 @@
-"""YAML experiment configuration."""
+"""YAML experiment configuration (the run knobs of Methods, "Experimental protocol").
+
+A :class:`Config` fixes the code, distance, noise regimes, physical error rate
+``p_eval``, the threshold-curve grid ``p_grid``, Monte-Carlo ``trials`` and
+neural ``train_trials``, the abstention threshold and the syndrome read-out
+rate. ``configs/smoke.yaml`` is the fast CI configuration; ``configs/full.yaml``
+is the reported scale (distance 9, 40,000 trials/regime) quoted in the paper.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

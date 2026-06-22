@@ -33,18 +33,18 @@
   "provenance": {
     "seed": 0,
     "command": "scripts/run.py --config configs/full.yaml --out results",
-    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
     "versions": {
-      "python": "3.11.15",
-      "numpy": "2.4.2",
+      "python": "3.13.12",
+      "numpy": "2.4.3",
       "scipy": "1.17.1",
       "networkx": "3.6.1",
       "sklearn": "1.8.0",
       "matplotlib": "3.10.8"
     },
-    "timestamp_utc": "2026-06-22T20:58:57Z",
-    "runtime_sec": 259.9246,
-    "peak_memory_mb": 327.05
+    "timestamp_utc": "2026-06-22T21:57:06Z",
+    "runtime_sec": 223.9955,
+    "peak_memory_mb": 338.69
   },
   "p_grid": [
     0.01,

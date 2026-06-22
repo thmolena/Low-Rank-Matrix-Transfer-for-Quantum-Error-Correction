@@ -8,9 +8,13 @@ decoder can be dropped in). No heavyweight quantum dependency.
 
 ## Install
 ```bash
-conda env create -f environment.yml && conda activate topoqec   # or:
-pip install -r requirements.txt && pip install -e .
+conda env create -f environment.yml && conda activate topoqec
+pip install -e .          # install topoqec from pyproject.toml (core deps +
+                          # the topoqec-reproduce entry point)
+# pip install -e .[gpu]   # optional accelerated backend (torch)
 ```
+The scripts also prepend `src/` to `sys.path` via a bootstrap, so `export
+PYTHONPATH=src` works without an editable install if you prefer.
 
 ## Reproduce
 ```bash
@@ -52,4 +56,4 @@ decoder; and the `automorphism_invariant` integrity flag. It is the single sourc
 for every table, figure and macro.
 
 All experiments are reproducible on commodity hardware; runtime and memory are reported for each benchmark.
-A from-basics explanation of the stabilizer, graph, and decoder objects is in `THEORY.txt`.
+A from-basics explanation of the stabilizer, graph, and decoder objects is in `src/topoqec/foundations.py`.

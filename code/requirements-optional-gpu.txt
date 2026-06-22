@@ -1,8 +1,0 @@
-# Optional accelerated backends. The CPU reference runs everything without
-# these; they enable larger-scale runs and a learned graph decoder.
-#   torch            -- GNN syndrome decoder + RL decoder-selection policy
-#   cuquantum-python -- GPU stabilizer / circuit-level noise sampling at scale
-#   torch-geometric  -- message-passing GNN layers on the Tanner / defect graph
-torch>=2.0
-# cuquantum-python>=23.10   # requires CUDA-capable GPU
-# torch-geometric>=2.4

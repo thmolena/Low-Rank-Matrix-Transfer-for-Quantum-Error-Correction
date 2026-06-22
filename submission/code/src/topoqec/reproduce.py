@@ -29,7 +29,7 @@ def _sync_submission() -> None:
     for path in (code / "figures").glob("*"):
         if path.suffix.lower() in {".pdf", ".png"}:
             shutil.copy2(path, submission / "figures" / path.name)
-    for name in ("main_results.tex", "summary_full.json"):
+    for name in ("main_results.tex",):
         src = code / "results" / name
         if src.exists():
             shutil.copy2(src, submission / "tables" / name)

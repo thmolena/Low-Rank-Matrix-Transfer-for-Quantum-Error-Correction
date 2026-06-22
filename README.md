@@ -93,9 +93,7 @@ and the risk-coverage curve are written to `results/summary.json` and plotted in
     ├── Makefile                One-word targets: install · test · demo · tables · figures · audit · full-run
     ├── README.md               Code-artifact quickstart and layout
     ├── environment.yml         Conda environment (CPU-only)
-    ├── requirements.txt        pip dependencies (numpy · scipy · networkx · scikit-learn · matplotlib)
-    ├── requirements-optional-gpu.txt   Optional accelerated backends (PyG · cuQuantum); never required
-    ├── pyproject.toml          Package metadata / editable install
+    ├── pyproject.toml          Package metadata / source-tree execution
     ├── .github/workflows/smoke.yml     CI: install + test + demo on every push
     ├── src/topoqec/            The library (see file-by-file table below)
     ├── scripts/                Thin command-line entry points around the library
@@ -165,7 +163,7 @@ JavaScript, so the logical error rate you see on the page is the same math as th
 ## GPU / acceleration note
 
 The reference implementation is **CPU-only and runs everywhere**. The architecture exposes
-optional accelerated backends ([`code/requirements-optional-gpu.txt`](code/requirements-optional-gpu.txt)):
+optional accelerated backends that can be installed separately:
 a **PyTorch-Geometric** message-passing graph decoder as a drop-in for the syndrome→coset
 head, **cuQuantum** for circuit-level stabilizer / noise sampling at larger distances, and
 GPU-batched Monte-Carlo over the decoder family. None are required to reproduce the results.

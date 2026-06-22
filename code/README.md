@@ -8,9 +8,12 @@ decoder can be dropped in). No heavyweight quantum dependency.
 
 ## Install
 ```bash
-conda env create -f environment.yml && conda activate topoqec   # or:
-pip install -r requirements.txt && pip install -e .
+conda env create -f environment.yml && conda activate topoqec
+pip install -e .          # install topoqec from pyproject.toml (core deps)
+# pip install -e .[gpu]   # optional accelerated backend (torch)
 ```
+The scripts also prepend `src/` to `sys.path` via a bootstrap, so `export
+PYTHONPATH=src` works without an editable install if you prefer.
 
 ## Reproduce
 ```bash
