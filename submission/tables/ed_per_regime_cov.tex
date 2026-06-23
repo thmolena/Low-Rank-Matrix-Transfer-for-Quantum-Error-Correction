@@ -1,0 +1,16 @@
+\begin{tabular}{lccccc}
+\toprule
+ & \multicolumn{5}{c}{Coverage at fixed abstention threshold $\tau=0.5$} \\
+\cmidrule(lr){2-6}
+Decoder & i.i.d. & biased & burst & correlated & meas.\ error \\
+\midrule
+majority  & 1.00000 & 1.00000 & 1.00000 & 1.00000 & 1.00000 \\
+matching  & 0.66693 & 0.27968 & 0.63665 & 0.63728 & 0.50358 \\
+bp        & 0.98988 & 0.90070 & 0.89023 & 0.88548 & 0.90805 \\
+topology  & 0.79428 & 0.41158 & 0.88260 & 0.90910 & 0.70803 \\
+lookup    & 1.00000 & 1.00000 & 1.00000 & 1.00000 & 1.00000 \\
+neural    & 1.00000 & 1.00000 & 1.00000 & 1.00000 & 1.00000 \\
+fused     & 1.00000 & 1.00000 & 1.00000 & 1.00000 & 1.00000 \\
+rl        & 0.78183 & 0.51650 & 0.68658 & 0.67973 & 0.64948 \\
+\bottomrule
+\end{tabular}

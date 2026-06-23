@@ -50,10 +50,11 @@ A Topology-Aware Decoder-Family Benchmark under Structured Noise}
 \maketitle
 
 \begin{abstract}
-A quantum error-correcting code only protects information if its \emph{decoder} maps a measured syndrome to the right recovery---quickly, and under the \emph{structured} noise that real hardware exhibits: bias, spatial bursts, neighbour correlations and faulty syndrome read-out. Most decoder studies optimise a single number, the logical error rate, and report it under independent-and-identically-distributed (i.i.d.) noise. We argue that two further axes are at least as important for deployable decoding and are usually treated as afterthoughts: the ability to \emph{abstain} when a decoder is unsure (selective decoding), and the \emph{calibration} of the confidence that drives such abstention. We build a unified, reproducible benchmark that evaluates a full decoder family---an optimal lookup leader, majority vote, minimum-weight matching, belief propagation, a learned neural coset selector, a topology-feature decoder, a confidence-fused decoder, and a reinforcement-learning (contextual-bandit) selector---across five structured-noise regimes on a distance-$d$ repetition code, treating logical error rate, expected calibration error (ECE) and the risk--coverage trade-off as first-class metrics with analytic 95\% confidence intervals. At reported scale (distance $9$, $40{,}000$ trials per regime, $200{,}000$ pooled shots per decoder), our central, deliberately conservative finding is that the decoders are \emph{statistically indistinguishable} on raw logical error rate (means \sync{0.1516}--\sync{0.1540}, 95\% confidence intervals $\approx\pm\sync{0.0016}$; the best-to-worst spread of $\sync{0.0024}$ is below one full interval width), so claims of one decoder ``beating'' another are not supported by the data. The genuine, separable contributions live elsewhere: (i)~a framework and audit discipline that compares the whole decoder family under structured noise on a single defect-graph interface; (ii)~abstention, which under selective decoding drives matching's committed logical error from \sync{0.1529} at full coverage down to \sync{0.0758} at \sync{0.55} coverage and \sync{0.0099} at \sync{0.25} coverage; and (iii)~calibration, where ECE varies eight-fold across decoders and is uncorrelated with sophistication---the lowest ECE belongs to the lightweight \emph{neural} coset selector (\sync{0.0317}), while plain minimum-weight \emph{matching} is the worst calibrated (\sync{0.2608}). Notably, this contradicts a natural intuition (and a claim in the project's own README) that the fused decoder is best calibrated; we report the artifact's numbers, not the intuition. We frame the work as a calibrated, selective-decoding benchmark, not a superiority claim.
+A quantum error-correcting code protects information only if its \emph{decoder} maps a measured syndrome to the right recovery under the \emph{structured} noise that real hardware exhibits: bias, spatial bursts, neighbour correlations and faulty syndrome read-out. Most decoder studies optimise a single number, the logical error rate, under independent-and-identically-distributed (i.i.d.) noise. We argue that two further axes matter at least as much for deployable decoding yet are usually treated as afterthoughts: the ability to \emph{abstain} when a decoder is unsure (selective decoding), and the \emph{calibration} of the confidence that gates abstention. We build a unified, reproducible benchmark that evaluates a family of eight decoders---spanning optimal lookup, classical matching and belief propagation, and learned neural and reinforcement-learning selectors---across five structured-noise regimes on a distance-$d$ repetition code, treating logical error rate, expected calibration error (ECE) and the risk--coverage trade-off as first-class metrics with analytic 95\% confidence intervals. At our reported scale (distance $9$; $40{,}000$ trials per regime, $200{,}000$ pooled shots per decoder), the decoders are \emph{statistically indistinguishable} on raw logical error (means \sync{0.1516}--\sync{0.1540}, 95\% intervals $\approx\pm\sync{0.0016}$; the \sync{0.0024} best-to-worst spread is below one interval width), so claims that one decoder ``beats'' another are not supported. The separable contributions lie elsewhere: (i)~a framework comparing the whole family under structured noise on one defect-graph interface; (ii)~abstention, which drives matching's committed logical error from \sync{0.1529} at full coverage to \sync{0.0757} at \sync{0.55} coverage and \sync{0.0099} at \sync{0.25} coverage; and (iii)~calibration, which varies eight-fold across decoders and is uncorrelated with sophistication---lowest for the lightweight neural selector (\sync{0.0317}), worst for plain matching (\sync{0.2608}), contradicting a natural intuition that the fused decoder is best calibrated. We report the artifact's numbers, not the intuition, and frame the work as a calibrated, selective-decoding benchmark, not a superiority claim.
 \end{abstract}
 
 % ============================================================
+\section{Introduction}
 \label{sec:introduction}
 
 Quantum error correction (QEC) protects logical information by encoding it redundantly across many physical qubits and repeatedly measuring stabilizer operators, whose outcomes form a \emph{syndrome}~\cite{shor1995scheme,nielsen2010quantum,terhal2015quantum}. Topological codes---most prominently Kitaev's toric and surface codes~\cite{kitaev2003fault,dennis2002topological,fowler2012surface}---are the leading candidates for scalable fault tolerance, and recent hardware has demonstrated that scaling such a code can suppress the logical error rate below the physical one~\cite{google2023suppressing}. The component that turns a syndrome into a correction is the \emph{decoder}, and it is the part of the stack where classical algorithms and, increasingly, machine learning meet the physics of the device.
@@ -66,7 +67,7 @@ Two facts motivate this paper. First, hardware noise is not i.i.d. It is \emph{s
 We treat decoding as a problem on the code's \emph{defect graph} and build a unified, fully reproducible benchmark with three properties usually kept separate. (1)~\emph{Breadth}: a single \texttt{decode(syndrome)$\,\to\,$(correction, confidence)} interface hosts eight decoders spanning the textbook-to-learned spectrum, evaluated across five structured-noise regimes. (2)~\emph{Selectivity}: every decoder can abstain, so we report risk--coverage curves, not just a single error rate. (3)~\emph{Calibration}: expected calibration error is a first-class output alongside the logical error rate, with analytic 95\% confidence intervals so that statistical significance is visible rather than assumed.
 
 \paragraph{What we claim, and what we do not.}
-We are deliberately conservative. On the repetition code and the regimes we study, at reported scale the eight decoders' logical error rates lie within each other's confidence intervals (Sec.~\ref{sec:headline}); we therefore do \emph{not} claim that any decoder beats another on raw accuracy, and we say so explicitly. What the benchmark does establish is (i)~that abstention buys a large, monotone reduction in committed logical error---matching's committed risk falls from \sync{0.1529} at full coverage to \sync{0.0758} at \sync{0.55} coverage and \sync{0.0099} at \sync{0.25} coverage (Sec.~\ref{sec:risk_coverage})---and (ii)~that calibration quality is \emph{not} predicted by decoder sophistication: ECE ranges from \sync{0.0317} (the lightweight neural coset selector) to \sync{0.2608} (plain minimum-weight matching), an eight-fold spread with no monotone relationship to decoder complexity. The contribution is the framework, the selective/calibrated lens, and the honest accounting---not a new state-of-the-art error rate. This audit ethos is enforced in code: a readiness gate rejects any reported number that does not trace to a generated artifact and rejects forbidden absolute-superiority phrasing.
+We are deliberately conservative. On the repetition code and the regimes we study, at reported scale the eight decoders' logical error rates lie within each other's confidence intervals (Sec.~\ref{sec:headline}); we therefore do \emph{not} claim that any decoder beats another on raw accuracy, and we say so explicitly. What the benchmark does establish is (i)~that abstention buys a large, monotone reduction in committed logical error---matching's committed risk falls from \sync{0.1529} at full coverage to \sync{0.0757} at \sync{0.55} coverage and \sync{0.0099} at \sync{0.25} coverage (Sec.~\ref{sec:risk_coverage})---and (ii)~that calibration quality is \emph{not} predicted by decoder sophistication: ECE ranges from \sync{0.0317} (the lightweight neural coset selector) to \sync{0.2608} (plain minimum-weight matching), an eight-fold spread with no monotone relationship to decoder complexity. The contribution is the framework, the selective/calibrated lens, and the honest accounting---not a new state-of-the-art error rate. This audit ethos is enforced in code: a readiness gate rejects any reported number that does not trace to a generated artifact and rejects forbidden absolute-superiority phrasing.
 
 \subsection{Contributions}
 \label{sec:contributions}
@@ -78,39 +79,350 @@ We are deliberately conservative. On the repetition code and the regimes we stud
 \end{enumerate}
 
 % ============================================================
-\subsection{Theory: selective decoding risk}
-\label{sec:selective_theory}
+\section{Theory}
+\label{sec:theory}
 
-The risk--coverage view has a simple decision-theoretic guarantee when the
-confidence score is calibrated and monotone in the conditional success
-probability. This is the formal reason calibration is reported alongside error
-rate.
+This section makes precise, and proves in full, every structural claim that the
+benchmark relies on: the algebraic characterisation of the repetition syndrome
+and of logical failure (Sec.~\ref{sec:theory_code}); the optimality of the
+lookup/coset-leader decoder and the syndrome-consistency of the matching,
+majority and learned decoders (Sec.~\ref{sec:theory_decoders}); the
+exact equivalence between matching, majority and lookup on the line, which is the
+formal origin of the observed statistical tie (Sec.~\ref{sec:theory_tie});
+automorphism invariance of the logical error rate (Sec.~\ref{sec:theory_auto});
+the Bernoulli confidence interval and the indistinguishability criterion
+(Sec.~\ref{sec:theory_ci}); and the calibration--selectivity guarantees that
+justify reporting risk--coverage and ECE as first-class metrics
+(Sec.~\ref{sec:theory_selective}). Each result is tied to the experiment that
+illustrates it. The results are stated conservatively: they concern small,
+fully reproducible simulated benchmarks (a repetition code and a surface-like
+toy lattice) under simulated structured noise; they are not hardware syndromes,
+not a full surface code at scale, and not a claim of superiority over production
+decoders (Sec.~\ref{sec:limitations}).
 
-\begin{theorem}[Monotone selective risk under calibrated confidence]
-\label{thm:selective-risk}
-Let $F\in\{0,1\}$ be the logical-failure indicator for a decoder and let
-$C\in[0,1]$ be a confidence score such that
-$\Pr(F=0\mid C=c)=c$ almost surely. For a threshold $\tau$ with
-$\Pr(C\ge\tau)>0$, define committed risk
-$R(\tau)=\Pr(F=1\mid C\ge\tau)$. Then
-$R(\tau)=1-\mathbb{E}[C\mid C\ge\tau]$ and $R(\tau)$ is non-increasing as
-$\tau$ increases.
+\subsection{The repetition code: syndromes and logical failure}
+\label{sec:theory_code}
+
+We work over the binary field $\F_2=\{0,1\}$ with addition $\oplus$ (XOR) and the
+Hamming weight $\abs{x}=\sum_i x_i$ (number of nonzero coordinates). Fix a distance
+$d\ge 2$.
+
+\begin{definition}[Repetition code]
+\label{def:rep}
+The distance-$d$ repetition code has data space $\F_2^{d}$ and parity-check matrix
+$H\in\F_2^{(d-1)\times d}$ with rows $H_i$, $i=0,\dots,d-2$, given by
+$(H_i)_i=(H_i)_{i+1}=1$ and all other entries $0$. The \emph{syndrome} of an error
+$e\in\F_2^{d}$ is $s(e)=He\in\F_2^{d-1}$, i.e.\ $s_i(e)=e_i\oplus e_{i+1}$. The
+\emph{logical functional} is $L\colon\F_2^d\to\F_2$, $L(e)=\bigl(\sum_i e_i\bigr)\bmod 2$.
+The \emph{stabilizer group} is $\mathcal{S}=\ker H=\{x:Hx=0\}$. A correction $\hat c\in\F_2^d$
+applied to error $e$ \emph{succeeds} iff the residual $r=e\oplus\hat c$ satisfies
+$Hr=0$ and $L(r)=0$, and is a \emph{logical failure} otherwise.
+\end{definition}
+
+The map $H$ is the boundary operator of the one-dimensional chain complex whose
+$1$-cells are the $d$ data bits and whose $0$-cells are the $d-1$ links; the next
+lemma records the elementary facts that make the line picture exact.
+
+\begin{lemma}[Kernel, image and the endpoint structure of the syndrome]
+\label{lem:boundary}
+For the matrix $H$ of Definition~\ref{def:rep}:
+\begin{enumerate}[leftmargin=2em,label=(\roman*)]
+  \item $\ker H=\{0,\mathbf 1\}$, where $\mathbf 1=(1,\dots,1)$; in particular
+        $\dim_{\F_2}\ker H=1$ and $\mathcal{S}=\{0,\mathbf 1\}$.
+  \item $H$ has rank $d-1$, so $s\mapsto e$ is surjective onto $\F_2^{d-1}$: every
+        syndrome is realisable.
+  \item For any error $e$, the set $J=\{i:s_i(e)=1\}$ of lit checks is exactly the
+        set of links $i$ at which $e_i\neq e_{i+1}$, i.e.\ the \emph{boundaries}
+        between maximal constant runs of $e$. Consequently $\abs{J}$ is even iff
+        $e_0=e_{d-1}$, and the lit checks are the endpoints of the error chains.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(i) If $Hx=0$ then $x_i=x_{i+1}$ for all $i=0,\dots,d-2$, so $x$ is constant; the
+only constant vectors in $\F_2^d$ are $0$ and $\mathbf 1$. Both lie in $\ker H$:
+$H0=0$ trivially, and $(H\mathbf1)_i=1\oplus1=0$. Hence $\ker H=\{0,\mathbf1\}$ and
+its $\F_2$-dimension is $1$.
+
+(ii) By rank--nullity over $\F_2$, $\operatorname{rank}H=d-\dim\ker H=d-1$, which
+equals the number of rows, so the row space is all of $\F_2^{d-1}$ and $H$ is
+surjective.
+
+(iii) By definition $s_i(e)=e_i\oplus e_{i+1}=1$ iff $e_i\neq e_{i+1}$, which is
+precisely a boundary between a maximal run of equal values ending at $i$ and the
+next run starting at $i+1$. Writing $e$ as an alternating sequence of maximal
+constant runs, each internal boundary toggles the value, so the number of
+toggles between coordinate $0$ and coordinate $d-1$ has the same parity as
+$e_0\oplus e_{d-1}$; thus $\abs J=\sum_i(e_i\oplus e_{i+1})\equiv e_0\oplus e_{d-1}\pmod 2$,
+which is even iff $e_0=e_{d-1}$. Each ``$1$-run'' of $e$ contributes a lit check at
+each of its two ends (or a single lit check at an open boundary of the line),
+i.e.\ the lit checks mark chain endpoints.
+\end{proof}
+
+Lemma~\ref{lem:boundary} turns decoding into pairing endpoints on a line, the
+picture used by every defect-graph decoder in Sec.~\ref{sec:methods_decoders} and
+drawn in Fig.~\ref{fig:schematic}. The next proposition is the exact
+characterisation of ``the code protected the bit'' implemented in the runner.
+
+\begin{proposition}[Cosets and the failure dichotomy]
+\label{prop:coset}
+Two errors $e,e'$ have the same syndrome iff $e\oplus e'\in\{0,\mathbf1\}$. Hence each
+syndrome $s$ labels exactly one \emph{coset} $e_s\oplus\mathcal{S}$ of size $2$, whose two
+representatives have logical values $L(e_s)$ and $L(e_s)\oplus(d\bmod 2)$. A
+correction $\hat c$ with $H\hat c=s(e)$ succeeds iff $L(\hat c)=L(e)$; a correction with
+$H\hat c\neq s(e)$ always fails.
+\end{proposition}
+
+\begin{proof}
+$He=He'$ iff $H(e\oplus e')=0$ iff $e\oplus e'\in\ker H=\{0,\mathbf1\}$ by
+Lemma~\ref{lem:boundary}(i). Thus the fibre $H^{-1}(s)$ is the coset
+$e_s\oplus\{0,\mathbf1\}=\{e_s,\,e_s\oplus\mathbf1\}$, a set of size two. Its two members
+differ by $\mathbf1$, and $L(e_s\oplus\mathbf1)=L(e_s)\oplus L(\mathbf1)=L(e_s)\oplus(d\bmod2)$
+because $L$ is $\F_2$-linear and $L(\mathbf1)=\sum_i 1=d\bmod 2$.
+
+For the failure dichotomy, let $r=e\oplus\hat c$. If $H\hat c\neq s(e)=He$ then
+$Hr=H e\oplus H\hat c\neq 0$, so $r\notin\mathcal S$ and the correction fails by
+Definition~\ref{def:rep}. If $H\hat c=He$ then $Hr=0$, i.e.\ $r\in\{0,\mathbf1\}$; the
+residual is then a stabilizer, and success requires additionally $L(r)=0$. Since $L$
+is linear, $L(r)=L(e)\oplus L(\hat c)$, so $L(r)=0\iff L(\hat c)=L(e)$.
+\end{proof}
+
+\subsection{Decoder optimality and syndrome-consistency}
+\label{sec:theory_decoders}
+
+Fix the i.i.d.\ bit-flip channel at physical rate $p<\tfrac12$: $\Pr(e)=p^{\abs e}(1-p)^{d-\abs e}$.
+
+\begin{theorem}[The coset-leader (lookup) decoder is maximum-likelihood and minimises logical error]
+\label{thm:lookup}
+For $p<\tfrac12$, the decoder that on syndrome $s$ outputs a minimum-Hamming-weight
+representative of the fibre $H^{-1}(s)$ (a \emph{coset leader}) is a maximum-likelihood
+decoder for the i.i.d.\ channel, and among all decoders it minimises the probability of
+logical failure on that channel.
 \end{theorem}
 
 \begin{proof}
-By calibration, $\Pr(F=1\mid C)=1-C$. Conditioning on $C\ge\tau$ and using the
-tower property gives
-$R(\tau)=\mathbb{E}[\Pr(F=1\mid C)\mid C\ge\tau]=1-\mathbb{E}[C\mid C\ge\tau]$.
-If $\tau_2>\tau_1$, the conditional distribution under $C\ge\tau_2$ is the upper
-tail of the distribution under $C\ge\tau_1$, so its conditional mean cannot be
-smaller. Hence $R(\tau_2)\le R(\tau_1)$.
+Because $p<\tfrac12$ we have $0<\tfrac{p}{1-p}<1$, so $\Pr(e)=(1-p)^{d}\bigl(\tfrac{p}{1-p}\bigr)^{\abs e}$
+is a strictly decreasing function of $\abs e$. Hence among all errors consistent with an
+observed syndrome $s$, i.e.\ all $e\in H^{-1}(s)$, the most likely is exactly the one of
+least weight; outputting a coset leader $\hat c=\arg\min_{e\in H^{-1}(s)}\abs e$ therefore
+maximises $\Pr(e\mid s)\propto\Pr(e)\mathbf 1[He=s]$. This is maximum likelihood.
+
+For optimality of the \emph{logical} error, condition on the observed syndrome $s$. By
+Proposition~\ref{prop:coset} the true error lies in a coset of size two with the two members
+carrying the two possible logical values; the residual is a stabilizer for \emph{any} decoder
+that returns some $\hat c\in H^{-1}(s)$ (a decoder returning $\hat c\notin H^{-1}(s)$ fails with
+conditional probability $1$ and is never better). Conditioned on $s$, success requires
+$L(\hat c)=L(e)$; the posterior probability of the logical class $\ell\in\F_2$ is
+$\Pr(L(e)=\ell\mid s)\propto\sum_{e\in H^{-1}(s),\,L(e)=\ell}\Pr(e)$. The Bayes-optimal rule
+picks the more probable logical class. The coset leader has weight no larger than the other
+representative (which differs by $\mathbf1$ and so has weight $d-\abs{\text{leader}}\ge\abs{\text{leader}}$
+when the leader weight is $\le d/2$, with equality only at $d/2$); since $\Pr(\cdot)$ is strictly
+decreasing in weight, the leader's logical class is the maximum-a-posteriori class, except in the
+measure-of-ties boundary case $\abs{\text{leader}}=d/2$ where the two classes are exactly equiprobable
+and any choice is optimal. Thus the coset-leader rule realises the Bayes-optimal (minimum logical
+error) decision for every syndrome and hence minimises the overall logical failure probability.
 \end{proof}
 
-The theorem is not assumed in the experiments; the empirical confidence scores
-are imperfect, so the risk--coverage curves and ECE quantify how far each
-decoder is from this ideal selective-decoding behaviour.
+This is why \texttt{lookup} is the yardstick of Table~\ref{tab:main}: no decoder on
+the i.i.d.\ channel can beat it, which already caps how far any competitor's accuracy
+can be from it. We next show the heuristic decoders never violate the basic
+constraint, so the only freedom left is the logical bit and the confidence.
 
-The results are stated conservatively. They are produced on small, fully reproducible simulated benchmarks (a repetition code and a surface-like toy lattice) under simulated structured noise; they are not hardware syndromes, not a full surface code at scale, and not a claim of superiority over production decoders. Those are future targets, not present facts (Sec.~\ref{sec:limitations}).
+\begin{proposition}[Syndrome-consistency of matching, majority and the learned decoders]
+\label{prop:consistency}
+On the line, each of the matching, majority, neural, topology and fused decoders of
+Sec.~\ref{sec:methods_decoders} returns a correction $\hat c$ with $H\hat c=s$ for every
+input syndrome $s$. Consequently, by Proposition~\ref{prop:coset}, each fails on a given
+shot iff it selects the wrong logical class, never because of an unsatisfied syndrome.
+\end{proposition}
+
+\begin{proof}
+It suffices to exhibit, for each decoder, a correction in $H^{-1}(s)$. \emph{Majority:}
+the cumulative XOR $c_j=\bigoplus_{i<j}s_i$ defines a chain with $c_{j}\oplus c_{j+1}=s_j$,
+i.e.\ $Hc=s$; the decoder returns this $c$ or $c\oplus\mathbf1$, both in $H^{-1}(s)$ by
+Lemma~\ref{lem:boundary}(i). \emph{Matching:} pairing the lit checks $J$ into chains and
+flipping the data bits strictly between paired endpoints produces an error whose only
+toggles are at the elements of $J$ (with a boundary closure supplying the missing endpoint
+when $\abs J$ is odd, which by Lemma~\ref{lem:boundary}(iii) corresponds to $e_0\neq e_{d-1}$);
+hence its syndrome is exactly $s$. \emph{Neural/topology/fused:} by construction each starts
+from a syndrome-determined base chain $c_0\in H^{-1}(s)$ (the same prefix chain as majority)
+and only ever adds a stabilizer $\in\{0,\mathbf1\}$ to choose the logical class, which does not
+change the syndrome since $H\mathbf1=0$. Thus every output lies in $H^{-1}(s)$. The second claim
+is immediate from Proposition~\ref{prop:coset}: with $H\hat c=s=He$, failure occurs iff
+$L(\hat c)\neq L(e)$.
+\end{proof}
+
+The neural decoder of Sec.~\ref{sec:methods_decoders} therefore reduces decoding to a single
+binary classification (the logical coset), which is why its confidence---a predicted class
+probability---is approximately calibrated (Sec.~\ref{sec:calibration}, Fig.~\ref{fig:risk_coverage}).
+
+\subsection{Why the decoders tie: exact agreement on the line}
+\label{sec:theory_tie}
+
+\begin{theorem}[Matching, majority and lookup coincide on the repetition line]
+\label{thm:tie}
+On the distance-$d$ repetition code, for every syndrome $s$ the lookup, majority and
+matching decoders return corrections in the \emph{same} coset $H^{-1}(s)$ and select the
+\emph{same} logical class as the minimum-weight coset leader, except on the measure-zero
+set of syndromes whose coset leader has weight exactly $d/2$. Hence on the i.i.d.\ channel
+all three have identical logical error rate, and any decoder of Proposition~\ref{prop:consistency}
+that breaks ties toward the lighter coset agrees with them.
+\end{theorem}
+
+\begin{proof}
+By Proposition~\ref{prop:consistency} all three decoders output members of $H^{-1}(s)$, so they
+agree on the coset; only the logical class (equivalently, the choice between $c$ and $c\oplus\mathbf1$)
+can differ. The lookup decoder picks the lighter of $\{c,c\oplus\mathbf1\}$ by definition. The majority
+decoder explicitly compares $\abs c$ and $\abs{c\oplus\mathbf1}=d-\abs c$ and returns the lighter, so it
+picks the same representative whenever $\abs c\neq d/2$. The matching decoder pairs the lit checks
+$J$ left-to-right on the line; on a one-dimensional line the unique perfect pairing of ordered
+endpoints into non-crossing intervals minimises the total flipped length $\sum_{\text{pairs}}(j_{\text{right}}-j_{\text{left}})$,
+which equals the Hamming weight of the produced chain, so matching also returns a minimum-weight
+representative, i.e.\ the lighter of $\{c,c\oplus\mathbf1\}$, again whenever $\abs c\neq d/2$. Therefore
+all three select the same logical class off the tie set $\{\,s:\abs{\text{leader}(s)}=d/2\,\}$, and on
+that set Theorem~\ref{thm:lookup} shows the two classes are equiprobable so any choice has the same
+conditional failure probability. Equal per-syndrome conditional failure for every syndrome implies
+equal logical error rate on the i.i.d.\ channel.
+\end{proof}
+
+Theorem~\ref{thm:tie} is the analytic origin of the central empirical finding: the
+decoders are \emph{statistically indistinguishable} on raw logical error
+(Table~\ref{tab:main}, Fig.~\ref{fig:threshold}); on the line they are, up to a
+negligible tie set and finite-sample noise, the \emph{same} decision rule, so the
+$\sync{0.0024}$ best-to-worst spread is residual sampling fluctuation, not signal.
+
+\subsection{Automorphism invariance of the logical error rate}
+\label{sec:theory_auto}
+
+\begin{definition}[Cyclic relabeling]
+\label{def:cyclic}
+For a shift $t\in\{0,\dots,d-1\}$ let $\rho_t\colon\F_2^d\to\F_2^d$ be the cyclic shift
+$(\rho_t e)_i=e_{(i-t)\bmod d}$. A decoder $\calD$ is \emph{cyclically equivariant} if
+$\calD(s(\rho_t e))=\rho_t(\calD(s(e)))$ for all $e,t$.
+\end{definition}
+
+\begin{theorem}[Automorphism invariance]
+\label{thm:auto}
+Let the noise distribution be cyclically invariant ($\Pr(\rho_t e)=\Pr(e)$ for all $t$),
+as holds for the i.i.d.\ channel. If a decoder $\calD$ is cyclically equivariant, then its
+logical error rate is invariant under cyclic relabeling: for every shift $t$,
+$\Pr_{e}\!\bigl[\calD\text{ fails on }e\bigr]=\Pr_{e}\!\bigl[\calD\text{ fails on }\rho_t e\bigr]$.
+\end{theorem}
+
+\begin{proof}
+The logical functional is cyclic-invariant: $L(\rho_t e)=\sum_i e_{(i-t)\bmod d}=\sum_i e_i=L(e)$,
+since cyclic shift permutes the summands. The cyclic shift also commutes with the (cyclic) check
+structure, so $s(\rho_t e)=\pi_t\,s(e)$ for the induced shift $\pi_t$ on links. Let $F(e)=\mathbf1[\calD\text{ fails on }e]$.
+By equivariance $\calD(s(\rho_t e))=\rho_t\calD(s(e))$, and the residual transforms as
+$\rho_t e\oplus\calD(s(\rho_t e))=\rho_t\bigl(e\oplus\calD(s(e))\bigr)$. Since both $H$ and $L$ are
+cyclic-invariant in the sense above, the residual of the shifted problem is a stabilizer with zero
+logical value iff that of the original is; hence $F(\rho_t e)=F(e)$ pointwise. Taking expectations
+and using $\Pr(\rho_t e)=\Pr(e)$,
+\[
+\Pr[\calD\text{ fails on }\rho_t e]=\mathbb E_e[F(\rho_t e)]=\mathbb E_e[F(e)]=\Pr[\calD\text{ fails on }e].\qedhere
+\]
+\end{proof}
+
+The matching decoder is cyclically equivariant up to the boundary-closure convention, so its
+logical error rate is invariant under shifts $\{1,2,d/2\}$ to within Monte-Carlo tolerance; the
+run reports this as the \texttt{automorphism\_invariant} flag, which is \sync{true} at reported
+scale (Sec.~\ref{sec:per_regime}).
+
+\subsection{Honest intervals and statistical indistinguishability}
+\label{sec:theory_ci}
+
+\begin{proposition}[Bernoulli confidence interval and the tie criterion]
+\label{prop:ci}
+Let $F_1,\dots,F_n$ be i.i.d.\ Bernoulli$(p_L)$ failure indicators with empirical mean
+$\hat p=\frac1n\sum_k F_k$. Then $\mathbb E[\hat p]=p_L$, $\operatorname{Var}(\hat p)=p_L(1-p_L)/n$,
+and the half-width $\mathrm{ci}_{95}=1.96\sqrt{\hat p(1-\hat p)/n}$ is a consistent estimate of the
+$95\%$ normal interval half-width. If two decoders have empirical means $\hat p_A,\hat p_B$ with
+$\abs{\hat p_A-\hat p_B}\le\mathrm{ci}_{95}$, the difference is not significant at the $95\%$ level:
+the value $p_{L,A}=p_{L,B}$ is contained in the confidence set for the difference.
+\end{proposition}
+
+\begin{proof}
+Each $F_k\in\{0,1\}$ has $\mathbb E[F_k]=p_L$ and $\operatorname{Var}(F_k)=p_L(1-p_L)$. By linearity
+$\mathbb E[\hat p]=p_L$, and by independence $\operatorname{Var}(\hat p)=\frac1{n^2}\sum_k\operatorname{Var}(F_k)=p_L(1-p_L)/n$.
+The central limit theorem gives $\sqrt n(\hat p-p_L)\Rightarrow\mathcal N(0,p_L(1-p_L))$, and by the
+continuous-mapping / Slutsky theorem $\hat p(1-\hat p)\to p_L(1-p_L)$ in probability, so
+$\hat p\pm1.96\sqrt{\hat p(1-\hat p)/n}$ is an asymptotic $95\%$ interval for $p_L$. For two
+independent samples the difference $\hat p_A-\hat p_B$ has standard error
+$\sqrt{p_{L,A}(1-p_{L,A})/n+p_{L,B}(1-p_{L,B})/n}$; when the two rates are comparable this is at most
+$\sqrt2\,\mathrm{ci}_{95}/1.96$, so an observed gap no larger than a single $\mathrm{ci}_{95}$ lies well
+inside the two-sided $95\%$ acceptance region for $p_{L,A}=p_{L,B}$, i.e.\ the null of equality is not
+rejected.
+\end{proof}
+
+At $n=\sync{200{,}000}$ pooled shots the eight decoders span $\sync{0.1516}$--$\sync{0.1540}$ with
+$\mathrm{ci}_{95}\approx\sync{0.0016}$, so the $\sync{0.0024}$ spread is below one interval width and the
+decoders are statistically tied (Table~\ref{tab:main})---exactly the regime Theorem~\ref{thm:tie}
+predicts.
+
+\subsection{Calibration gates selective decoding}
+\label{sec:theory_selective}
+
+The risk--coverage view has a decision-theoretic guarantee when the confidence score is
+calibrated. This is the formal reason calibration is reported alongside the error rate.
+
+\begin{definition}[Calibration and expected calibration error]
+\label{def:ece}
+A confidence $C\in[0,1]$ is \emph{perfectly calibrated} for failure indicator $F$ if
+$\Pr(F=0\mid C=c)=c$ for almost every $c$. The expected calibration error is
+$\mathrm{ECE}=\sum_{b=1}^{B}\frac{n_b}{n}\bigl\lvert\overline{\mathrm{conf}}_b-\overline{\mathrm{acc}}_b\bigr\rvert$,
+where the bins $b$ partition $[0,1]$, $\overline{\mathrm{conf}}_b$ is the mean confidence and
+$\overline{\mathrm{acc}}_b=1-\overline F_b$ the mean accuracy in bin $b$, and $n_b$ the bin count.
+\end{definition}
+
+\begin{lemma}[ECE vanishes under perfect calibration]
+\label{lem:ece}
+If $C$ is perfectly calibrated, then the population ECE $\sum_b\Pr(C\in b)\,\abs{\mathbb E[C\mid C\in b]-\Pr(F=0\mid C\in b)}$ is zero for every binning.
+\end{lemma}
+
+\begin{proof}
+Fix a bin $b$ with $\Pr(C\in b)>0$. By the tower property and perfect calibration,
+$\Pr(F=0\mid C\in b)=\mathbb E[\Pr(F=0\mid C)\mid C\in b]=\mathbb E[C\mid C\in b]$, so the
+per-bin gap $\abs{\mathbb E[C\mid C\in b]-\Pr(F=0\mid C\in b)}=0$. Summing over bins gives
+$\mathrm{ECE}=0$.
+\end{proof}
+
+Thus ECE is a genuine deviation-from-calibration measure: ``when the decoder says $0.8$, it is
+right $80\%$ of the time'' is exactly ECE $=0$. Empirically ECE spans an eight-fold range
+(\sync{0.0317}--\sync{0.2608}) and is uncorrelated with sophistication (Sec.~\ref{sec:calibration}).
+
+\begin{theorem}[Monotone selective risk under calibrated confidence]
+\label{thm:selective-risk}
+Let $F\in\{0,1\}$ be the logical-failure indicator and $C\in[0,1]$ a confidence with
+$\Pr(F=0\mid C=c)=c$ almost surely. For a threshold $\tau$ with $\Pr(C\ge\tau)>0$ define the
+committed risk $R(\tau)=\Pr(F=1\mid C\ge\tau)$ and coverage $G(\tau)=\Pr(C\ge\tau)$. Then
+$R(\tau)=1-\mathbb E[C\mid C\ge\tau]$, $G$ is non-increasing in $\tau$, and $R$ is non-increasing
+in $\tau$; equivalently, risk is a non-increasing function of decreasing coverage.
+\end{theorem}
+
+\begin{proof}
+By calibration and the tower property, $\Pr(F=1\mid C)=1-C$ almost surely, so
+\[
+R(\tau)=\mathbb E\bigl[\Pr(F=1\mid C)\mid C\ge\tau\bigr]=\mathbb E[\,1-C\mid C\ge\tau\,]=1-\mathbb E[C\mid C\ge\tau].
+\]
+Monotonicity of coverage is immediate: if $\tau_2>\tau_1$ then $\{C\ge\tau_2\}\subseteq\{C\ge\tau_1\}$,
+so $G(\tau_2)=\Pr(C\ge\tau_2)\le\Pr(C\ge\tau_1)=G(\tau_1)$. For the risk, we show
+$\mathbb E[C\mid C\ge\tau]$ is non-decreasing in $\tau$. Let $\tau_2>\tau_1$ and write
+$A=\{C\ge\tau_1\}$, $A'=\{C\ge\tau_2\}\subseteq A$, and $A\setminus A'=\{\tau_1\le C<\tau_2\}$. On
+$A\setminus A'$ we have $C<\tau_2$, while on $A'$ we have $C\ge\tau_2$; hence
+$\mathbb E[C\mid A']\ge\tau_2>\mathbb E[C\mid A\setminus A']$ whenever $\Pr(A\setminus A')>0$. The mean over
+$A$ is the occupancy-weighted average of these two conditional means,
+$\mathbb E[C\mid A]=w\,\mathbb E[C\mid A']+(1-w)\,\mathbb E[C\mid A\setminus A']$ with
+$w=\Pr(A'\mid A)\in[0,1]$, and a weighted average of two numbers never exceeds the larger; therefore
+$\mathbb E[C\mid A']\ge\mathbb E[C\mid A]$, i.e.\ $\mathbb E[C\mid C\ge\tau_2]\ge\mathbb E[C\mid C\ge\tau_1]$.
+Consequently $R(\tau_2)=1-\mathbb E[C\mid C\ge\tau_2]\le 1-\mathbb E[C\mid C\ge\tau_1]=R(\tau_1)$. Since raising
+$\tau$ lowers coverage and lowers risk, risk is non-increasing as coverage shrinks.
+\end{proof}
+
+The theorem is not assumed in the experiments; the empirical confidences are imperfect, so the
+risk--coverage curves and ECE quantify how far each decoder is from this ideal. The predicted
+monotone fall is exactly what Fig.~\ref{fig:risk_coverage} and the runner's monotonicity check
+verify: matching's committed error falls from \sync{0.1529} at full coverage to \sync{0.0099} at
+\sync{0.25} coverage (Sec.~\ref{sec:risk_coverage}).
 
 % ============================================================
 \section{Results}
@@ -149,7 +461,7 @@ This is the expected behaviour for a distance-$d$ repetition code in these regim
 
 \begin{table}[htbp]
     \centering
-    \caption{Headline decoder comparison on the repetition code at $p=0.12$, pooled over the five structured-noise regimes (distance $9$, $40{,}000$ trials per regime, $n=200{,}000$ shots per decoder; reported scale). Columns: logical error rate, its $\pm$95\% confidence interval, and expected calibration error (ECE). Rows are sorted by logical error rate; $\star$ marks the lowest. The logical error rates lie within one confidence-interval width of one another (statistically indistinguishable), whereas ECE spans an eight-fold range and is uncorrelated with both error rate and decoder sophistication. Table content is generated verbatim from \texttt{summary.json}.}
+    \caption{\textbf{Headline decoder comparison: tied on accuracy, eight-fold apart on calibration.} Results on the repetition code at $p=0.12$, pooled over the five structured-noise regimes (distance $9$, $40{,}000$ trials per regime, $n=200{,}000$ shots per decoder; reported scale). Columns: logical error rate, its $\pm$95\% confidence interval, and expected calibration error (ECE). Rows are sorted by logical error rate; $\star$ marks the lowest. The logical error rates lie within one confidence-interval width of one another (statistically indistinguishable), whereas ECE spans an eight-fold range and is uncorrelated with both error rate and decoder sophistication. Table content is generated verbatim from \texttt{summary.json}.}
     \label{tab:main}
     \input{tables/main_results.tex}
 \end{table}
@@ -157,7 +469,7 @@ This is the expected behaviour for a distance-$d$ repetition code in these regim
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.72\textwidth]{fig_threshold.pdf}
-    \caption{Logical error rate versus physical error rate $p$ for the core decoders on the repetition code under i.i.d.\ noise. All decoders track the optimal \texttt{lookup} leader closely and stay below the break-even line $p_L=p$; the curves overlap, consistent with the statistically indistinguishable logical error rates of Table~\ref{tab:main}. Lines are the mean logical error rate over $n=\sync{40{,}000}$ Monte-Carlo trials per point (reported scale) and shaded bands are analytic $95\%$ Bernoulli confidence intervals ($1.96\sqrt{\hat p(1-\hat p)/n}$); the bands overlap throughout. Generated from the run artifact \texttt{summary.json}.}
+    \caption{\textbf{The decoders are indistinguishable on raw accuracy across the physical-error grid.} Logical error rate versus physical error rate $p$ for the core decoders on the repetition code under i.i.d.\ noise. All decoders track the optimal \texttt{lookup} leader closely and stay below the break-even line $p_L=p$; the curves overlap, consistent with the statistically indistinguishable logical error rates of Table~\ref{tab:main}. Lines are the mean logical error rate over $n=\sync{40{,}000}$ Monte-Carlo trials per point (reported scale) and shaded bands are analytic $95\%$ Bernoulli confidence intervals ($1.96\sqrt{\hat p(1-\hat p)/n}$); the bands overlap throughout. Generated from the run artifact \texttt{summary.json}.}
     \label{fig:threshold}
 \end{figure}
 
@@ -171,7 +483,7 @@ The per-regime coverage values (Table~\ref{tab:main}, and Methods) make the mech
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.72\textwidth]{fig_risk_coverage.pdf}
-    \caption{Selective decoding. Risk (logical error rate on committed shots) versus coverage (fraction of syndromes decoded) for the fused and matching decoders, obtained by sweeping the abstention threshold (full coverage on the left). Risk falls monotonically as coverage shrinks: abstaining on low-confidence syndromes trades coverage for reliability. Lines are means over the $n=\sync{200{,}000}$ pooled shots per decoder (reported scale) and shaded bands are analytic $95\%$ Bernoulli confidence intervals of the committed error rate, whose effective sample size at each point is (coverage~$\times$~pooled shots). Generated from the run artifact \texttt{summary.json}.}
+    \caption{\textbf{Abstention buys large, monotone reliability gains.} Risk (logical error rate on committed shots) versus coverage (fraction of syndromes decoded) for the fused and matching decoders, obtained by sweeping the abstention threshold (full coverage on the left). Risk falls monotonically as coverage shrinks: abstaining on low-confidence syndromes trades coverage for reliability. Lines are means over the $n=\sync{200{,}000}$ pooled shots per decoder (reported scale) and shaded bands are analytic $95\%$ Bernoulli confidence intervals of the committed error rate, whose effective sample size at each point is (coverage~$\times$~pooled shots). Generated from the run artifact \texttt{summary.json}.}
     \label{fig:risk_coverage}
 \end{figure}
 
@@ -187,6 +499,67 @@ This ordering directly contradicts a natural intuition---and an explicit claim i
 \label{sec:per_regime}
 
 The per-(regime, decoder) breakdown (Methods, Sec.~\ref{sec:methods_perregime}) confirms that the dominant axis of variation is the \emph{noise regime}, not the decoder. At reported scale the per-regime logical error rises from $\approx\sync{0.002}$ under i.i.d.\ noise to $\approx\sync{0.043}$ (biased), $\approx\sync{0.17}$ (burst), $\approx\sync{0.21}$ (correlated) and $\approx\sync{0.34}$ (measurement error) for essentially all decoders---a more than hundred-fold change driven entirely by structure, with the syndrome-read-out-noise regime by far the hardest. Within a regime the decoders again cluster within their (now tight) confidence intervals: under correlated noise \texttt{fused} reaches \sync{0.2062} and \texttt{topology} \sync{0.2078} against majority's \sync{0.2105}, and under measurement error \texttt{lookup} reaches \sync{0.3315} and \texttt{fused} \sync{0.3324} against majority's \sync{0.3401}---small, regime-dependent gaps that are at most marginally significant and are consistent with topology- or read-out-aware decoders helping slightly where structure exists. The integrity flag \texttt{automorphism\_invariant} is \sync{true}, confirming the matching decoder respects the code's cyclic symmetry to within statistical tolerance.
+
+\subsection{Extended data}
+\label{sec:extended_data}
+
+The aggregate numbers of Table~\ref{tab:main} pool over all five regimes. The single
+source-of-truth artifact \texttt{summary.json} also stores the full per-(regime,
+decoder) breakdown and the swept curves, which we transcribe verbatim here so the
+regime-dominated structure of Sec.~\ref{sec:per_regime} can be read off directly. No
+number in these tables is rounded beyond the precision written by the run, and none is
+recomputed by hand.
+
+Table~\ref{tab:ed_ler} gives the logical error rate of every decoder in every regime; it
+shows the more-than-hundred-fold rise from i.i.d.\ ($\approx\sync{0.002}$) to
+measurement-error ($\approx\sync{0.34}$) noise and the tight within-regime clustering that
+Theorem~\ref{thm:tie} predicts. Table~\ref{tab:ed_ece} gives the per-regime expected
+calibration error: calibration quality is itself regime-dependent (for example
+\texttt{matching} is badly miscalibrated under bias, ECE \sync{0.5461}, but well calibrated
+under measurement error, \sync{0.1396}), reinforcing that calibration must be measured rather
+than inferred from accuracy (Sec.~\ref{sec:calibration}). Table~\ref{tab:ed_cov} gives the
+coverage at the fixed operating threshold $\tau=\sync{0.5}$, making concrete that
+\texttt{matching}, \texttt{topology} and \texttt{rl} abstain heavily under structure
+(matching commits on only \sync{0.2797} of biased shots) while \texttt{majority},
+\texttt{lookup}, \texttt{neural} and \texttt{fused} always commit (Sec.~\ref{sec:risk_coverage}).
+Table~\ref{tab:ed_threshold} lists the full logical-versus-physical threshold sweep underlying
+Fig.~\ref{fig:threshold}, and Table~\ref{tab:ed_rc} lists the risk--coverage operating points
+underlying Fig.~\ref{fig:risk_coverage}.
+
+\begin{table}[htbp]
+    \centering
+    \caption{\textbf{Extended Data: logical error rate by decoder and structured-noise regime.} Per-(regime, decoder) logical error rate on the repetition code at $p_{\mathrm{eval}}=0.12$ (distance $9$; $40{,}000$ trials per regime$\,\times\,$decoder). Lower is better; \textbf{bold} marks the lowest entry in each regime column. The dominant axis of variation is the regime, not the decoder: every decoder rises from $\approx0.002$ (i.i.d.) to $\approx0.34$ (measurement error), while within a column the eight decoders cluster within their statistical intervals. Transcribed verbatim from \texttt{summary.json}~(\texttt{by\_regime}).}
+    \label{tab:ed_ler}
+    \input{tables/ed_per_regime_ler.tex}
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \caption{\textbf{Extended Data: expected calibration error by decoder and regime.} Per-(regime, decoder) ECE at $p_{\mathrm{eval}}=0.12$, computed over ten equal-width confidence bins (Methods, Sec.~\ref{sec:methods_metrics}). Lower is better; \textbf{bold} marks the lowest entry in each regime column. Calibration quality is itself regime-dependent and is not predicted by logical accuracy (cf.\ Table~\ref{tab:ed_ler}); the best-calibrated decoder changes from column to column. Transcribed verbatim from \texttt{summary.json}~(\texttt{by\_regime}).}
+    \label{tab:ed_ece}
+    \input{tables/ed_per_regime_ece.tex}
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \caption{\textbf{Extended Data: coverage at the fixed abstention threshold by decoder and regime.} Fraction of shots committed (not abstained) at threshold $\tau=0.5$ for each (regime, decoder) at $p_{\mathrm{eval}}=0.12$. A value of $1.00000$ means the decoder commits on every shot. \texttt{majority}, \texttt{lookup}, \texttt{neural} and \texttt{fused} always commit; \texttt{matching}, \texttt{topology} and \texttt{rl} abstain heavily under structured noise, which is the mechanism behind the risk--coverage gains of Fig.~\ref{fig:risk_coverage}. Transcribed verbatim from \texttt{summary.json}~(\texttt{by\_regime}).}
+    \label{tab:ed_cov}
+    \input{tables/ed_per_regime_cov.tex}
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \caption{\textbf{Extended Data: logical-versus-physical threshold sweep.} Logical error rate as a function of physical error rate $p$ under i.i.d.\ noise for the six core decoders, on the repetition code at distance $9$ ($40{,}000$ trials per grid point). These are the curves plotted in Fig.~\ref{fig:threshold}; all decoders stay well below the break-even line $p_L=p$ and overlap throughout, consistent with the statistical tie of Table~\ref{tab:main}. Transcribed verbatim from \texttt{summary.json}~(\texttt{threshold\_curves}).}
+    \label{tab:ed_threshold}
+    \input{tables/ed_threshold.tex}
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \caption{\textbf{Extended Data: risk--coverage operating points.} Committed logical error (risk) as a function of coverage for the fused and matching decoders, obtained by sweeping the abstention threshold over the pooled $n=200{,}000$ shots per decoder (reported scale). Each row is an actual operating point stored by the run; the two decoders are swept on their own confidence grids, so coverage values differ between the two blocks. These are the points plotted in Fig.~\ref{fig:risk_coverage}; risk falls monotonically as coverage shrinks, as guaranteed under calibration by Theorem~\ref{thm:selective-risk}. Transcribed verbatim from \texttt{summary.json}~(\texttt{risk\_coverage}).}
+    \label{tab:ed_rc}
+    \input{tables/ed_risk_coverage.tex}
+\end{table}
 
 % ============================================================
 \section{Discussion}
@@ -238,7 +611,7 @@ The repetition code is invariant under cyclic relabeling of its data bits (ring 
 
 \subsection{Experimental protocol}
 \label{sec:methods_protocol}
-A run builds the code, fits the neural decoder on a mixed-regime training stream, warms up the RL bandit on its own Monte-Carlo stream, then for each (regime, decoder) Monte-Carlos \texttt{trials} shots at the evaluation physical error rate $p_{\mathrm{eval}}$, records the per-shot failure/confidence, and aggregates the metrics above. Threshold curves sweep $p$ for the core decoders under i.i.d.\ noise; the risk--coverage curve is built from the fused and matching decoders' pooled confidences. Seeds, platform, library versions, runtime and peak memory are recorded as provenance in \texttt{summary.json}. All numbers in this paper are from the \emph{reported-scale} configuration: distance $\sync{9}$, $\sync{40{,}000}$ trials per (regime, decoder) ($\sync{200{,}000}$ pooled shots per decoder), $\sync{20{,}000}$ training shots, $p_{\mathrm{eval}}=\sync{0.12}$, an eleven-point physical-error grid, run end-to-end in $\sync{507}$\,s at $\sync{200}$\,MB peak memory on a single CPU. A faster smoke configuration (distance $\sync{5}$, $\sync{1{,}500}$ trials, $\approx\sync{13}$\,s) is provided for continuous integration. Software: \texttt{numpy}~\cite{harris2020array}, \texttt{scipy}~\cite{virtanen2020scipy}, \texttt{networkx}~\cite{hagberg2008exploring}, \texttt{scikit-learn}~\cite{pedregosa2011scikit}, \texttt{matplotlib}~\cite{hunter2007matplotlib}; CPU only.
+A run builds the code, fits the neural decoder on a mixed-regime training stream, warms up the RL bandit on its own Monte-Carlo stream, then for each (regime, decoder) Monte-Carlos \texttt{trials} shots at the evaluation physical error rate $p_{\mathrm{eval}}$, records the per-shot failure/confidence, and aggregates the metrics above. Threshold curves sweep $p$ for the core decoders under i.i.d.\ noise; the risk--coverage curve is built from the fused and matching decoders' pooled confidences. Seeds, platform, library versions, runtime and peak memory are recorded as provenance in \texttt{summary.json}. All numbers in this paper are from the \emph{reported-scale} configuration: distance $\sync{9}$, $\sync{40{,}000}$ trials per (regime, decoder) ($\sync{200{,}000}$ pooled shots per decoder), $\sync{20{,}000}$ training shots, $p_{\mathrm{eval}}=\sync{0.12}$, an eleven-point physical-error grid, run end-to-end in $\sync{507}$\,s at $\sync{200}$\,MB peak memory on a single CPU. A faster smoke configuration (distance $\sync{5}$, $\sync{1{,}500}$ trials, $\approx\sync{13}$\,s) is provided for continuous integration. \emph{Statistics.} Each reported logical error rate is a mean of $n$ independent Bernoulli failure indicators; the $\pm$95\% interval is the analytic Wald half-width $1.96\sqrt{\hat p(1-\hat p)/n}$ (Proposition~\ref{prop:ci}), and two decoders are called statistically indistinguishable when their means differ by less than this half-width. The neural classifier's training stream ($\sync{20{,}000}$ shots) is generated independently of the evaluation stream; all randomness derives from a single master seed (\texttt{seed}~$=\sync{0}$) recorded in \texttt{summary.json}. The exact run provenance---platform \texttt{macOS-26.5.1-arm64}, \texttt{python}~\sync{3.13.12}, \texttt{numpy}~\sync{2.4.3}, \texttt{scipy}~\sync{1.17.1}, \texttt{networkx}~\sync{3.6.1}, \texttt{scikit-learn}~\sync{1.8.0}, \texttt{matplotlib}~\sync{3.10.8}---is stored alongside the results. Software: \texttt{numpy}~\cite{harris2020array}, \texttt{scipy}~\cite{virtanen2020scipy}, \texttt{networkx}~\cite{hagberg2008exploring}, \texttt{scikit-learn}~\cite{pedregosa2011scikit}, \texttt{matplotlib}~\cite{hunter2007matplotlib}; CPU only.
 
 \subsection{Per-regime results}
 \label{sec:methods_perregime}
@@ -262,6 +635,9 @@ The author received no specific funding for this work.
 
 \section*{Reproducibility statement}
 All experiments are reproducible on commodity hardware; runtime and memory are reported for each benchmark.
+
+\section*{Acknowledgements}
+The author thanks the maintainers of the open-source scientific Python ecosystem (\texttt{numpy}, \texttt{scipy}, \texttt{networkx}, \texttt{scikit-learn} and \texttt{matplotlib}) on which this work relies.
 
 % ============================================================
 \bibliographystyle{unsrtnat}
@@ -359,9 +735,9 @@ parameters):
   \item \texttt{biased}: even-index bits flip at $\min(1,\mathrm{bias}\cdot p)$,
         odd-index at $p$ (default $\mathrm{bias}=3$)---a coarse Pauli-bias
         surrogate (\texttt{sample\_biased}).
-  \item \texttt{burst}: scanning the line, with probability $p$ flip a contiguous
-        run of length $1+\mathrm{Poisson}(\mathrm{burst\_len}-1)$ (default
-        $\mathrm{burst\_len}=3$)---spatially clustered errors
+  \item \texttt{burst}: scanning the line, with probability $p$ flip a
+        contiguous run whose length is $1+\mathrm{Poisson}(\ell-1)$, with
+        $\ell=\mathrm{burst\_len}$ (default $3$)---spatially clustered errors
         (\texttt{sample\_burst}).
   \item \texttt{correlated}: an i.i.d.\ seed pattern recruits each neighbour with
         probability $\mathrm{corr}$ (default $0.5$) over two sweeps---neighbour
@@ -385,10 +761,14 @@ with correction in $\F_2^n$ and confidence in $[0,1]$. The single interface is
 what makes the eight decoders comparable on one footing and what makes abstention
 (Sec.~\ref{sec:si_selective}) and calibration (Sec.~\ref{sec:si_calibration})
 definable uniformly. Two helpers recur: \texttt{\_chain\_\allowbreak from\_\allowbreak defects()} turns a
-set of paired defect endpoints into a flip chain, and
-$\texttt{\_defect\_confidence}(n_{\mathrm{def}},n_{\mathrm{checks}})=
-\exp(-2\,n_{\mathrm{def}}/n_{\mathrm{checks}})$ is the defect-fraction confidence
-heuristic (more lit checks $\Rightarrow$ less sure).
+set of paired defect endpoints into a flip chain, and the defect-fraction
+confidence heuristic
+\begin{equation}
+  \texttt{\_defect\_confidence}(n_{\mathrm{def}},n_{\mathrm{checks}})
+    = \exp\!\left(-2\,n_{\mathrm{def}}/n_{\mathrm{checks}}\right)
+\end{equation}
+makes a decoder less sure as more checks light up (more lit checks
+$\Rightarrow$ less sure).
 
 \subsection{The decoder family: textbook to learned (\texttt{decoders.py})}
 \label{sec:si_family}
@@ -469,7 +849,7 @@ descending-coverage order. As we abstain more (coverage shrinks), risk should
 fall: we drop the shots we were least sure about.
 \texttt{is\_\allowbreak monotone\_\allowbreak risk\_\allowbreak coverage()} programmatically verifies risk is (weakly)
 non-increasing as coverage shrinks. Empirically the effect is large: matching's
-committed error falls from $0.1529$ at full coverage to $0.0758$ at $\approx0.55$
+committed error falls from $0.1529$ at full coverage to $0.0757$ at $\approx0.55$
 coverage and $0.0099$ at $\approx0.25$ coverage (Sec.~\ref{sec:risk_coverage}).
 The formal reason this works is Theorem~\ref{thm:selective-risk}: under perfectly
 calibrated confidence $C$ (so $\Pr(\text{success}\mid C=c)=c$), the committed risk
@@ -532,8 +912,9 @@ every claimed number traces to a value in the generated \texttt{summary.json} (t
 single source of truth); \texttt{audit\_\allowbreak reproducibility\_\allowbreak phrase()} checks the
 mandated reproducibility statement is present;
 \texttt{audit\_\allowbreak forbidden\_\allowbreak claims()} rejects forbidden absolute-superiority
-phrasing. \texttt{scripts/\allowbreak audit\_\allowbreak claims.py} runs these in continuous integration
-and exits non-zero on any violation---so the paper cannot drift from the artifact.
+phrasing. The driver \texttt{scripts/\allowbreak audit\_\allowbreak claims.\allowbreak py} runs these in
+continuous integration and exits non-zero on any violation---so the paper cannot
+drift from the artifact.
 
 \subsection{The single source of truth and how to reproduce (\texttt{runner.py})}
 \label{sec:si_reproduce}
