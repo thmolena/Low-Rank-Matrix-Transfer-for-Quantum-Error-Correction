@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "topoqec"
 version = "0.1.0"
 description = "Topology-Aware Graph RL Decoding for Quantum Error Correction under Structured Noise"
-readme = "README.md"
+readme = { text = "Topology-Aware Graph RL Decoding for Quantum Error Correction under Structured Noise: a selective, calibrated decoder-family benchmark.", content-type = "text/plain" }
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Molena Huynh" }]
