@@ -5,19 +5,55 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "topoqec"
 version = "0.1.0"
-description = "Topology-Aware Graph RL Decoding for Quantum Error Correction under Structured Noise"
+description = "Selective and calibrated decoding for quantum error correction: a topology-aware decoder-family benchmark under structured noise"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-authors = [{ name = "Molena Huynh" }]
+authors = [{ name = "Molena Huynh", email = "molena.huynh@jmp.com" }]
+keywords = [
+  "quantum error correction",
+  "decoding",
+  "selective classification",
+  "calibration",
+  "minimum-weight perfect matching",
+  "belief propagation",
+  "topological machine learning",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
-  "numpy>=1.24", "scipy>=1.10", "networkx>=3.0",
-  "scikit-learn>=1.2", "matplotlib>=3.6", "pyyaml>=6.0",
+  "numpy>=1.24",
+  "scipy>=1.10",
+  "networkx>=3.0",
+  "scikit-learn>=1.2",
+  "matplotlib>=3.6",
+  "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
 gpu = ["torch>=2.0"]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "build>=1.0", "twine>=5.0"]
+
+[project.urls]
+Homepage = "https://github.com/thmolena/P2-Topology-Aware-Graph-RL-Decoding-for-QEC"
+Demo = "https://thmolena.github.io/P2-Topology-Aware-Graph-RL-Decoding-for-QEC/"
+Repository = "https://github.com/thmolena/P2-Topology-Aware-Graph-RL-Decoding-for-QEC"
+
+[project.scripts]
+topoqec-reproduce = "topoqec.reproduce:main"
+
+[tool.setuptools]
+license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

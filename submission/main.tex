@@ -41,7 +41,8 @@
 A Topology-Aware Decoder-Family Benchmark under Structured Noise}
 
 \author{Molena Huynh\\[3pt]
-\normalsize [Affiliation to be completed before submission]}
+\normalsize North Carolina State University\\
+\normalsize \texttt{molena.huynh@jmp.com}}
 
 \date{\today}
 
@@ -65,6 +66,17 @@ Two facts motivate this paper. First, hardware noise is not i.i.d. It is \emph{s
 
 \paragraph{This work.}
 We treat decoding as a problem on the code's \emph{defect graph} and build a unified, fully reproducible benchmark with three properties usually kept separate. (1)~\emph{Breadth}: a single \texttt{decode(syndrome)$\,\to\,$(correction, confidence)} interface hosts eight decoders spanning the textbook-to-learned spectrum, evaluated across five structured-noise regimes. (2)~\emph{Selectivity}: every decoder can abstain, so we report risk--coverage curves, not just a single error rate. (3)~\emph{Calibration}: expected calibration error is a first-class output alongside the logical error rate, with analytic 95\% confidence intervals so that statistical significance is visible rather than assumed.
+
+This is the seventh manuscript in an ordered quantum-AI series.  It carries
+forward the same CPU-reproducible and resource-accounted style used in the
+QAOA, Hamiltonian-simulation, open-system-identification, and drift-forecasting
+papers~\cite{huynh2026uqqaoa,huynh2026topoqaoa,huynh2026topoham,huynh2026liergtc,huynh2026cptppinn,huynh2026drift}.
+The immediate predecessor treats hardware reliability as calibrated
+time-series monitoring; here calibration appears as the confidence that gates
+whether a decoder should commit or abstain.  The Hamiltonian-simulation work of
+Nguyen and Jing supplies complementary fixed-depth and representation-theoretic
+context for the quantum circuits whose errors QEC must eventually
+suppress~\cite{nguyen2025zassenhaus,jing2026complexity}.
 
 \paragraph{What we claim, and what we do not.}
 We are deliberately conservative. On the repetition code and the regimes we study, at reported scale the eight decoders' logical error rates lie within each other's confidence intervals (Sec.~\ref{sec:headline}); we therefore do \emph{not} claim that any decoder beats another on raw accuracy, and we say so explicitly. What the benchmark does establish is (i)~that abstention buys a large, monotone reduction in committed logical error---matching's committed risk falls from \sync{0.1529} at full coverage to \sync{0.0757} at \sync{0.55} coverage and \sync{0.0099} at \sync{0.25} coverage (Sec.~\ref{sec:risk_coverage})---and (ii)~that calibration quality is \emph{not} predicted by decoder sophistication: ECE ranges from \sync{0.0317} (the lightweight neural coset selector) to \sync{0.2608} (plain minimum-weight matching), an eight-fold spread with no monotone relationship to decoder complexity. The contribution is the framework, the selective/calibrated lens, and the honest accounting---not a new state-of-the-art error rate. This audit ethos is enforced in code: a readiness gate rejects any reported number that does not trace to a generated artifact and rejects forbidden absolute-superiority phrasing.
@@ -704,7 +716,7 @@ The repetition code is invariant under cyclic relabeling of its data bits (ring 
 
 \subsection{Experimental protocol}
 \label{sec:methods_protocol}
-A run builds the code, fits the neural decoder on a mixed-regime training stream, warms up the RL bandit on its own Monte-Carlo stream, then for each (regime, decoder) Monte-Carlos \texttt{trials} shots at the evaluation physical error rate $p_{\mathrm{eval}}$, records the per-shot failure/confidence, and aggregates the metrics above. Threshold curves sweep $p$ for the core decoders under i.i.d.\ noise; the risk--coverage curve is built from the fused and matching decoders' pooled confidences. Seeds, platform, library versions, runtime and peak memory are recorded as provenance in \texttt{summary.json}. All numbers in this paper are from the \emph{reported-scale} configuration: distance $\sync{9}$, $\sync{40{,}000}$ trials per (regime, decoder) ($\sync{200{,}000}$ pooled shots per decoder), $\sync{20{,}000}$ training shots, $p_{\mathrm{eval}}=\sync{0.12}$, an eleven-point physical-error grid, run end-to-end in $\sync{507}$\,s at $\sync{200}$\,MB peak memory on a single CPU. A faster smoke configuration (distance $\sync{5}$, $\sync{1{,}500}$ trials, $\approx\sync{13}$\,s) is provided for continuous integration. \emph{Statistics.} Each reported logical error rate is a mean of $n$ independent Bernoulli failure indicators; the $\pm$95\% interval is the analytic Wald half-width $1.96\sqrt{\hat p(1-\hat p)/n}$ (Proposition~\ref{prop:ci}), and two decoders are called statistically indistinguishable when their means differ by less than this half-width. The neural classifier's training stream ($\sync{20{,}000}$ shots) is generated independently of the evaluation stream; all randomness derives from a single master seed (\texttt{seed}~$=\sync{0}$) recorded in \texttt{summary.json}. The exact run provenance---platform \texttt{macOS-26.5.1-arm64}, \texttt{python}~\sync{3.13.12}, \texttt{numpy}~\sync{2.4.3}, \texttt{scipy}~\sync{1.17.1}, \texttt{networkx}~\sync{3.6.1}, \texttt{scikit-learn}~\sync{1.8.0}, \texttt{matplotlib}~\sync{3.10.8}---is stored alongside the results. Software: \texttt{numpy}~\cite{harris2020array}, \texttt{scipy}~\cite{virtanen2020scipy}, \texttt{networkx}~\cite{hagberg2008exploring}, \texttt{scikit-learn}~\cite{pedregosa2011scikit}, \texttt{matplotlib}~\cite{hunter2007matplotlib}; CPU only.
+A run builds the code, fits the neural decoder on a mixed-regime training stream, warms up the RL bandit on its own Monte-Carlo stream, then for each (regime, decoder) Monte-Carlos \texttt{trials} shots at the evaluation physical error rate $p_{\mathrm{eval}}$, records the per-shot failure/confidence, and aggregates the metrics above. Threshold curves sweep $p$ for the core decoders under i.i.d.\ noise; the risk--coverage curve is built from the fused and matching decoders' pooled confidences. Seeds, platform, library versions, runtime and peak memory are recorded as provenance in \texttt{summary.json}. All numbers in this paper are from the \emph{reported-scale} configuration: distance $\sync{9}$, $\sync{40{,}000}$ trials per (regime, decoder) ($\sync{200{,}000}$ pooled shots per decoder), $\sync{20{,}000}$ training shots, $p_{\mathrm{eval}}=\sync{0.12}$, an eleven-point physical-error grid, run end-to-end in $\sync{224}$\,s at $\sync{339}$\,MB peak memory on a single CPU. A faster smoke configuration (distance $\sync{5}$, $\sync{1{,}500}$ trials, $\approx\sync{13}$\,s) is provided for continuous integration. \emph{Statistics.} Each reported logical error rate is a mean of $n$ independent Bernoulli failure indicators; the $\pm$95\% interval is the analytic Wald half-width $1.96\sqrt{\hat p(1-\hat p)/n}$ (Proposition~\ref{prop:ci}), and two decoders are called statistically indistinguishable when their means differ by less than this half-width. The neural classifier's training stream ($\sync{20{,}000}$ shots) is generated independently of the evaluation stream; all randomness derives from a single master seed (\texttt{seed}~$=\sync{0}$) recorded in \texttt{summary.json}. The exact run provenance---platform \texttt{macOS-26.5.1-arm64}, \texttt{python}~\sync{3.13.12}, \texttt{numpy}~\sync{2.4.3}, \texttt{scipy}~\sync{1.17.1}, \texttt{networkx}~\sync{3.6.1}, \texttt{scikit-learn}~\sync{1.8.0}, \texttt{matplotlib}~\sync{3.10.8}---is stored alongside the results. Software: \texttt{numpy}~\cite{harris2020array}, \texttt{scipy}~\cite{virtanen2020scipy}, \texttt{networkx}~\cite{hagberg2008exploring}, \texttt{scikit-learn}~\cite{pedregosa2011scikit}, \texttt{matplotlib}~\cite{hunter2007matplotlib}; CPU only.
 
 \subsection{Per-regime results}
 \label{sec:methods_perregime}
@@ -928,6 +940,56 @@ John~D. Hunter.
 \newblock Matplotlib: A 2d graphics environment.
 \newblock \emph{Computing in Science \& Engineering}, 9\penalty0 (3):\penalty0
   90--95, 2007.
+
+\bibitem[Huynh(2026{\natexlab{a}})]{huynh2026uqqaoa}
+Molena Huynh.
+\newblock Query-efficient quantum approximate optimization via
+  graph-conditioned trust regions.
+\newblock \emph{arXiv preprint arXiv:2604.24803}, 2026.
+\newblock \doi{10.48550/arXiv.2604.24803}.
+
+\bibitem[Huynh(2026{\natexlab{b}})]{huynh2026topoqaoa}
+Molena Huynh.
+\newblock Topology-conditioned warm starts match spectral initialization for
+  depth-one {QAOA}.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Huynh(2026{\natexlab{c}})]{huynh2026topoham}
+Molena Huynh.
+\newblock Commutator-graph term ordering reduces first-order {Trotter} error at
+  matched gate cost.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Huynh(2026{\natexlab{d}})]{huynh2026liergtc}
+Molena Huynh.
+\newblock Provable operator learning of size-transferable {Trotter}
+  corrections for {Hamiltonian} simulation.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Huynh(2026{\natexlab{e}})]{huynh2026cptppinn}
+Molena Huynh.
+\newblock {CPTP-Compiler-PINNs}: structure-preserving residual learning and
+  matrix-free compilation for open quantum dynamics.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Huynh(2026{\natexlab{f}})]{huynh2026drift}
+Molena Huynh.
+\newblock Objective-aware sequence modelling for drift forecasting and anomaly
+  detection in quantum hardware.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Nguyen and Jing(2025)]{nguyen2025zassenhaus}
+M.~Nguyen and Naihuan Jing.
+\newblock Zassenhaus expansion in solving the {Schr\"odinger} equation.
+\newblock \emph{arXiv preprint arXiv:2505.09441}, 2025.
+\newblock \doi{10.48550/arXiv.2505.09441}.
+
+\bibitem[Jing and Nguyen(2026)]{jing2026complexity}
+Naihuan Jing and M.~Nguyen.
+\newblock Complexity bounds for {Hamiltonian} simulation in unitary
+  representations.
+\newblock \emph{arXiv preprint arXiv:2603.07231}, 2026.
+\newblock \doi{10.48550/arXiv.2603.07231}.
 
 \end{thebibliography}
 

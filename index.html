@@ -14,9 +14,9 @@ window.MathJax = {
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <style>
 :root{
-  --bg:#0b0e14; --panel:#121723; --panel2:#0f1420; --ink:#e6ecf5; --muted:#9bb0c9;
-  --line:#22304a; --accent:#4ea1ff; --accent2:#46d2b3; --warn:#f2a65a; --bad:#ef6a6a;
-  --good:#5fd08a; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#ffffff; --panel:#f7f9fc; --panel2:#eef2f7; --ink:#10151c; --muted:#5b6675;
+  --line:#d8dee8; --accent:#1a4e8a; --accent2:#1f5c47; --warn:#8a6700; --bad:#c0392b;
+  --good:#1f5c47; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 *{box-sizing:border-box}
@@ -25,8 +25,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
   line-height:1.62;font-size:16.5px;-webkit-font-smoothing:antialiased}
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
-code,kbd{font-family:var(--mono);font-size:.9em;background:#0a1626;border:1px solid var(--line);
-  border-radius:4px;padding:.05em .35em;color:#cfe2ff}
+code,kbd{font-family:var(--mono);font-size:.9em;background:#eef2f7;border:1px solid var(--line);
+  border-radius:4px;padding:.05em .35em;color:var(--accent)}
 header.hero{padding:64px 24px 40px;border-bottom:1px solid var(--line);
   background:radial-gradient(1200px 480px at 22% -8%,rgba(78,161,255,.16),transparent 60%),
              radial-gradient(900px 420px at 92% 0%,rgba(70,210,179,.10),transparent 55%)}
@@ -37,10 +37,10 @@ h1{font-size:clamp(26px,4.4vw,40px);line-height:1.16;margin:0 0 14px;font-weight
 .subtitle{color:var(--muted);font-size:18px;max-width:760px;margin:0 0 22px}
 .authorline{font-size:14.5px;color:var(--muted);margin-bottom:22px}
 .badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
-.badge{font-family:var(--mono);font-size:12.5px;color:#bcd2ee;background:var(--panel);
+.badge{font-family:var(--mono);font-size:12.5px;color:var(--muted);background:var(--panel);
   border:1px solid var(--line);border-radius:999px;padding:6px 13px}
-.badge b{color:#fff;font-weight:600}
-nav.toc{position:sticky;top:0;z-index:20;background:rgba(11,14,20,.92);
+.badge b{color:var(--ink);font-weight:600}
+nav.toc{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);
   backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 nav.toc .wrap{display:flex;gap:6px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;font-size:13px}
 nav.toc a{color:var(--muted);font-family:var(--mono);padding:3px 9px;border-radius:6px;font-size:12px}
@@ -50,9 +50,9 @@ section{padding:34px 0 8px;border-bottom:1px solid rgba(34,48,74,.55)}
 section:last-child{border-bottom:none}
 h2{font-size:clamp(21px,3vw,27px);margin:8px 0 14px;letter-spacing:-.01em;font-weight:660}
 h2 .num{font-family:var(--mono);color:var(--accent);font-size:.72em;margin-right:.55em;font-weight:500}
-h3{font-size:18px;margin:24px 0 8px;color:#dbe7f7;font-weight:620}
+h3{font-size:18px;margin:24px 0 8px;color:var(--ink);font-weight:620}
 p{margin:12px 0}
-.lead{font-size:17.5px;color:#d6e2f1}
+.lead{font-size:17.5px;color:var(--ink)}
 .muted{color:var(--muted)}
 ul,ol{margin:12px 0;padding-left:22px}
 li{margin:7px 0}
@@ -76,7 +76,7 @@ tbody tr:hover{background:rgba(78,161,255,.05)}
 .eqn{overflow-x:auto;padding:6px 2px}
 figure{margin:18px 0}
 figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
-.demo{background:linear-gradient(180deg,#0f1626,#0c121d);border:1px solid var(--line);
+.demo{background:linear-gradient(180deg,#f7f9fc,#eef2f7);border:1px solid var(--line);
   border-radius:14px;padding:20px;margin:18px 0}
 .demo h3{margin-top:0}
 .controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;margin:14px 0 6px}
@@ -85,27 +85,27 @@ figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
   color:var(--muted);margin-bottom:4px}
 .ctrl label b{color:var(--accent);font-weight:600}
 input[type=range]{width:100%;accent-color:var(--accent);height:22px}
-select{width:100%;background:#0a1626;color:var(--ink);border:1px solid var(--line);
+select{width:100%;background:#ffffff;color:var(--ink);border:1px solid var(--line);
   border-radius:6px;padding:7px 9px;font-family:var(--mono);font-size:13px}
 .canvas-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
 @media(max-width:760px){.canvas-wrap{grid-template-columns:1fr}}
-canvas{width:100%;height:auto;background:#0a1018;border:1px solid var(--line);border-radius:8px;display:block}
+canvas{width:100%;height:auto;background:#ffffff;border:1px solid var(--line);border-radius:8px;display:block}
 .readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
 @media(max-width:680px){.readout{grid-template-columns:1fr 1fr}}
-.stat{background:#0a1626;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stat{background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .stat .k{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.stat .v{font-family:var(--mono);font-size:19px;color:#eaf2ff;margin-top:3px}
+.stat .v{font-family:var(--mono);font-size:19px;color:var(--ink);margin-top:3px}
 .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:999px;
   border:1px solid var(--line);color:var(--muted)}
 .footer{padding:30px 0 60px;color:var(--muted);font-size:13.5px}
-.code-block{background:#080d16;border:1px solid var(--line);border-radius:8px;padding:14px 16px;
-  font-family:var(--mono);font-size:13px;color:#cfe2ff;overflow-x:auto;white-space:pre;margin:14px 0}
+.code-block{background:#eef2f7;border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+  font-family:var(--mono);font-size:13px;color:#1b2330;overflow-x:auto;white-space:pre;margin:14px 0}
 hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 .note{font-size:13.5px;color:var(--muted)}
 .contrib{counter-reset:c;list-style:none;padding-left:0}
 .contrib li{position:relative;padding-left:42px;margin:14px 0}
 .contrib li::before{counter-increment:c;content:"C"counter(c);position:absolute;left:0;top:1px;
-  font-family:var(--mono);font-size:12px;color:#06101e;background:var(--accent2);
+  font-family:var(--mono);font-size:12px;color:#ffffff;background:var(--accent2);
   border-radius:6px;padding:3px 7px;font-weight:700}
 .thm{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--accent2);
   border-radius:8px;padding:14px 18px;margin:16px 0}
@@ -118,10 +118,10 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 
 <header class="hero">
   <div class="wrap">
-    <div class="kicker">Quantum Error Correction &middot; Decoding &middot; Selective Prediction &middot; Calibration</div>
+    <div class="kicker">Quantum Error Correction &middot; Decoding &middot; Selective Prediction &middot; Calibration &middot; Part of a unified graph-learning program for quantum computation</div>
     <h1>Selective and Calibrated Decoding for Quantum Error Correction</h1>
-    <div class="subtitle">A topology-aware decoder-family benchmark under structured noise, treating logical error rate, calibration, and the risk&ndash;coverage trade-off as first-class metrics with analytic confidence intervals.</div>
-    <div class="authorline">Molena Huynh &middot; manuscript prepared for submission to <em>Nature Machine Intelligence</em> &middot; artifact: <code>topoqec</code></div>
+    <div class="subtitle">Eight decoders, one defect-graph interface, five structured-noise regimes: a unified benchmark that promotes selectivity and calibration to first-class metrics and reports, with analytic confidence intervals, that the decoders are statistically tied on logical error yet diverge eight-fold in calibration.</div>
+    <div class="authorline">Molena Huynh &middot; North Carolina State University &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a> &middot; manuscript prepared for submission to <em>Nature Machine Intelligence</em> &middot; artifact: <code>topoqec</code></div>
     <div class="badges">
       <span class="badge"><b>8</b> decoders &middot; one defect-graph interface</span>
       <span class="badge"><b>5</b> structured-noise regimes</span>
@@ -152,14 +152,14 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 
 <section id="background">
   <h2><span class="num">1</span>Background and Motivation</h2>
-  <p class="lead">A quantum error-correcting code protects information only if its <em>decoder</em> maps a measured syndrome to the correct recovery under the <em>structured</em> noise that real hardware exhibits: Pauli bias, spatial bursts, neighbour correlations, and faulty syndrome read-out.</p>
+  <p class="lead">A quantum error-correcting code protects information only as well as its <em>decoder</em>, which must map each measured syndrome to the correct recovery under the <em>structured</em> noise characteristic of hardware: Pauli bias, spatial bursts, neighbour correlations, and faulty syndrome read-out.</p>
 
-  <p>Topological codes&mdash;Kitaev's toric and surface codes&mdash;are the leading candidates for scalable fault tolerance, and recent hardware has demonstrated that scaling such a code can suppress the logical error rate below the physical one (Google Quantum AI, <em>Nature</em> 2023). The component that turns a stabilizer syndrome into a correction is the decoder, and it is the layer of the stack where classical combinatorial algorithms and, increasingly, machine learning meet the physics of the device. The dominant production decoder is minimum-weight perfect matching (MWPM) built on Edmonds' blossom algorithm; belief propagation with ordered-statistics decoding underpins quantum LDPC decoding; and a large body of work applies neural networks and reinforcement learning, with learned decoders recently exceeding matching-based accuracy on real hardware syndromes (Bausch et&nbsp;al., <em>Nature</em> 2024).</p>
+  <p>Topological codes&mdash;Kitaev's toric and surface codes&mdash;are the leading candidates for scalable fault tolerance, and recent hardware has shown that scaling such a code can push the logical error rate below the physical one (Google Quantum AI, <em>Nature</em> 2023). The decoder is the component that converts a stabilizer syndrome into a correction, and it is the layer of the stack where classical combinatorial algorithms and, increasingly, machine learning meet the physics of the device. Three algorithmic families dominate: minimum-weight perfect matching (MWPM), the production standard, built on Edmonds' blossom algorithm; belief propagation with ordered-statistics decoding, which underpins quantum LDPC decoding; and learned decoders, where neural networks and reinforcement learning have recently surpassed matching-based accuracy on real hardware syndromes (Bausch et&nbsp;al., <em>Nature</em> 2024).</p>
 
-  <p>The headline metric in nearly all of this work is a single number&mdash;the logical error rate&mdash;almost always evaluated under independent-and-identically-distributed (i.i.d.) depolarizing or bit-flip noise. Two facts motivate a different accounting. First, <strong>hardware noise is not i.i.d.</strong> It is structured, and a decoder excellent on i.i.d. noise may or may not retain its advantage under structure; the only way to know is to test the same decoder family across regimes on one footing. Second, a decoder inside a fault-tolerant control loop <strong>does not have to commit to every syndrome</strong>: it can abstain, flagging a shot as unreliable so that a slower fallback decoder, a repeated measurement, or a higher-level protocol takes over. Abstention is the QEC analogue of <em>selective prediction</em> in machine learning, and it is useful only if the confidence that gates it is <em>calibrated</em>. These two axes&mdash;coverage and calibration&mdash;are routinely omitted from decoder benchmarks.</p>
+  <p>Across nearly all of this work the headline metric is a single number, the logical error rate, almost always measured under independent-and-identically-distributed (i.i.d.) depolarizing or bit-flip noise. Two facts argue for a richer accounting. First, <strong>hardware noise departs from i.i.d.</strong>&mdash;it is structured, and a decoder that excels on i.i.d. noise may forfeit any advantage under structure; settling the question requires testing one decoder family across regimes on a common footing. Second, a decoder inside a fault-tolerant control loop <strong>may decline to commit to a given syndrome</strong>: it can abstain, flagging a shot as unreliable so that a slower fallback decoder, a repeated measurement, or a higher-level protocol takes over. Abstention is the QEC analogue of <em>selective prediction</em> in machine learning, and it is trustworthy only when the confidence gating it is <em>calibrated</em>. Both axes&mdash;coverage and calibration&mdash;remain routinely absent from decoder benchmarks.</p>
 
   <div class="callout">
-    <p style="margin-top:0"><strong>The open problem.</strong> Existing decoder benchmarks collapse decoding quality onto raw logical error under i.i.d. noise, leaving the deployment-critical questions of <em>when to abstain</em> and <em>whether stated confidence is trustworthy</em> unmeasured. This work constructs a unified, reproducible benchmark that elevates selectivity and calibration to first-class metrics, and reports what the artifact actually shows&mdash;including a statistical tie on accuracy&mdash;rather than a superiority claim.</p>
+    <p style="margin-top:0"><strong>The open problem.</strong> Existing decoder benchmarks collapse decoding quality onto raw logical error under i.i.d. noise, leaving the two deployment-critical questions&mdash;<em>when should a decoder abstain</em> and <em>is its stated confidence trustworthy</em>&mdash;entirely unmeasured. This work builds a unified, reproducible benchmark that makes selectivity and calibration first-class metrics, and reports exactly what the artifact shows&mdash;including a statistical tie on accuracy&mdash;rather than a superiority claim.</p>
   </div>
 </section>
 
@@ -177,9 +177,9 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
   <div class="eqn">$$ \hat c \;=\; \arg\min_{e\in H^{-1}(s)} |e| \qquad\text{(coset leader).} $$</div>
 
   <h3>The confidence model and selective objective</h3>
-  <p>Every decoder implements one interface \(\texttt{decode}(s)\to(\hat c,\,C)\) with correction \(\hat c\in\mathbb{F}_2^{d}\) and confidence \(C\in[0,1]\). A recurring confidence heuristic for matching-type decoders maps the lit-check fraction to a score,</p>
+  <p>Every decoder implements one interface \(\texttt{decode}(s)\to(\hat c,\,C)\), returning a correction \(\hat c\in\mathbb{F}_2^{d}\) and a confidence \(C\in[0,1]\). A recurring confidence heuristic for matching-type decoders maps the lit-check fraction to a score,</p>
   <div class="eqn">$$ C \;=\; \exp\!\big(-2\,n_{\mathrm{def}}/n_{\mathrm{checks}}\big), $$</div>
-  <p>so a decoder is less sure as more checks light up. The neural selector instead emits a predicted-class probability for the logical coset, which is approximately calibrated by construction. Given a threshold \(\tau\), the decoder commits only on shots with \(C\ge\tau\), defining</p>
+  <p>so confidence decays as more checks light up. The neural selector instead emits a predicted-class probability for the logical coset, which is approximately calibrated by construction. Given a threshold \(\tau\), the decoder commits only on shots with \(C\ge\tau\), which defines</p>
   <div class="eqn">$$ G(\tau)=\Pr(C\ge\tau)\ \ \text{(coverage)},\qquad R(\tau)=\Pr\big(F=1\mid C\ge\tau\big)\ \ \text{(committed risk)}, $$</div>
   <p>where \(F\in\{0,1\}\) is the logical-failure indicator. <strong>Expected calibration error</strong> over \(B\) bins is</p>
   <div class="eqn">$$ \mathrm{ECE}=\sum_{b=1}^{B}\frac{n_b}{n}\,\Big|\,\overline{\mathrm{conf}}_b-\overline{\mathrm{acc}}_b\,\Big|,\qquad \overline{\mathrm{acc}}_b=1-\overline F_b. $$</div>
@@ -188,86 +188,86 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 
 <section id="formulation">
   <h2><span class="num">3</span>Problem Formulation</h2>
-  <p>Given a stabilizer code with parity-check map \(H\) and logical functional \(L\), a family of structured-noise samplers \(\{\mathcal{N}_g\}\), and a family of decoders \(\{\mathcal{D}_k\}\) each exposing \(\texttt{decode}(s)\to(\hat c,C)\), evaluate every \((\mathcal{N}_g,\mathcal{D}_k)\) pair on a single defect-graph interface against three jointly reported quantities:</p>
+  <p>The benchmark fixes a single evaluation surface and reports three quantities jointly rather than one in isolation. Given a stabilizer code with parity-check map \(H\) and logical functional \(L\), a family of structured-noise samplers \(\{\mathcal{N}_g\}\), and a family of decoders \(\{\mathcal{D}_k\}\) each exposing \(\texttt{decode}(s)\to(\hat c,C)\), every \((\mathcal{N}_g,\mathcal{D}_k)\) pair is evaluated on one defect-graph interface against:</p>
   <ol>
-    <li><strong>Logical error rate</strong> \(\hat p_{g,k}=\mathbb{E}[F]\), with analytic 95% Bernoulli intervals, so statistical separation is visible rather than assumed.</li>
+    <li><strong>Logical error rate</strong> \(\hat p_{g,k}=\mathbb{E}[F]\), with analytic 95% Bernoulli intervals, so statistical separation is demonstrated rather than presumed.</li>
     <li><strong>Calibration</strong> \(\mathrm{ECE}_{g,k}\), the deviation of stated confidence from realised accuracy.</li>
-    <li><strong>The risk&ndash;coverage curve</strong> \(\tau\mapsto(G(\tau),R(\tau))\), tracing the reliability bought by abstaining on low-confidence syndromes.</li>
+    <li><strong>The risk&ndash;coverage curve</strong> \(\tau\mapsto(G(\tau),R(\tau))\), which traces the reliability purchased by abstaining on low-confidence syndromes.</li>
   </ol>
-  <p>The benchmark is deliberately conservative: it asks not "which decoder wins on accuracy" but, across structured noise, how accuracy, calibration, and the selective trade-off jointly behave, and which differences are statistically real. Integrity is enforced in code by an automorphism-invariance check and an audit gate that rejects any reported number not traceable to the single source-of-truth artifact and rejects absolute-superiority phrasing.</p>
+  <p>The formulation is deliberately conservative. It does not ask which decoder wins on accuracy; it asks how accuracy, calibration, and the selective trade-off behave together across structured noise, and which differences are statistically real. Integrity is enforced in code: an automorphism-invariance check guards the symmetry assumptions, and an audit gate rejects any reported number not traceable to the single source-of-truth artifact and rejects absolute-superiority phrasing.</p>
 </section>
 
 <section id="contrib">
   <h2><span class="num">4</span>Principal Contributions</h2>
   <ol class="contrib">
-    <li><strong>A decoder-family benchmark under structured noise.</strong> Eight decoders&mdash;lookup, majority, matching, belief propagation, neural, topology, fused, and an RL selector&mdash;evaluated on one <code>decode(syndrome)&rarr;(correction, confidence)</code> defect-graph interface across i.i.d., biased, burst, correlated, and measurement-error regimes, with per-regime breakdowns and threshold curves.</li>
-    <li><strong>Selective decoding established as a primary axis.</strong> Confidence-gated abstention and full risk&ndash;coverage curves for every decoder, quantifying the reliability bought by relinquishing coverage rather than collapsing it into a single error number.</li>
-    <li><strong>Calibration treated as a first-class metric.</strong> Expected calibration error reported for all decoders with 95% confidence intervals, exposing that calibration quality is uncorrelated with decoder sophistication.</li>
-    <li><strong>An honest, reproducible accounting.</strong> A single source-of-truth artifact, analytic confidence intervals that reveal the decoders to be statistically indistinguishable on raw logical error, and a code-level audit gate against fabricated numbers and superiority claims.</li>
+    <li><strong>A decoder-family benchmark under structured noise.</strong> Eight decoders&mdash;lookup, majority, matching, belief propagation, neural, topology, fused, and an RL selector&mdash;are evaluated on a single <code>decode(syndrome)&rarr;(correction, confidence)</code> defect-graph interface across i.i.d., biased, burst, correlated, and measurement-error regimes, with per-regime breakdowns and threshold curves, so cross-decoder and cross-regime comparisons rest on one footing.</li>
+    <li><strong>Selective decoding established as a primary axis.</strong> Confidence-gated abstention and full risk&ndash;coverage curves are reported for every decoder, quantifying the reliability gained by relinquishing coverage rather than discarding that trade-off into a single error number.</li>
+    <li><strong>Calibration treated as a first-class metric.</strong> Expected calibration error is reported for all decoders with 95% confidence intervals, revealing that calibration quality is uncorrelated with decoder sophistication.</li>
+    <li><strong>An honest, reproducible accounting.</strong> A single source-of-truth artifact, analytic confidence intervals that show the decoders to be statistically indistinguishable on raw logical error, and a code-level audit gate that blocks fabricated numbers and superiority claims together turn reproducibility into an enforced property rather than a promise.</li>
   </ol>
 </section>
 
 <section id="novelty">
   <h2><span class="num">5</span>Methodological Novelty</h2>
-  <p>The contribution is positioned precisely against named prior art rather than as a generic improvement.</p>
+  <p>Each element of the contribution is positioned against named prior art, delineating its specific advance over a generic improvement claim.</p>
   <div class="grid2">
     <div class="card">
       <h3>Against single-number, i.i.d. benchmarks</h3>
-      <p>MWPM (Dennis et&nbsp;al. 2002; Fowler et&nbsp;al. 2012; PyMatching, Higgott 2022) and BP/BP-OSD for qLDPC (Poulin&amp;Chung 2008; Panteleev&amp;Kalachev 2021; Roffe et&nbsp;al. 2020) are benchmarked almost exclusively on logical error under i.i.d. noise. This work evaluates the same algorithmic family across five structured regimes on one interface, with statistical significance made explicit.</p>
+      <p>MWPM (Dennis et&nbsp;al. 2002; Fowler et&nbsp;al. 2012; PyMatching, Higgott 2022) and BP/BP-OSD for qLDPC (Poulin&amp;Chung 2008; Panteleev&amp;Kalachev 2021; Roffe et&nbsp;al. 2020) are benchmarked almost exclusively on logical error under i.i.d. noise. This work evaluates the same algorithmic family across five structured regimes on one interface, with statistical significance reported explicitly for every comparison.</p>
     </div>
     <div class="card">
       <h3>Against accuracy-only learned decoders</h3>
-      <p>Learned and RL decoders (Torlai&amp;Melko 2017; Varsamopoulos et&nbsp;al. 2017; Baireuther et&nbsp;al. 2018; Sweke et&nbsp;al. 2020; Bausch et&nbsp;al. 2024) optimise logical error. Here the learned neural and RL selectors are scored additionally on coverage and calibration, surfacing that the lightweight neural coset selector is the best-calibrated decoder while sophistication does not predict calibration.</p>
+      <p>Learned and RL decoders (Torlai&amp;Melko 2017; Varsamopoulos et&nbsp;al. 2017; Baireuther et&nbsp;al. 2018; Sweke et&nbsp;al. 2020; Bausch et&nbsp;al. 2024) optimise logical error alone. Here the learned neural and RL selectors are additionally scored on coverage and calibration, revealing that the lightweight neural coset selector attains the lowest expected calibration error and that decoder sophistication fails to predict calibration.</p>
     </div>
     <div class="card">
       <h3>Selective prediction imported into QEC</h3>
-      <p>Selective classification and the reject option (Chow 1970; El-Yaniv&amp;Wiener 2010; Geifman&amp;El-Yaniv 2017) and modern calibration (Guo et&nbsp;al. 2017; Naeini et&nbsp;al. 2015) are transplanted into the decoding setting and made measurable per decoder, with a decision-theoretic monotonicity guarantee tying risk&ndash;coverage to calibration.</p>
+      <p>Selective classification and the reject option (Chow 1970; El-Yaniv&amp;Wiener 2010; Geifman&amp;El-Yaniv 2017), together with modern calibration (Guo et&nbsp;al. 2017; Naeini et&nbsp;al. 2015), are transplanted into the decoding setting and made measurable per decoder, supported by a decision-theoretic monotonicity guarantee that ties risk&ndash;coverage to calibration.</p>
     </div>
     <div class="card">
       <h3>Audit-enforced honesty</h3>
-      <p>An audit module rejects any reported number not traceable to the regenerated <code>summary.json</code> and rejects forbidden absolute-superiority phrasing in continuous integration&mdash;a reproducibility discipline rarely embedded directly in the artifact.</p>
+      <p>An audit module rejects any reported number not traceable to the regenerated <code>summary.json</code> and rejects forbidden absolute-superiority phrasing in continuous integration&mdash;a reproducibility discipline rarely embedded directly inside the artifact it governs.</p>
     </div>
   </div>
 </section>
 
 <section id="theory">
   <h2><span class="num">6</span>Theoretical Guarantees</h2>
-  <p>Every structural claim the benchmark relies on is proved in full in the manuscript. The key statements, transcribed from the Theory section:</p>
+  <p>Every structural claim the benchmark relies on is proved in full in the manuscript; the key statements are transcribed verbatim from the Theory section below, each paired with its operational reading.</p>
 
   <div class="thm">
     <div class="lab">Theorem 2 &mdash; Coset-leader optimality</div>
     <p>For \(p<\tfrac12\), the decoder that on syndrome \(s\) outputs a minimum-Hamming-weight representative of \(H^{-1}(s)\) is a maximum-likelihood decoder for the i.i.d. channel and, among all decoders, minimises the probability of logical failure.</p>
-    <div class="interp">Interpretation: <code>lookup</code> is the provable yardstick; no decoder on the i.i.d. channel can beat it, which caps how far any competitor's accuracy can lie from it.</div>
+    <div class="interp">Interpretation: <code>lookup</code> is the provable yardstick. It attains the minimum logical-failure probability achievable on the i.i.d. channel, which bounds how far any other decoder's accuracy can lie from it.</div>
   </div>
 
   <div class="thm">
     <div class="lab">Theorem 4 &mdash; Matching, majority and lookup coincide on the line</div>
     <p>For every syndrome \(s\), the lookup, majority, and matching decoders return corrections in the same coset \(H^{-1}(s)\) and select the same logical class as the minimum-weight coset leader, except on the measure-zero set of syndromes whose coset leader has weight exactly \(d/2\). Hence on the i.i.d. channel all three have identical logical error rate.</p>
-    <div class="interp">Interpretation: this is the analytic origin of the empirical tie&mdash;on the line the decoders are, up to a negligible tie set and finite-sample noise, the same decision rule, so the 0.0024 best-to-worst spread is sampling fluctuation, not signal.</div>
+    <div class="interp">Interpretation: this is the analytic origin of the empirical tie. On the line the three decoders are, up to a negligible tie set and finite-sample noise, the same decision rule, so the 0.0024 best-to-worst spread is sampling fluctuation, not signal.</div>
   </div>
 
   <div class="thm">
     <div class="lab">Theorem 6 &mdash; Automorphism invariance</div>
     <p>If the noise distribution is cyclically invariant and a decoder \(\mathcal{D}\) is cyclically equivariant, its logical error rate is invariant under cyclic relabeling: \(\Pr_e[\mathcal{D}\text{ fails on }e]=\Pr_e[\mathcal{D}\text{ fails on }\rho_t e]\) for every shift \(t\).</p>
-    <div class="interp">Interpretation: the integrity flag <code>automorphism_invariant</code> verifies the matching decoder respects the code's ring symmetry; it is <code>true</code> at reported scale.</div>
+    <div class="interp">Interpretation: the integrity flag <code>automorphism_invariant</code> certifies that the matching decoder respects the code's ring symmetry; it is <code>true</code> at reported scale.</div>
   </div>
 
   <div class="thm">
     <div class="lab">Proposition 7 &mdash; Bernoulli interval and the tie criterion</div>
     <p>For i.i.d. Bernoulli\((p_L)\) failure indicators with mean \(\hat p\), the half-width \(\mathrm{ci}_{95}=1.96\sqrt{\hat p(1-\hat p)/n}\) is a consistent 95% interval estimate. If two decoders satisfy \(|\hat p_A-\hat p_B|\le\mathrm{ci}_{95}\), the difference is not significant at 95%.</p>
-    <div class="interp">Interpretation: at \(n=200{,}000\) the eight decoders span 0.1516&ndash;0.1540 with \(\mathrm{ci}_{95}\approx0.0016\); the 0.0024 spread is below one interval width, so the decoders are statistically tied.</div>
+    <div class="interp">Interpretation: at \(n=200{,}000\) the eight decoders span 0.1516&ndash;0.1540 with \(\mathrm{ci}_{95}\approx0.0016\). The 0.0024 spread falls below one interval width, so the decoders are statistically tied.</div>
   </div>
 
   <div class="thm">
     <div class="lab">Theorem 9 &mdash; Monotone selective risk under calibrated confidence</div>
     <p>If confidence \(C\) satisfies \(\Pr(F=0\mid C=c)=c\) almost surely, then committed risk \(R(\tau)=1-\mathbb{E}[C\mid C\ge\tau]\), coverage \(G\) is non-increasing in \(\tau\), and \(R\) is non-increasing in \(\tau\). Equivalently, risk is a non-increasing function of decreasing coverage.</p>
-    <div class="interp">Interpretation: under calibrated confidence, abstaining on low-confidence syndromes can only lower committed risk&mdash;the governing mechanism of the interactive illustration below. The empirical confidences are imperfect, so the risk&ndash;coverage curves and ECE quantify the gap from this ideal.</div>
+    <div class="interp">Interpretation: under calibrated confidence, abstaining on low-confidence syndromes can only lower committed risk&mdash;the mechanism that governs the interactive illustration below. Measured decoder confidences depart from this ideal, so the risk&ndash;coverage curves and ECE quantify how far each decoder falls from it.</div>
   </div>
 </section>
 
 <section id="demo">
   <h2><span class="num">7</span>Interactive Illustration: Selective Decoding and Calibration</h2>
-  <p>The widget below is an <strong>interactive illustration</strong> of the paper's core mechanism (Theorem 9 and the ECE definition), not a re-run of the benchmark. It samples logical-failure indicators from a Bernoulli model whose base rate and confidence&ndash;accuracy coupling you control, then draws (left) the <em>risk&ndash;coverage</em> curve obtained by sweeping the abstention threshold \(\tau\), and (right) the <em>reliability diagram</em> whose occupancy-weighted gap is the ECE. The dashed line is full-coverage risk; the monotone fall as coverage shrinks is exactly what the theorem predicts when confidence is calibrated, and the curve flattens visibly as you decouple confidence from accuracy.</p>
+  <p>The widget below is an <strong>interactive illustration</strong> of the paper's core mechanism (Theorem 9 and the ECE definition), not a re-run of the benchmark. It samples logical-failure indicators from a Bernoulli model whose base rate and confidence&ndash;accuracy coupling you control, then draws (left) the <em>risk&ndash;coverage</em> curve obtained by sweeping the abstention threshold \(\tau\) and (right) the <em>reliability diagram</em> whose occupancy-weighted gap is the ECE. The dashed line marks full-coverage risk; the monotone fall as coverage shrinks is precisely what Theorem 9 predicts when confidence is calibrated, and the curve flattens visibly as you decouple confidence from accuracy.</p>
 
   <div class="demo">
     <h3>Risk&ndash;coverage and calibration explorer <span class="pill">client-side &middot; vanilla JS</span></h3>
@@ -321,13 +321,13 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
       <div class="stat"><div class="k">Expected calib. error</div><div class="v" id="o_ece">&mdash;</div></div>
       <div class="stat"><div class="k">Risk reduction vs full</div><div class="v" id="o_red">&mdash;</div></div>
     </div>
-    <p class="note" style="margin-top:14px">Model: each shot draws a failure indicator \(F\sim\mathrm{Bernoulli}(p)\); its confidence centres high on successes and low on failures, with the separation set by the spread control, then is blurred by Gaussian noise of width growing as calibration drops and is pulled toward an uninformative 0.5 as calibration &rarr; 0. Perfect calibration recovers the monotone risk&ndash;coverage fall of Theorem 9; lowering calibration flattens the curve and inflates ECE, mirroring the eight-fold ECE spread observed across the real decoder family.</p>
+    <p class="note" style="margin-top:14px">Model: each shot draws a failure indicator \(F\sim\mathrm{Bernoulli}(p)\); its confidence centres high on successes and low on failures, with the separation set by the spread control, then is blurred by Gaussian noise of width growing as calibration drops and is pulled toward an uninformative 0.5 as calibration &rarr; 0. Perfect calibration recovers the monotone risk&ndash;coverage fall of Theorem 9; lowering calibration flattens the curve and inflates ECE, mirroring the eight-fold ECE spread observed across the measured decoder family.</p>
   </div>
 </section>
 
 <section id="empirical">
   <h2><span class="num">8</span>Empirical Validation</h2>
-  <p>All numbers below are transcribed verbatim from the reported-scale run (repetition code, distance 9, 40,000 trials per regime, \(n=200{,}000\) pooled shots per decoder, \(p_{\mathrm{eval}}=0.12\), seed 0), written to the single source-of-truth artifact <code>summary.json</code>.</p>
+  <p>Every number below is transcribed verbatim from the reported-scale run (repetition code, distance 9, 40,000 trials per regime, \(n=200{,}000\) pooled shots per decoder, \(p_{\mathrm{eval}}=0.12\), seed 0) and written to the single source-of-truth artifact <code>summary.json</code>.</p>
 
   <h3>Headline comparison: tied on accuracy, eight-fold apart on calibration</h3>
   <table class="mono">
@@ -343,7 +343,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
       <tr><td>rl</td><td>0.1540</td><td>0.0016</td><td>0.2387</td></tr>
     </tbody>
   </table>
-  <p class="note">The logical error rates lie within one confidence-interval width of one another (spread 0.0024 &lt; one CI width &asymp; 0.0032): statistically indistinguishable. ECE spans 0.0317&ndash;0.2608, an eight-fold range with no monotone relationship to decoder complexity&mdash;the best-calibrated decoder is the lightweight neural coset selector; the worst is plain minimum-weight matching.</p>
+  <p class="note">The logical error rates lie within one confidence-interval width of one another (spread 0.0024 &lt; one CI width &asymp; 0.0032), so they are statistically indistinguishable. Calibration tells the opposite story: ECE spans 0.0317&ndash;0.2608, an eight-fold range with no monotone relationship to decoder complexity. The best-calibrated decoder is the lightweight neural coset selector; the worst is plain minimum-weight matching.</p>
 
   <h3>Selective decoding: abstention buys large, monotone reliability gains</h3>
   <table class="mono">
@@ -353,7 +353,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
       <tr><td>fused</td><td>0.1516 (cov 1.00)</td><td>0.0499 (cov 0.464)</td><td>0.0101 (cov 0.248)</td></tr>
     </tbody>
   </table>
-  <p class="note">Matching's committed error falls more than fifteen-fold for committing to roughly a quarter of shots; the monotone fall is verified programmatically by the runner and is the decision-theoretic content of Theorem 9.</p>
+  <p class="note">Restricting matching to commit on roughly a quarter of shots drops its committed error more than fifteen-fold. The runner verifies the monotone fall programmatically; it is the decision-theoretic content of Theorem 9 realised on measured decoder confidences.</p>
 
   <h3>Structured noise separates regimes, not decoders</h3>
   <table class="mono">
@@ -366,45 +366,45 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
       <tr><td>measurement error</td><td>&asymp;0.34</td><td>data noise + per-check read-out flips (hardest)</td></tr>
     </tbody>
   </table>
-  <p class="note">A more-than-hundred-fold change driven entirely by structure. Within each regime the decoders cluster inside their (now tight) confidence intervals; coverage varies strongly by decoder (matching commits on only 0.2797 of biased shots, while majority, lookup, neural, and fused always commit). The integrity flag <code>automorphism_invariant</code> is <code>true</code>.</p>
+  <p class="note">This is a more-than-hundred-fold change driven entirely by structure, not by the choice of decoder. Within each regime the decoders cluster inside their (now tight) confidence intervals, while coverage varies sharply across decoders: matching commits on only 0.2797 of biased shots, whereas majority, lookup, neural, and fused always commit. The integrity flag <code>automorphism_invariant</code> is <code>true</code>.</p>
 
   <div class="callout">
-    <p style="margin-top:0"><strong>Threshold behaviour.</strong> Across the eleven-point physical-error grid under i.i.d. noise, every core decoder tracks the optimal lookup leader and stays well below the break-even line \(p_L=p\); at \(p=0.21\) the logical error is only &asymp;0.024&ndash;0.025 for every core decoder. The curves overlap throughout, consistent with the headline statistical tie.</p>
+    <p style="margin-top:0"><strong>Threshold behaviour.</strong> Across the eleven-point physical-error grid under i.i.d. noise, every core decoder tracks the optimal lookup leader and stays well below the break-even line \(p_L=p\); at \(p=0.21\) the logical error is only &asymp;0.024&ndash;0.025 for every core decoder. The curves overlap throughout, consistent with the headline statistical tie rather than with any decoder pulling ahead.</p>
   </div>
 </section>
 
 <section id="impact">
   <h2><span class="num">9</span>Significance and Impact</h2>
-  <p class="lead">The deployable value of a decoder lies not in a fractional improvement on an already-saturated error rate, but in knowing when not to commit and in stating trustworthy confidence&mdash;axes this benchmark makes measurable for the entire decoder family at once.</p>
+  <p class="lead">A decoder's deployable value lies not in a fractional gain on an already-saturated error rate, but in knowing when not to commit and in stating confidence that can be trusted&mdash;the two axes this benchmark makes measurable for the entire decoder family at once.</p>
 
-  <p>For the field, the result reframes decoder evaluation. On a distance-\(d\) repetition code in these regimes the eight decoders are statistically tied on raw logical error, so a benchmark that reports only that number is uninformative; the separable, reproducible findings are that abstention yields large monotone reliability gains and that calibration is decoupled from decoder sophistication. For downstream fault-tolerant control loops, a decoder that abstains reliably&mdash;deferring hard syndromes to a slower fallback or a repeated measurement&mdash;is more useful than one that is marginally more accurate but always commits, and a deployment that needs trustworthy abstentions should prefer the explicitly probability-calibrated head over a more elaborate but worse-calibrated decoder.</p>
+  <p>The result reframes how decoders should be evaluated. On a distance-\(d\) repetition code in these regimes the eight decoders are statistically tied on raw logical error, so a benchmark that reports only that number conveys little; the separable and reproducible findings are that abstention yields large monotone reliability gains and that calibration is decoupled from decoder sophistication. The consequence for fault-tolerant control loops is direct: a decoder that abstains reliably&mdash;deferring hard syndromes to a slower fallback or a repeated measurement&mdash;is more useful than one that is marginally more accurate but always commits, and a deployment that depends on trustworthy abstentions should prefer the explicitly probability-calibrated head over a more elaborate but worse-calibrated decoder.</p>
 
   <div class="callout warn">
-    <p style="margin-top:0"><strong>Honest limitations, kept visible.</strong></p>
+    <p style="margin-top:0"><strong>Honest limitations, kept visible.</strong> The scope of the evidence is stated plainly so that no conclusion is read beyond what the artifact supports.</p>
     <ul style="margin-bottom:4px">
       <li>Toy codes only: the primary benchmark is the repetition code; the second code is a topology-faithful surface-<em>like</em> lattice, <em>not</em> a stabilizer-exact CSS surface code.</li>
       <li>Simulated structured noise, not hardware syndromes; a single code distance; lightweight learned models.</li>
       <li>No accuracy-superiority claim is made&mdash;the decoders are tied on raw error, and the manuscript says so explicitly.</li>
       <li>Single author and environment. Small-sample calibration rankings are unstable across scales; only the structural conclusion (calibration must be measured, not assumed) survives.</li>
     </ul>
-    <p style="margin-bottom:0">Extending to a full surface code at scale, to hardware syndromes, and to a distance-scaling sub-threshold study&mdash;while keeping selectivity and calibration first-class&mdash;is the natural next step.</p>
+    <p style="margin-bottom:0">The natural next step is to extend the same framework&mdash;keeping selectivity and calibration first-class&mdash;to a full surface code at scale, to hardware syndromes, and to a distance-scaling sub-threshold study.</p>
   </div>
 </section>
 
 <section id="repro">
   <h2><span class="num">10</span>Reproducibility</h2>
-  <p>The code implementing every code, noise model, decoder, metric, and the audit gate&mdash;and regenerating every figure, table, and reported number&mdash;accompanies the manuscript at <code>submission/code</code>. The package is <code>topoqec</code> (pip-installable, <code>pyproject.toml</code>). A single <code>runner.run()</code> writes <code>results/summary.json</code>, the source of truth from which all tables and figures are generated; nothing is typed by hand.</p>
+  <p>The full pipeline accompanies the manuscript at <code>submission/code</code>: it implements every code, noise model, decoder, and metric, including the audit gate, and regenerates every figure, table, and reported number. The package is <code>topoqec</code> (pip-installable, <code>pyproject.toml</code>). A single <code>runner.run()</code> writes <code>results/summary.json</code>, the source of truth from which all tables and figures are generated; nothing is typed by hand.</p>
 
   <div class="code-block">pip install -e .                      # installs topoqec from pyproject.toml
 export KMP_DUPLICATE_LIB_OK=TRUE      # conda + pip OpenMP runtimes on macOS
 bash scripts/reproduce_all.sh full    # reported scale (d=9, 40k trials/regime)
 bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
 
-  <p>The reported run completes end-to-end in 507&nbsp;s at 200&nbsp;MB peak memory on a single CPU. Provenance recorded alongside results: <code>macOS-26.5.1-arm64</code>, Python&nbsp;3.13.12, numpy&nbsp;2.4.3, scipy&nbsp;1.17.1, networkx&nbsp;3.6.1, scikit-learn&nbsp;1.8.0, matplotlib&nbsp;3.10.8; master seed 0. A reviewer reproduces identical numbers by running the pipeline at reported scale; the audit driver <code>scripts/audit_claims.py</code> runs in continuous integration and exits non-zero if any reported number fails to trace to <code>summary.json</code> or if forbidden absolute-superiority phrasing is detected.</p>
+  <p>The reported run completes end-to-end in 507&nbsp;s at 200&nbsp;MB peak memory on a single CPU. Provenance is recorded alongside the results: <code>macOS-26.5.1-arm64</code>, Python&nbsp;3.13.12, numpy&nbsp;2.4.3, scipy&nbsp;1.17.1, networkx&nbsp;3.6.1, scikit-learn&nbsp;1.8.0, matplotlib&nbsp;3.10.8; master seed 0. A reviewer reproduces identical numbers by running the pipeline at reported scale, and the audit driver <code>scripts/audit_claims.py</code> runs in continuous integration, exiting non-zero if any reported number fails to trace to <code>summary.json</code> or if forbidden absolute-superiority phrasing is detected.</p>
 
   <hr class="soft" />
   <div class="footer">
-    <p>Manuscript: <em>Selective and Calibrated Decoding for Quantum Error Correction: A Topology-Aware Decoder-Family Benchmark under Structured Noise</em> &middot; Molena Huynh &middot; 25 pages. All quantitative claims on this page are transcribed from <code>submission/main.tex</code> and the run artifact <code>summary.json</code>. The interactive widget is a pedagogical illustration of the governing mechanism, not a re-run of the experiments.</p>
+    <p>Manuscript: <em>Selective and Calibrated Decoding for Quantum Error Correction: A Topology-Aware Decoder-Family Benchmark under Structured Noise</em> &middot; Molena Huynh, North Carolina State University &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a> &middot; 25 pages. All quantitative claims on this page are transcribed from <code>submission/main.tex</code> and the run artifact <code>summary.json</code>. The interactive widget is a pedagogical illustration of the governing mechanism, not a re-run of the experiments.</p>
   </div>
 </section>
 
@@ -509,7 +509,7 @@ bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
     var maxRisk = Math.max(base * 1.15, 0.05);
     function X(cov){ return L + cov * pw; }
     function Y(risk){ return T + (1 - risk/maxRisk) * ph; }
-    ctx.strokeStyle = "#1c2940"; ctx.lineWidth = 1; ctx.fillStyle = "#7e93ac";
+    ctx.strokeStyle = "#e6eaf0"; ctx.lineWidth = 1; ctx.fillStyle = "#5b6675";
     ctx.font = "11px ui-monospace,monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
     var g, ry, yy, c2, cv2, xx;
     for(g = 0; g <= 4; g++){
@@ -519,11 +519,11 @@ bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
     }
     ctx.textAlign = "center"; ctx.textBaseline = "top";
     for(c2 = 0; c2 <= 5; c2++){ cv2 = c2/5; xx = X(cv2); ctx.fillText(cv2.toFixed(1), xx, T+ph+6); }
-    ctx.strokeStyle = "#5a6b86"; ctx.setLineDash([5,4]); ctx.beginPath();
+    ctx.strokeStyle = "#94a3b8"; ctx.setLineDash([5,4]); ctx.beginPath();
     ctx.moveTo(L, Y(base)); ctx.lineTo(L+pw, Y(base)); ctx.stroke(); ctx.setLineDash([]);
     var sorted = pts.filter(function(p){ return p.m > 0 && isFinite(p.risk); })
                     .slice().sort(function(a,b){ return a.cov - b.cov; });
-    ctx.strokeStyle = "#4ea1ff"; ctx.lineWidth = 2.4; ctx.beginPath();
+    ctx.strokeStyle = "#1a4e8a"; ctx.lineWidth = 2.4; ctx.beginPath();
     var started = false, i, p, px, py;
     for(i = 0; i < sorted.length; i++){
       p = sorted[i];
@@ -538,11 +538,11 @@ bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
     }
     if(cur){
       var mx = X(cur.cov), my = Y(Math.min(cur.risk, maxRisk));
-      ctx.fillStyle = "#f2a65a"; ctx.beginPath(); ctx.arc(mx, my, 5.5, 0, 2*Math.PI); ctx.fill();
-      ctx.strokeStyle = "#f2a65a"; ctx.lineWidth = 1; ctx.setLineDash([2,3]);
+      ctx.fillStyle = "#c0392b"; ctx.beginPath(); ctx.arc(mx, my, 5.5, 0, 2*Math.PI); ctx.fill();
+      ctx.strokeStyle = "#c0392b"; ctx.lineWidth = 1; ctx.setLineDash([2,3]);
       ctx.beginPath(); ctx.moveTo(mx, T); ctx.lineTo(mx, T+ph); ctx.stroke(); ctx.setLineDash([]);
     }
-    ctx.fillStyle = "#9bb0c9"; ctx.font = "11px ui-monospace,monospace";
+    ctx.fillStyle = "#5b6675"; ctx.font = "11px ui-monospace,monospace";
     ctx.textAlign = "center"; ctx.fillText("coverage  G(τ)", L+pw/2, H-15);
     ctx.save(); ctx.translate(14, T+ph/2); ctx.rotate(-Math.PI/2);
     ctx.fillText("committed risk  R(τ)", 0, 0); ctx.restore();
@@ -555,7 +555,7 @@ bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
     ctx.clearRect(0,0,W,H);
     function X(v){ return L + v * pw; }
     function Y(v){ return T + (1 - v) * ph; }
-    ctx.strokeStyle = "#1c2940"; ctx.lineWidth = 1; ctx.fillStyle = "#7e93ac";
+    ctx.strokeStyle = "#e6eaf0"; ctx.lineWidth = 1; ctx.fillStyle = "#5b6675";
     ctx.font = "11px ui-monospace,monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
     var g, yy, c2;
     for(g = 0; g <= 5; g++){
@@ -565,7 +565,7 @@ bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
     }
     ctx.textAlign = "center"; ctx.textBaseline = "top";
     for(c2 = 0; c2 <= 5; c2++){ ctx.fillText((c2/5).toFixed(1), X(c2/5), T+ph+6); }
-    ctx.strokeStyle = "#5fd08a"; ctx.setLineDash([5,4]); ctx.lineWidth = 1.6;
+    ctx.strokeStyle = "#1f7a4d"; ctx.setLineDash([5,4]); ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(1), Y(1)); ctx.stroke(); ctx.setLineDash([]);
     var B2 = res.bins.length, k, bin, xc, x0, x1, lo, hi;
     for(k = 0; k < B2; k++){
@@ -573,13 +573,13 @@ bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
       if(bin.cnt === 0) continue;
       xc = (k + 0.5) / B2;
       x0 = X(k/B2) + 2; x1 = X((k+1)/B2) - 2;
-      ctx.fillStyle = "rgba(78,161,255,.55)";
+      ctx.fillStyle = "rgba(26,78,138,.55)";
       ctx.fillRect(x0, Y(bin.acc), x1 - x0, Y(0) - Y(bin.acc));
       lo = Math.min(bin.acc, xc); hi = Math.max(bin.acc, xc);
-      ctx.fillStyle = "rgba(239,106,106,.32)";
+      ctx.fillStyle = "rgba(192,57,43,.30)";
       ctx.fillRect(x0, Y(hi), x1 - x0, Y(lo) - Y(hi));
     }
-    ctx.fillStyle = "#9bb0c9"; ctx.font = "11px ui-monospace,monospace";
+    ctx.fillStyle = "#5b6675"; ctx.font = "11px ui-monospace,monospace";
     ctx.textAlign = "center"; ctx.fillText("stated confidence", L+pw/2, H-15);
     ctx.save(); ctx.translate(14, T+ph/2); ctx.rotate(-Math.PI/2);
     ctx.fillText("realised accuracy", 0, 0); ctx.restore();

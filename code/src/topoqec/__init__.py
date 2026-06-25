@@ -20,6 +20,7 @@ from . import (  # noqa: F401
     metrics,
     noise,
     plotting,
+    reproduce,
     runner,
     seed,
     symmetry,
