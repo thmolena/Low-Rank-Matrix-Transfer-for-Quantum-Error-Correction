@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Selective and Calibrated Decoding for Quantum Error Correction &mdash; Topo-QEC</title>
-<meta name="description" content="A topology-aware decoder-family benchmark under structured noise: selective decoding, calibration, and honest confidence intervals on a distance-d repetition code." />
+<meta name="description" content="A topology-aware decoder-family benchmark under structured noise: selective decoding, calibration, and analytic confidence intervals on a distance-d repetition code." />
 <script>
 window.MathJax = {
   tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
@@ -194,7 +194,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
     <li><strong>Calibration</strong> \(\mathrm{ECE}_{g,k}\), the deviation of stated confidence from realised accuracy.</li>
     <li><strong>The risk&ndash;coverage curve</strong> \(\tau\mapsto(G(\tau),R(\tau))\), which traces the reliability purchased by abstaining on low-confidence syndromes.</li>
   </ol>
-  <p>The formulation is deliberately conservative. It does not ask which decoder wins on accuracy; it asks how accuracy, calibration, and the selective trade-off behave together across structured noise, and which differences are statistically real. Integrity is enforced in code: an automorphism-invariance check guards the symmetry assumptions, and an audit gate rejects any reported number not traceable to the single source-of-truth artifact and rejects absolute-superiority phrasing.</p>
+  <p>The formulation is deliberately conservative. It does not ask which decoder wins on accuracy; it asks how accuracy, calibration, and the selective trade-off behave together across structured noise, and which differences are statistically real. Integrity is enforced in code: an automorphism-invariance check guards the symmetry assumptions, and an audit gate rejects any reported number not traceable to the regenerated <code>summary.json</code> and rejects absolute-superiority phrasing.</p>
 </section>
 
 <section id="contrib">
@@ -203,7 +203,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
     <li><strong>A decoder-family benchmark under structured noise.</strong> Eight decoders&mdash;lookup, majority, matching, belief propagation, neural, topology, fused, and an RL selector&mdash;are evaluated on a single <code>decode(syndrome)&rarr;(correction, confidence)</code> defect-graph interface across i.i.d., biased, burst, correlated, and measurement-error regimes, with per-regime breakdowns and threshold curves, so cross-decoder and cross-regime comparisons rest on one footing.</li>
     <li><strong>Selective decoding established as a primary axis.</strong> Confidence-gated abstention and full risk&ndash;coverage curves are reported for every decoder, quantifying the reliability gained by relinquishing coverage rather than discarding that trade-off into a single error number.</li>
     <li><strong>Calibration treated as a first-class metric.</strong> Expected calibration error is reported for all decoders with 95% confidence intervals, revealing that calibration quality is uncorrelated with decoder sophistication.</li>
-    <li><strong>An honest, reproducible accounting.</strong> A single source-of-truth artifact, analytic confidence intervals that show the decoders to be statistically indistinguishable on raw logical error, and a code-level audit gate that blocks fabricated numbers and superiority claims together turn reproducibility into an enforced property rather than a promise.</li>
+    <li><strong>A traceable accounting of results.</strong> Every table and figure derives from one seeded artifact; analytic confidence intervals show the decoders to be statistically indistinguishable on raw logical error, and a code-level audit gate blocks numbers without provenance together with absolute-superiority phrasing.</li>
   </ol>
 </section>
 
@@ -224,7 +224,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
       <p>Selective classification and the reject option (Chow 1970; El-Yaniv&amp;Wiener 2010; Geifman&amp;El-Yaniv 2017), together with modern calibration (Guo et&nbsp;al. 2017; Naeini et&nbsp;al. 2015), are transplanted into the decoding setting and made measurable per decoder, supported by a decision-theoretic monotonicity guarantee that ties risk&ndash;coverage to calibration.</p>
     </div>
     <div class="card">
-      <h3>Audit-enforced honesty</h3>
+      <h3>Audit-enforced provenance</h3>
       <p>An audit module rejects any reported number not traceable to the regenerated <code>summary.json</code> and rejects forbidden absolute-superiority phrasing in continuous integration&mdash;a reproducibility discipline rarely embedded directly inside the artifact it governs.</p>
     </div>
   </div>
@@ -327,7 +327,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 
 <section id="empirical">
   <h2><span class="num">8</span>Empirical Validation</h2>
-  <p>Every number below is transcribed verbatim from the reported-scale run (repetition code, distance 9, 40,000 trials per regime, \(n=200{,}000\) pooled shots per decoder, \(p_{\mathrm{eval}}=0.12\), seed 0) and written to the single source-of-truth artifact <code>summary.json</code>.</p>
+  <p>Every number below is transcribed verbatim from the reported-scale run (repetition code, distance 9, 40,000 trials per regime, \(n=200{,}000\) pooled shots per decoder, \(p_{\mathrm{eval}}=0.12\), seed 0) and written to the regenerated artifact <code>summary.json</code>.</p>
 
   <h3>Headline comparison: tied on accuracy, eight-fold apart on calibration</h3>
   <table class="mono">
@@ -380,7 +380,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
   <p>The result reframes how decoders should be evaluated. On a distance-\(d\) repetition code in these regimes the eight decoders are statistically tied on raw logical error, so a benchmark that reports only that number conveys little; the separable and reproducible findings are that abstention yields large monotone reliability gains and that calibration is decoupled from decoder sophistication. The consequence for fault-tolerant control loops is direct: a decoder that abstains reliably&mdash;deferring hard syndromes to a slower fallback or a repeated measurement&mdash;is more useful than one that is marginally more accurate but always commits, and a deployment that depends on trustworthy abstentions should prefer the explicitly probability-calibrated head over a more elaborate but worse-calibrated decoder.</p>
 
   <div class="callout warn">
-    <p style="margin-top:0"><strong>Honest limitations, kept visible.</strong> The scope of the evidence is stated plainly so that no conclusion is read beyond what the artifact supports.</p>
+    <p style="margin-top:0"><strong>Limitations, kept visible.</strong> The scope of the evidence is stated plainly so that no conclusion is read beyond what the artifact supports.</p>
     <ul style="margin-bottom:4px">
       <li>Toy codes only: the primary benchmark is the repetition code; the second code is a topology-faithful surface-<em>like</em> lattice, <em>not</em> a stabilizer-exact CSS surface code.</li>
       <li>Simulated structured noise, not hardware syndromes; a single code distance; lightweight learned models.</li>
