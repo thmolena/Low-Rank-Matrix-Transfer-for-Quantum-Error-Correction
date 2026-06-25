@@ -58,7 +58,7 @@ regenerated artifact (`summary.json`).
    to the regenerated `summary.json` and rejects absolute-superiority phrasing, executed
    in continuous integration.
 
-## Headline results
+## Main results
 
 At reported scale (distance `d = 9`, eight decoders, five noise regimes, 40,000 trials per
 regime, `n = 200,000` shots aggregated per decoder, physical error rate `p = 0.12`), the
@@ -67,7 +67,7 @@ logical error rates lie within one confidence-interval width of one another: the
 **statistically tied** on raw logical error. Calibration tells a separate story: ECE spans
 0.0317–0.2608, an eight-fold range that varies independently of decoder complexity.
 
-<!-- transcribed from code/results/main_results.md (single source of truth: code/results/summary.json) -->
+<!-- transcribed from code/results/main_results.md (authoritative artifact: code/results/summary.json) -->
 | decoder | logical err. rate | ±95% CI | ECE |
 |---|---|---|---|
 | fused | 0.1516 | 0.0016 | 0.0608 |
@@ -146,7 +146,7 @@ risk–coverage curve are written to `code/results/summary.json` and plotted in 
     ├── scripts/                Command-line entry points around the library
     ├── configs/                smoke.yaml (demo scale) · full.yaml (reported scale)
     ├── tests/                  Code identities + automorphism invariance + metric-bound tests
-    ├── results/                Generated artifacts — summary.json is the single source of truth
+    ├── results/                Generated artifacts — summary.json is the authoritative artifact
     └── figures/                Generated PDFs (threshold + risk-coverage)
 ```
 
