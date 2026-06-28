@@ -3,13 +3,15 @@
 
 <p align="center">
   <a href="https://thmolena.github.io/P2-Topology-Aware-Graph-RL-Decoding-for-QEC/"><img alt="Live demo" src="https://img.shields.io/badge/demo-live-1f6feb"></a>
-  <img alt="Paper" src="https://img.shields.io/badge/paper-in%20review-informational">
+  <a href="submission/main.pdf"><img alt="Paper (PDF)" src="https://img.shields.io/badge/paper-PDF%20%C2%B7%20in%20review-informational"></a>
   <img alt="Python" src="https://img.shields.io/badge/python-3.9%E2%80%933.13-3776ab">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
   <img alt="Reproducible" src="https://img.shields.io/badge/results-script--generated-success">
 </p>
 
 <p align="center"><b><a href="https://thmolena.github.io/P2-Topology-Aware-Graph-RL-Decoding-for-QEC/">Open the live in-browser demo</a></b> — sample structured noise on a distance-<i>d</i> repetition code and watch the channel-adaptive <i>spectral</i> decoder beat the minimum-weight leader live, regime by regime, install-free.</p>
+
+<p align="center"><b><a href="submission/main.pdf">Read the manuscript (PDF)</a></b> &middot; <a href="index.html">Full tutorial</a> &middot; <a href="code">Reproducibility package</a></p>
 
 ## Summary
 
