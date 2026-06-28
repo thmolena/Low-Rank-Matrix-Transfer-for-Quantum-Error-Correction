@@ -154,6 +154,11 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 
 <main class="wrap">
 
+<div style="margin:26px 0 6px;padding:18px 20px;border:1px solid rgba(127,140,170,.32);border-left:4px solid var(--accent,#1f6feb);border-radius:8px;background:rgba(127,140,170,.06);">
+  <strong style="display:block;font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent,#1f6feb);margin-bottom:7px;">AI for quantum, at HPC scale</strong>
+  <p style="margin:0;font-size:1.02rem;line-height:1.6;">The decoder <em>learns the noise</em>: it fits a truncated transfer-operator model of the operating channel from a small calibration sample and returns the channel-matched maximum-a-posteriori coset &mdash; calibrated by construction, benchmarked head-to-head against neural and reinforcement-learning decoders, and cutting logical error <strong>20&ndash;44%</strong> under structured noise. Decoding is embarrassingly parallel Monte-Carlo over syndromes, GPU-batchable to higher code distance and shot count; every number on this page regenerates from one seeded run.</p>
+</div>
+
 <section id="background">
   <h2><span class="num">1</span>Background and Motivation</h2>
   <p class="lead">A quantum error-correcting code protects information only as well as its <em>decoder</em>, which must map each measured syndrome to the correct recovery under the <em>structured</em> noise characteristic of hardware: Pauli bias, spatial bursts, neighbour correlations, and faulty syndrome read-out.</p>
