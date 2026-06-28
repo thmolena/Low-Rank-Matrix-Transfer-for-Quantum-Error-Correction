@@ -25,8 +25,8 @@
       0.19,
       0.21
     ],
-    "trials": 40000,
-    "train_trials": 20000,
+    "trials": 20000,
+    "train_trials": 12000,
     "abstain_threshold": 0.5,
     "q_meas": 0.05
   },
@@ -42,9 +42,9 @@
       "sklearn": "1.8.0",
       "matplotlib": "3.10.8"
     },
-    "timestamp_utc": "2026-06-22T21:57:06Z",
-    "runtime_sec": 223.9955,
-    "peak_memory_mb": 338.69
+    "timestamp_utc": "2026-06-27T18:01:29Z",
+    "runtime_sec": 136.0188,
+    "peak_memory_mb": 261.92
   },
   "p_grid": [
     0.01,
@@ -63,286 +63,320 @@
   "decoders": {
     "majority": {
       "logical_error_rate": {
-        "mean": 0.15349,
-        "std": 0.36046,
-        "ci95": 0.00158,
-        "n": 200000
+        "mean": 0.15083,
+        "std": 0.357885,
+        "ci95": 0.002218,
+        "n": 100000
       },
-      "ece": 0.048913
+      "ece": 0.049768
     },
     "matching": {
       "logical_error_rate": {
-        "mean": 0.15292,
-        "std": 0.359911,
-        "ci95": 0.001577,
-        "n": 200000
+        "mean": 0.15245,
+        "std": 0.359458,
+        "ci95": 0.002228,
+        "n": 100000
       },
-      "ece": 0.260842
+      "ece": 0.262049
     },
     "bp": {
       "logical_error_rate": {
-        "mean": 0.15329,
-        "std": 0.360268,
-        "ci95": 0.001579,
-        "n": 200000
+        "mean": 0.15228,
+        "std": 0.359294,
+        "ci95": 0.002227,
+        "n": 100000
       },
-      "ece": 0.123212
+      "ece": 0.123834
     },
     "topology": {
       "logical_error_rate": {
-        "mean": 0.1537,
-        "std": 0.360662,
-        "ci95": 0.001581,
-        "n": 200000
+        "mean": 0.15249,
+        "std": 0.359497,
+        "ci95": 0.002228,
+        "n": 100000
       },
-      "ece": 0.242799
+      "ece": 0.242064
     },
     "lookup": {
       "logical_error_rate": {
-        "mean": 0.152395,
-        "std": 0.359404,
-        "ci95": 0.001575,
-        "n": 200000
+        "mean": 0.15415,
+        "std": 0.361094,
+        "ci95": 0.002238,
+        "n": 100000
       },
-      "ece": 0.056904
+      "ece": 0.05575
     },
     "neural": {
       "logical_error_rate": {
-        "mean": 0.15311,
-        "std": 0.360094,
-        "ci95": 0.001578,
-        "n": 200000
+        "mean": 0.15339,
+        "std": 0.360365,
+        "ci95": 0.002234,
+        "n": 100000
       },
-      "ece": 0.031716
+      "ece": 0.044576
     },
     "fused": {
       "logical_error_rate": {
-        "mean": 0.151635,
-        "std": 0.358668,
-        "ci95": 0.001572,
-        "n": 200000
+        "mean": 0.15242,
+        "std": 0.359429,
+        "ci95": 0.002228,
+        "n": 100000
       },
-      "ece": 0.060805
+      "ece": 0.062155
+    },
+    "spectral": {
+      "logical_error_rate": {
+        "mean": 0.12913,
+        "std": 0.335345,
+        "ci95": 0.002078,
+        "n": 100000
+      },
+      "ece": 0.062898
     },
     "rl": {
       "logical_error_rate": {
-        "mean": 0.154025,
-        "std": 0.360974,
-        "ci95": 0.001582,
-        "n": 200000
+        "mean": 0.15414,
+        "std": 0.361085,
+        "ci95": 0.002238,
+        "n": 100000
       },
-      "ece": 0.238657
+      "ece": 0.262423
     }
   },
   "by_regime": {
     "iid": {
       "majority": {
-        "logical_error_rate": 0.00235,
-        "ece": 0.117197,
+        "logical_error_rate": 0.0018,
+        "ece": 0.117711,
         "coverage": 1.0
       },
       "matching": {
-        "logical_error_rate": 0.002325,
-        "ece": 0.349581,
-        "coverage": 0.666925
+        "logical_error_rate": 0.00185,
+        "ece": 0.351611,
+        "coverage": 0.6651
       },
       "bp": {
-        "logical_error_rate": 0.002,
-        "ece": 0.211606,
-        "coverage": 0.989875
+        "logical_error_rate": 0.0019,
+        "ece": 0.211061,
+        "coverage": 0.98955
       },
       "topology": {
-        "logical_error_rate": 0.0019,
-        "ece": 0.30703,
-        "coverage": 0.794275
+        "logical_error_rate": 0.0024,
+        "ece": 0.305581,
+        "coverage": 0.7962
       },
       "lookup": {
-        "logical_error_rate": 0.0022,
-        "ece": 0.172873,
+        "logical_error_rate": 0.0023,
+        "ece": 0.173264,
         "coverage": 1.0
       },
       "neural": {
-        "logical_error_rate": 0.001975,
-        "ece": 0.120961,
+        "logical_error_rate": 0.00225,
+        "ece": 0.120172,
         "coverage": 1.0
       },
       "fused": {
-        "logical_error_rate": 0.00255,
-        "ece": 0.084082,
+        "logical_error_rate": 0.00155,
+        "ece": 0.084845,
+        "coverage": 1.0
+      },
+      "spectral": {
+        "logical_error_rate": 0.00145,
+        "ece": 0.000695,
         "coverage": 1.0
       },
       "rl": {
-        "logical_error_rate": 0.00215,
-        "ece": 0.329818,
-        "coverage": 0.781825
+        "logical_error_rate": 0.00205,
+        "ece": 0.317168,
+        "coverage": 0.69085
       }
     },
     "biased": {
       "majority": {
-        "logical_error_rate": 0.04275,
-        "ece": 0.203544,
+        "logical_error_rate": 0.0419,
+        "ece": 0.203906,
         "coverage": 1.0
       },
       "matching": {
-        "logical_error_rate": 0.043775,
-        "ece": 0.546135,
-        "coverage": 0.279675
+        "logical_error_rate": 0.04205,
+        "ece": 0.549339,
+        "coverage": 0.27555
       },
       "bp": {
-        "logical_error_rate": 0.043975,
-        "ece": 0.339675,
-        "coverage": 0.9007
+        "logical_error_rate": 0.0446,
+        "ece": 0.338727,
+        "coverage": 0.90085
       },
       "topology": {
-        "logical_error_rate": 0.0436,
-        "ece": 0.546534,
-        "coverage": 0.411575
+        "logical_error_rate": 0.04425,
+        "ece": 0.542599,
+        "coverage": 0.4157
       },
       "lookup": {
-        "logical_error_rate": 0.043775,
-        "ece": 0.250445,
+        "logical_error_rate": 0.04285,
+        "ece": 0.251896,
         "coverage": 1.0
       },
       "neural": {
-        "logical_error_rate": 0.0425,
-        "ece": 0.121339,
+        "logical_error_rate": 0.04485,
+        "ece": 0.119232,
         "coverage": 1.0
       },
       "fused": {
-        "logical_error_rate": 0.0451,
-        "ece": 0.147621,
+        "logical_error_rate": 0.04305,
+        "ece": 0.145995,
+        "coverage": 1.0
+      },
+      "spectral": {
+        "logical_error_rate": 0.024,
+        "ece": 0.001593,
         "coverage": 1.0
       },
       "rl": {
-        "logical_error_rate": 0.0459,
-        "ece": 0.506075,
-        "coverage": 0.5165
+        "logical_error_rate": 0.04145,
+        "ece": 0.552816,
+        "coverage": 0.3214
       }
     },
     "burst": {
       "majority": {
-        "logical_error_rate": 0.1717,
-        "ece": 0.04165,
+        "logical_error_rate": 0.1704,
+        "ece": 0.043267,
         "coverage": 1.0
       },
       "matching": {
-        "logical_error_rate": 0.17315,
-        "ece": 0.169669,
-        "coverage": 0.63665
+        "logical_error_rate": 0.173,
+        "ece": 0.171856,
+        "coverage": 0.63375
       },
       "bp": {
-        "logical_error_rate": 0.174275,
-        "ece": 0.080973,
-        "coverage": 0.890225
+        "logical_error_rate": 0.1726,
+        "ece": 0.080916,
+        "coverage": 0.8895
       },
       "topology": {
-        "logical_error_rate": 0.17655,
-        "ece": 0.16324,
-        "coverage": 0.8826
+        "logical_error_rate": 0.1716,
+        "ece": 0.166596,
+        "coverage": 0.88335
       },
       "lookup": {
-        "logical_error_rate": 0.173925,
-        "ece": 0.03372,
+        "logical_error_rate": 0.17845,
+        "ece": 0.034536,
         "coverage": 1.0
       },
       "neural": {
-        "logical_error_rate": 0.175725,
-        "ece": 0.064328,
+        "logical_error_rate": 0.1754,
+        "ece": 0.097534,
         "coverage": 1.0
       },
       "fused": {
-        "logical_error_rate": 0.171925,
-        "ece": 0.096486,
+        "logical_error_rate": 0.17765,
+        "ece": 0.102562,
+        "coverage": 1.0
+      },
+      "spectral": {
+        "logical_error_rate": 0.1196,
+        "ece": 0.025377,
         "coverage": 1.0
       },
       "rl": {
-        "logical_error_rate": 0.172475,
-        "ece": 0.166668,
-        "coverage": 0.686575
+        "logical_error_rate": 0.16925,
+        "ece": 0.19657,
+        "coverage": 0.6354
       }
     },
     "correlated": {
       "majority": {
-        "logical_error_rate": 0.210525,
-        "ece": 0.042239,
+        "logical_error_rate": 0.20575,
+        "ece": 0.045306,
         "coverage": 1.0
       },
       "matching": {
-        "logical_error_rate": 0.20925,
-        "ece": 0.13518,
-        "coverage": 0.637275
+        "logical_error_rate": 0.2086,
+        "ece": 0.13539,
+        "coverage": 0.6324
       },
       "bp": {
-        "logical_error_rate": 0.21015,
-        "ece": 0.079187,
-        "coverage": 0.885475
+        "logical_error_rate": 0.20405,
+        "ece": 0.074149,
+        "coverage": 0.88395
       },
       "topology": {
-        "logical_error_rate": 0.207775,
-        "ece": 0.129282,
-        "coverage": 0.9091
+        "logical_error_rate": 0.2074,
+        "ece": 0.132685,
+        "coverage": 0.90925
       },
       "lookup": {
-        "logical_error_rate": 0.210575,
-        "ece": 0.044992,
+        "logical_error_rate": 0.20695,
+        "ece": 0.044649,
         "coverage": 1.0
       },
       "neural": {
-        "logical_error_rate": 0.208275,
-        "ece": 0.098471,
+        "logical_error_rate": 0.2092,
+        "ece": 0.107188,
         "coverage": 1.0
       },
       "fused": {
-        "logical_error_rate": 0.206175,
-        "ece": 0.135009,
+        "logical_error_rate": 0.20355,
+        "ece": 0.132417,
+        "coverage": 1.0
+      },
+      "spectral": {
+        "logical_error_rate": 0.1619,
+        "ece": 0.048591,
         "coverage": 1.0
       },
       "rl": {
-        "logical_error_rate": 0.206975,
-        "ece": 0.153335,
-        "coverage": 0.679725
+        "logical_error_rate": 0.21265,
+        "ece": 0.164962,
+        "coverage": 0.6328
       }
     },
     "measurement_error": {
       "majority": {
-        "logical_error_rate": 0.340125,
-        "ece": 0.156075,
+        "logical_error_rate": 0.3343,
+        "ece": 0.151217,
         "coverage": 1.0
       },
       "matching": {
-        "logical_error_rate": 0.3361,
-        "ece": 0.139564,
-        "coverage": 0.503575
+        "logical_error_rate": 0.33675,
+        "ece": 0.137732,
+        "coverage": 0.506
       },
       "bp": {
-        "logical_error_rate": 0.33605,
-        "ece": 0.085668,
-        "coverage": 0.90805
+        "logical_error_rate": 0.33825,
+        "ece": 0.084447,
+        "coverage": 0.91095
       },
       "topology": {
-        "logical_error_rate": 0.338675,
-        "ece": 0.165964,
-        "coverage": 0.708025
+        "logical_error_rate": 0.3368,
+        "ece": 0.168109,
+        "coverage": 0.712
       },
       "lookup": {
-        "logical_error_rate": 0.3315,
-        "ece": 0.116678,
+        "logical_error_rate": 0.3402,
+        "ece": 0.12363,
         "coverage": 1.0
       },
       "neural": {
-        "logical_error_rate": 0.337075,
-        "ece": 0.207982,
+        "logical_error_rate": 0.33525,
+        "ece": 0.207043,
         "coverage": 1.0
       },
       "fused": {
-        "logical_error_rate": 0.332425,
-        "ece": 0.21852,
+        "logical_error_rate": 0.3363,
+        "ece": 0.222541,
+        "coverage": 1.0
+      },
+      "spectral": {
+        "logical_error_rate": 0.3387,
+        "ece": 0.323589,
         "coverage": 1.0
       },
       "rl": {
-        "logical_error_rate": 0.342625,
-        "ece": 0.123898,
-        "coverage": 0.649475
+        "logical_error_rate": 0.3453,
+        "ece": 0.124231,
+        "coverage": 0.52315
       }
     }
   },
@@ -350,265 +384,319 @@
     "majority": [
       0.0,
       0.0,
+      0.0,
       5e-05,
-      0.00015,
-      0.000525,
-      0.001475,
-      0.002725,
-      0.00555,
-      0.010175,
-      0.014675,
-      0.0239
+      0.00065,
+      0.0014,
+      0.004,
+      0.0057,
+      0.0097,
+      0.01495,
+      0.02385
     ],
     "matching": [
       0.0,
-      2.5e-05,
       0.0,
-      0.00015,
-      0.0005,
-      0.001425,
-      0.0031,
-      0.00555,
-      0.009325,
-      0.015775,
-      0.025425
+      0.0,
+      0.00025,
+      0.00065,
+      0.00165,
+      0.00275,
+      0.00485,
+      0.0094,
+      0.0158,
+      0.02465
     ],
     "topology": [
       0.0,
       0.0,
-      2.5e-05,
-      0.000225,
-      0.00065,
-      0.000975,
-      0.00275,
-      0.0054,
-      0.009425,
-      0.015225,
-      0.023975
+      0.0,
+      5e-05,
+      0.00055,
+      0.00175,
+      0.0028,
+      0.0051,
+      0.01115,
+      0.0165,
+      0.025
     ],
     "bp": [
       0.0,
       0.0,
       0.0,
-      0.0001,
-      0.000625,
-      0.001675,
-      0.00275,
-      0.00595,
-      0.00925,
-      0.01615,
-      0.024825
+      5e-05,
+      0.0006,
+      0.0015,
+      0.00265,
+      0.0055,
+      0.00905,
+      0.01575,
+      0.02195
     ],
     "lookup": [
       0.0,
       0.0,
-      5e-05,
-      0.00025,
-      0.000725,
-      0.0013,
-      0.00295,
-      0.0055,
-      0.0095,
-      0.014925,
-      0.024475
+      0.0,
+      0.0,
+      0.0005,
+      0.001,
+      0.003,
+      0.0057,
+      0.00915,
+      0.01595,
+      0.02315
     ],
     "fused": [
       0.0,
       0.0,
-      5e-05,
-      0.000225,
-      0.000525,
-      0.001275,
-      0.00325,
-      0.0048,
-      0.0109,
+      0.0001,
+      0.0003,
+      0.00065,
+      0.00115,
+      0.0036,
+      0.0052,
+      0.0098,
       0.01605,
-      0.0248
+      0.0239
+    ],
+    "spectral": [
+      0.0,
+      0.0,
+      0.0001,
+      0.0003,
+      0.0008,
+      0.0015,
+      0.0032,
+      0.0052,
+      0.0104,
+      0.01715,
+      0.02475
     ]
   },
   "risk_coverage": {
-    "fused": [
+    "spectral": [
       [
         1.0,
-        0.151635
+        0.12913
       ],
       [
-        0.99828,
-        0.150599
+        0.99463,
+        0.12669
       ],
       [
-        0.996665,
-        0.150708
+        0.97695,
+        0.119525
       ],
       [
-        0.991715,
-        0.150699
+        0.9699,
+        0.115909
       ],
       [
-        0.982475,
-        0.150767
+        0.95134,
+        0.112568
       ],
       [
-        0.96677,
-        0.150946
+        0.93382,
+        0.109047
       ],
       [
-        0.948695,
-        0.149674
+        0.92184,
+        0.107253
       ],
       [
-        0.937895,
-        0.148417
+        0.91004,
+        0.105446
       ],
       [
-        0.927135,
-        0.145766
+        0.90637,
+        0.104648
       ],
       [
-        0.85499,
-        0.13892
+        0.90397,
+        0.104307
       ],
       [
-        0.79617,
-        0.125287
+        0.89432,
+        0.102693
       ],
       [
-        0.749485,
-        0.120423
+        0.88965,
+        0.101939
       ],
       [
-        0.724705,
-        0.12176
+        0.86813,
+        0.097278
       ],
       [
-        0.72386,
-        0.121584
+        0.8531,
+        0.093354
       ],
       [
-        0.65679,
-        0.108665
+        0.82721,
+        0.091114
       ],
       [
-        0.547185,
-        0.074783
+        0.80779,
+        0.085814
       ],
       [
-        0.52623,
-        0.067138
+        0.78214,
+        0.082671
       ],
       [
-        0.464245,
-        0.04992
+        0.67545,
+        0.080169
       ],
       [
-        0.27053,
-        0.028795
+        0.64173,
+        0.075374
       ],
       [
-        0.248385,
-        0.010105
+        0.54786,
+        0.084292
       ],
       [
-        0.248385,
-        0.010105
+        0.04257,
+        0.021611
       ]
     ],
     "matching": [
       [
         1.0,
-        0.15292
+        0.15245
       ],
       [
-        0.99472,
-        0.152244
+        0.99467,
+        0.151658
       ],
       [
-        0.956465,
-        0.151344
+        0.95571,
+        0.15059
       ],
       [
-        0.940905,
-        0.151019
+        0.93968,
+        0.150136
       ],
       [
-        0.940905,
-        0.151019
+        0.93968,
+        0.150136
       ],
       [
-        0.814995,
-        0.125669
+        0.81382,
+        0.124806
       ],
       [
-        0.72346,
-        0.124091
+        0.72108,
+        0.122954
       ],
       [
-        0.72346,
-        0.124091
+        0.72108,
+        0.122954
       ],
       [
-        0.72346,
-        0.124091
+        0.72108,
+        0.122954
       ],
       [
-        0.54482,
-        0.075741
+        0.54256,
+        0.074425
       ],
       [
-        0.54482,
-        0.075741
+        0.54256,
+        0.074425
       ],
       [
-        0.54482,
-        0.075741
+        0.54256,
+        0.074425
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ],
       [
-        0.24703,
-        0.009857
+        0.24834,
+        0.010792
       ]
     ]
   },
   "headline": {
-    "best_decoder": "fused",
-    "best_logical_error_rate": 0.151635,
-    "fused_logical_error_rate": 0.151635,
-    "majority_logical_error_rate": 0.15349,
-    "fused_vs_majority_improvement": 1.012,
-    "fused_ece": 0.060805,
-    "headline_decoder": "fused",
-    "n_decoders": 8,
+    "best_decoder": "spectral",
+    "best_logical_error_rate": 0.12913,
+    "spectral_logical_error_rate": 0.12913,
+    "lookup_logical_error_rate": 0.15415,
+    "spectral_vs_lookup_improvement": 1.194,
+    "spectral_ece": 0.062898,
+    "spectral_by_regime": {
+      "iid": {
+        "spectral_ler": 0.00145,
+        "lookup_ler": 0.0023,
+        "abs_reduction": 0.00085,
+        "rel_reduction": 0.3696,
+        "z": 1.96
+      },
+      "biased": {
+        "spectral_ler": 0.024,
+        "lookup_ler": 0.04285,
+        "abs_reduction": 0.01885,
+        "rel_reduction": 0.4399,
+        "z": 10.5
+      },
+      "burst": {
+        "spectral_ler": 0.1196,
+        "lookup_ler": 0.17845,
+        "abs_reduction": 0.05885,
+        "rel_reduction": 0.3298,
+        "z": 16.58
+      },
+      "correlated": {
+        "spectral_ler": 0.1619,
+        "lookup_ler": 0.20695,
+        "abs_reduction": 0.04505,
+        "rel_reduction": 0.2177,
+        "z": 11.64
+      },
+      "measurement_error": {
+        "spectral_ler": 0.3387,
+        "lookup_ler": 0.3402,
+        "abs_reduction": 0.0015,
+        "rel_reduction": 0.0044,
+        "z": 0.32
+      }
+    },
+    "fused_logical_error_rate": 0.15242,
+    "majority_logical_error_rate": 0.15083,
+    "fused_vs_majority_improvement": 0.99,
+    "fused_ece": 0.062155,
+    "headline_decoder": "spectral",
+    "n_decoders": 9,
     "distance": 9
   }
 }

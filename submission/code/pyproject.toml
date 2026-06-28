@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "topoqec"
 version = "0.1.0"
-description = "Topology-Aware Graph RL Decoding for Quantum Error Correction under Structured Noise"
-readme = { text = "Topology-Aware Graph RL Decoding for Quantum Error Correction under Structured Noise: a selective, calibrated decoder-family benchmark.", content-type = "text/plain" }
+description = "Channel-adaptive spectral (transfer-operator) decoding for quantum error correction under structured noise"
+readme = { text = "Channel-adaptive spectral decoding for QEC: a transfer-operator decoder on the defect graph that breaks the decoder tie under structured noise, with selective decoding and calibration as first-class metrics.", content-type = "text/plain" }
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Molena Huynh" }]

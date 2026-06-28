@@ -28,7 +28,7 @@ import numpy as np
 from . import metrics, noise
 from .codes import make_code
 from .config import Config
-from .decoders import NeuralDecoder, RLDecoder, build_decoders
+from .decoders import NeuralDecoder, RLDecoder, SpectralDecoder, build_decoders
 from .seed import RunProvenance, set_seed
 from .symmetry import is_automorphism_invariant
 
@@ -95,17 +95,26 @@ def run(cfg: Config, out_dir: Path) -> Dict:
     # the decoder derives the coset label internally. This is the regime where a
     # learned decoder beats fixed minimum-weight matching: under biased / bursty
     # noise the most-likely coset is not always the lightest one.
+    # Per-regime calibration streams are retained so that the channel-adaptive
+    # spectral decoder can be matched to each operating channel using exactly the
+    # same labelled data the neural decoder is trained on (a fair comparison).
     train_S, train_E = [], []
+    train_by_regime: Dict[str, np.ndarray] = {}
     for regime in cfg.regimes:
         s, e = _sample_dataset(code, regime, cfg.train_trials // len(cfg.regimes),
                                cfg.p_eval, rng, cfg.q_meas)
         train_S.append(s)
         train_E.append(e)
+        train_by_regime[regime] = e
     train_S = np.vstack(train_S)
     train_E = np.vstack(train_E)
     neural = NeuralDecoder(code, kind="logreg").fit(train_S, train_E)
 
-    roster = build_decoders(code, rng, neural=neural)
+    # The spectral decoder is channel-adaptive: it carries one transfer-operator
+    # model that is re-estimated from the operating regime's calibration sample
+    # immediately before that regime is evaluated (see the per-regime loop).
+    spectral = SpectralDecoder(code)
+    roster = build_decoders(code, rng, neural=neural, spectral=spectral)
     rl = _train_rl(code, roster, rng, cfg.train_trials, cfg.p_eval, cfg.q_meas)
     if rl is not None:
         roster["rl"] = rl
@@ -119,6 +128,10 @@ def run(cfg: Config, out_dir: Path) -> Dict:
 
     for regime in cfg.regimes:
         by_regime[regime] = {}
+        # Channel-adaptive step: match the spectral transfer operator to this
+        # regime's calibration sample before evaluating it.
+        if "spectral" in roster:
+            roster["spectral"].fit(train_by_regime[regime])
         for dname in decoder_names:
             rec = _evaluate(code, roster[dname], regime, cfg.trials,
                             cfg.p_eval, rng, cfg.q_meas, cfg.abstain_threshold)
@@ -148,8 +161,15 @@ def run(cfg: Config, out_dir: Path) -> Dict:
     # Trace the core decoders (the headline comparison); the learned/selector
     # decoders are summarised at p_eval above and omitted here to keep the smoke
     # run fast. The curve answers "how does logical error scale with p?".
-    curve_decoders = [d for d in ("majority", "matching", "topology", "bp", "lookup", "fused")
+    curve_decoders = [d for d in ("majority", "matching", "topology", "bp", "lookup",
+                                  "fused", "spectral")
                       if d in decoder_names]
+    # The threshold sweep is under i.i.d. noise, where the spectral transfer
+    # operator is uniform and the decoder provably coincides with the optimal
+    # leader: we calibrate it on the i.i.d. stream so the curve is honest (it
+    # tracks lookup, claiming no i.i.d. advantage).
+    if "spectral" in roster:
+        roster["spectral"].fit(train_by_regime["iid"])
     threshold_curves: Dict[str, List[float]] = {d: [] for d in curve_decoders}
     for p in cfg.p_grid:
         for dname in curve_decoders:
@@ -157,13 +177,13 @@ def run(cfg: Config, out_dir: Path) -> Dict:
                             p, rng, cfg.q_meas, cfg.abstain_threshold)
             threshold_curves[dname].append(round(metrics.logical_error_rate(rec["fails"]), 6))
 
-    # ---- risk-coverage curve for the headline (fused) decoder ------------- #
-    headline_decoder = "fused" if "fused" in decoder_names else "matching"
+    # ---- risk-coverage curve for the headline (spectral) decoder ---------- #
+    headline_decoder = ("spectral" if "spectral" in decoder_names
+                        else "fused" if "fused" in decoder_names else "matching")
     rc_curves = {}
-    rc = metrics.risk_coverage_curve(
+    rc_curves[headline_decoder] = metrics.risk_coverage_curve(
         per_decoder_conf[headline_decoder], per_decoder_fail[headline_decoder]
     )
-    rc_curves[headline_decoder] = rc
     if "matching" in decoder_names and "matching" != headline_decoder:
         rc_curves["matching"] = metrics.risk_coverage_curve(
             per_decoder_conf["matching"], per_decoder_fail["matching"]
@@ -183,8 +203,34 @@ def run(cfg: Config, out_dir: Path) -> Dict:
                        key=lambda d: decoders_summary[d]["logical_error_rate"]["mean"])
     maj = decoders_summary.get("majority", {}).get(
         "logical_error_rate", {}).get("mean", float("nan"))
-    fused_ler = decoders_summary[headline_decoder]["logical_error_rate"]["mean"]
+
+    def _mean(dname):
+        return decoders_summary.get(dname, {}).get(
+            "logical_error_rate", {}).get("mean", float("nan"))
+
+    spectral_ler = _mean("spectral")
+    lookup_ler = _mean("lookup")
+    fused_ler = _mean("fused") if "fused" in decoder_names else spectral_ler
     improvement = round(maj / max(1e-9, fused_ler), 3) if maj == maj else 0.0
+    spectral_vs_lookup = (round(lookup_ler / max(1e-9, spectral_ler), 3)
+                          if spectral_ler == spectral_ler and lookup_ler == lookup_ler else None)
+
+    # Per-regime spectral advantage over the i.i.d.-optimal lookup leader, with a
+    # two-sample z-score, so the structured-noise wins are explicit and auditable.
+    spectral_by_regime = {}
+    if "spectral" in decoder_names and "lookup" in decoder_names:
+        for regime in cfg.regimes:
+            sp = by_regime[regime]["spectral"]["logical_error_rate"]
+            lk = by_regime[regime]["lookup"]["logical_error_rate"]
+            se = float(np.sqrt(max(sp * (1 - sp), 1e-12) / cfg.trials
+                               + max(lk * (1 - lk), 1e-12) / cfg.trials))
+            spectral_by_regime[regime] = {
+                "spectral_ler": round(sp, 6),
+                "lookup_ler": round(lk, 6),
+                "abs_reduction": round(lk - sp, 6),
+                "rel_reduction": round((lk - sp) / lk, 4) if lk > 0 else 0.0,
+                "z": round((lk - sp) / max(se, 1e-12), 2),
+            }
 
     summary: Dict = {
         "config": cfg.__dict__,
@@ -198,10 +244,16 @@ def run(cfg: Config, out_dir: Path) -> Dict:
         "headline": {
             "best_decoder": best_decoder,
             "best_logical_error_rate": decoders_summary[best_decoder]["logical_error_rate"]["mean"],
-            "fused_logical_error_rate": round(float(fused_ler), 6),
+            "spectral_logical_error_rate": round(float(spectral_ler), 6) if spectral_ler == spectral_ler else None,
+            "lookup_logical_error_rate": round(float(lookup_ler), 6) if lookup_ler == lookup_ler else None,
+            "spectral_vs_lookup_improvement": spectral_vs_lookup,
+            "spectral_ece": decoders_summary.get("spectral", {}).get("ece"),
+            "spectral_by_regime": spectral_by_regime,
+            "fused_logical_error_rate": round(float(fused_ler), 6) if fused_ler == fused_ler else None,
             "majority_logical_error_rate": round(float(maj), 6) if maj == maj else None,
             "fused_vs_majority_improvement": improvement,
-            "fused_ece": decoders_summary[headline_decoder]["ece"],
+            "fused_ece": decoders_summary.get("fused", {}).get(
+                "ece", decoders_summary.get(headline_decoder, {}).get("ece")),
             "headline_decoder": headline_decoder,
             "n_decoders": len(decoder_names),
             "distance": cfg.distance,

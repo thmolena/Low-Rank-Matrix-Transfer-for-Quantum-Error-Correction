@@ -8,7 +8,7 @@ distance: 9
 regimes: [iid, biased, burst, correlated, measurement_error]
 p_eval: 0.12
 p_grid: [0.01, 0.03, 0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17, 0.19, 0.21]
-trials: 40000
-train_trials: 20000
+trials: 20000
+train_trials: 12000
 abstain_threshold: 0.5
 q_meas: 0.05

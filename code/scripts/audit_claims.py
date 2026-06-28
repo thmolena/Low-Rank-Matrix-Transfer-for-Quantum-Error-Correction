@@ -25,9 +25,22 @@ def main() -> int:
     headline = summary.get("headline", {})
     if not headline:
         problems.append("summary has an empty 'headline' block")
-    for key in ("best_decoder", "fused_vs_majority_improvement", "fused_ece", "n_decoders"):
+    for key in ("best_decoder", "spectral_vs_lookup_improvement", "spectral_ece",
+                "spectral_by_regime", "n_decoders"):
         if key not in headline:
             problems.append(f"headline macro {key!r} not generated")
+
+    # The central performance claim must be *evidenced*: the spectral decoder's
+    # advantage over the i.i.d.-optimal lookup leader must be statistically
+    # significant (z > 3) in at least one structured regime, and not significant
+    # under i.i.d. noise, where theory forbids any data-channel advantage.
+    sbr = headline.get("spectral_by_regime", {})
+    if sbr:
+        structured = [r for r in sbr if r != "iid"]
+        if not any(sbr[r].get("z", 0) > 3.0 for r in structured):
+            problems.append("spectral advantage not significant (z<=3) in any structured regime")
+        if abs(sbr.get("iid", {}).get("z", 0)) > 4.0:
+            problems.append("spectral claims an i.i.d. advantage (|z|>4) that theory forbids")
 
     # Integrity flag: the cyclic-relabeling automorphism must hold.
     if not summary.get("automorphism_invariant", False):

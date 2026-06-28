@@ -3,7 +3,8 @@ import numpy as np
 
 from topoqec import noise
 from topoqec.codes import RepetitionCode
-from topoqec.decoders import MajorityDecoder, MatchingDecoder
+from topoqec.decoders import (LookupDecoder, MajorityDecoder, MatchingDecoder,
+                              SpectralDecoder)
 
 
 def _logical_error_rate(code, decoder, regime, trials, p, seed):
@@ -57,3 +58,42 @@ def test_decoders_return_valid_confidence():
             corr, conf = dec.decode(code.syndrome(err))
             assert corr.shape == (code.n_data,)
             assert 0.0 <= conf <= 1.0
+
+
+def _fit_spectral(code, regime, p, n, seed):
+    rng = np.random.default_rng(seed)
+    E = np.array([noise.sample(regime, code.n_data, p, rng)[0] for _ in range(n)],
+                 dtype=np.int8)
+    return SpectralDecoder(code).fit(E)
+
+
+def test_spectral_corrections_are_syndrome_consistent():
+    code = RepetitionCode(7)
+    dec = _fit_spectral(code, "biased", 0.12, 2000, seed=4)
+    rng = np.random.default_rng(5)
+    for _ in range(80):
+        err, _ = noise.sample("biased", code.n_data, 0.12, rng)
+        s = code.syndrome(err)
+        corr, conf = dec.decode(s)
+        assert np.array_equal(code.syndrome(corr), s)  # reproduces the syndrome
+        assert 0.0 <= conf <= 1.0
+
+
+def test_spectral_beats_lookup_under_structured_noise():
+    code = RepetitionCode(9)
+    look = LookupDecoder(code)
+    for regime in ("biased", "burst", "correlated"):
+        dec = _fit_spectral(code, regime, 0.12, 4000, seed=11)
+        ler_s = _logical_error_rate(code, dec, regime, 4000, 0.12, seed=21)
+        ler_l = _logical_error_rate(code, look, regime, 4000, 0.12, seed=21)
+        assert ler_s <= ler_l + 1e-9  # channel-adaptive never loses to the leader
+
+
+def test_spectral_ties_lookup_on_iid():
+    code = RepetitionCode(9)
+    look = LookupDecoder(code)
+    dec = _fit_spectral(code, "iid", 0.1, 4000, seed=12)
+    ler_s = _logical_error_rate(code, dec, "iid", 4000, 0.1, seed=22)
+    ler_l = _logical_error_rate(code, look, "iid", 4000, 0.1, seed=22)
+    # under i.i.d. noise the transfer operator is uniform: no advantage, no loss
+    assert abs(ler_s - ler_l) < 0.01
