@@ -13,6 +13,8 @@
 
 <p align="center"><b><a href="submission/main.pdf">Read the manuscript (PDF)</a></b> &middot; <a href="index.html">Full tutorial</a> &middot; <a href="code">Reproducibility package</a></p>
 
+> **AI for quantum, at HPC scale.** The decoder *learns the noise*: it estimates a truncated transfer-operator model of the operating channel from a small calibration sample and returns the channel-matched maximum-a-posteriori coset — a learned, calibrated-by-construction decoder benchmarked head-to-head against neural and reinforcement-learning decoders on one `decode(s) → (correction, confidence)` interface, cutting logical error by **20–44%** under structured noise. Decoding is embarrassingly parallel Monte-Carlo over syndromes — the workload GPU batching is built for — so the benchmark scales to code distance and shot count. Every number regenerates deterministically from one seeded run.
+
 ## Summary
 
 A quantum error-correcting code protects information only insofar as its **decoder** maps a
