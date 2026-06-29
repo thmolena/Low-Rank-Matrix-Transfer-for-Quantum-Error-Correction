@@ -149,6 +149,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
     <a href="#empirical">Empirical</a>
     <a href="#impact">Significance</a>
     <a href="#repro">Reproducibility</a>
+    <a href="#references">References</a>
   </div>
 </nav>
 
@@ -166,6 +167,8 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
   <p>Topological codes&mdash;Kitaev's toric and surface codes&mdash;are the leading candidates for scalable fault tolerance, and recent hardware has shown that scaling such a code can push the logical error rate below the physical one (Google Quantum AI, <em>Nature</em> 2023). The decoder is the component that converts a stabilizer syndrome into a correction, and it is the layer of the stack where classical combinatorial algorithms and, increasingly, machine learning meet the physics of the device. Three algorithmic families dominate: minimum-weight perfect matching (MWPM), the production standard, built on Edmonds' blossom algorithm; belief propagation with ordered-statistics decoding, which underpins quantum LDPC decoding; and learned decoders, where neural networks and reinforcement learning have recently surpassed matching-based accuracy on real hardware syndromes (Bausch et&nbsp;al., <em>Nature</em> 2024).</p>
 
   <p>Across nearly all of this work the main metric is a single number, the logical error rate, almost always measured under independent-and-identically-distributed (i.i.d.) depolarizing or bit-flip noise. Two facts argue for a richer accounting. First, <strong>hardware noise departs from i.i.d.</strong>&mdash;it is structured, and a decoder that excels on i.i.d. noise may forfeit any advantage under structure; settling the question requires testing one decoder family across regimes on a common footing. Second, a decoder inside a fault-tolerant control loop <strong>may decline to commit to a given syndrome</strong>: it can abstain, flagging a shot as unreliable so that a slower fallback decoder, a repeated measurement, or a higher-level protocol takes over. Abstention is the QEC analogue of <em>selective prediction</em> in machine learning, and it is trustworthy only when the confidence gating it is <em>calibrated</em>. Both axes&mdash;coverage and calibration&mdash;remain routinely absent from decoder benchmarks.</p>
+
+  <p>What unites the incumbent decoders is their objective: each is engineered to approximate the minimum-weight coset leader, which is the maximum-likelihood recovery only when the channel is i.i.d. On a distance-\(d\) repetition code, a family of otherwise dissimilar decoders&mdash;optimal lookup, majority, matching, belief propagation, a learned neural coset selector, a topology decoder, a confidence-fused decoder, and a reinforcement-learning selector&mdash;turn out to be statistically indistinguishable on raw logical error. This is not a ceiling on achievable accuracy but the signature of a shared blind spot: every one targets the same weight-based leader and so collapses, on the line, to the same decision rule. The component that breaks it represents the structured channel by a truncated transfer operator&mdash;an inhomogeneous first-order Markov (classical matrix-product) model whose log-likelihood is a sum of local terms read along the chain&mdash;estimated from a small calibration sample of the operating channel, and selects the maximum-a-posteriori coset. It is Bayes-optimal for the structured channel and provably reduces to the leader under i.i.d. noise, so it claims no advantage where none exists.</p>
 
   <div class="callout">
     <p style="margin-top:0"><strong>The open problem, and our answer.</strong> The dominant decoders&mdash;matching, belief propagation, learned decoders&mdash;are all built to approximate the minimum-weight coset leader, which is the maximum-likelihood rule <em>only</em> for i.i.d. noise. We prove this is exactly why a careful family of eight such decoders is statistically indistinguishable on a repetition code: they share one i.i.d. target. The missing ingredient is <em>channel-awareness</em>. We introduce a channel-adaptive <strong>spectral</strong> decoder that models the structured channel by a truncated transfer operator on the defect graph and returns the maximum-a-posteriori coset; it is Bayes-optimal for the structured channel, breaks the tie by 20&ndash;44% under structured noise, and&mdash;reported with equal emphasis&mdash;ties the leader honestly where no single-shot advantage exists.</p>
@@ -483,6 +486,55 @@ bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
   <div class="footer">
     <p>Manuscript: <em>Channel-Adaptive Spectral Decoding for Quantum Error Correction: A Transfer-Operator Decoder on the Defect Graph that Breaks the Decoder Tie under Structured Noise</em> &middot; Molena Huynh, North Carolina State University &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a> &middot; 31 pages. All quantitative claims on this page are transcribed from <code>submission/main.tex</code> and the run artifact <code>summary.json</code>. The live spectral-decoder demo re-implements the package's mechanism; the selective-decoding widget is a pedagogical illustration of the governing theorem.</p>
   </div>
+</section>
+
+<section id="references">
+  <h2><span class="num">11</span>References</h2>
+
+  <p class="lead">Related work.</p>
+  <p>The benchmark places one decoder family on a common footing. Minimum-weight perfect matching&mdash;the production standard for surface codes, packaged in <em>PyMatching</em> (Higgott 2022) and built on Edmonds' blossom algorithm (Edmonds 1965)&mdash;sets the i.i.d.-optimal baseline that the spectral decoder must tie where no structure exists. Belief propagation with ordered-statistics decoding (Roffe et&nbsp;al. 2020; Panteleev and Kalachev 2021) underpins the quantum LDPC line of work, and a fast-growing learned-decoder literature trains neural networks and reinforcement-learning agents to decode (Torlai and Melko 2017; Baireuther et&nbsp;al. 2018), with very recent work exceeding matching accuracy on real hardware syndromes (Bausch et&nbsp;al. 2024). The two evaluation axes added here&mdash;selective prediction (Chow 1970; El-Yaniv and Wiener 2010; Geifman and El-Yaniv 2017) and calibration (Guo et&nbsp;al. 2017; Naeini et&nbsp;al. 2015)&mdash;are imported from the classification literature, where abstention and calibrated confidence are first-class concerns. The complete bibliography of the manuscript follows.</p>
+
+  <ol style="font-size:.9rem;line-height:1.55">
+    <li>P. W. Shor. "Scheme for reducing decoherence in quantum computer memory." <em>Physical Review A</em> 52(4), R2493&ndash;R2496, 1995.</li>
+    <li>M. A. Nielsen and I. L. Chuang. "Quantum computation and quantum information." 2010.</li>
+    <li>B. M. Terhal. "Quantum error correction for quantum memories." <em>Reviews of Modern Physics</em> 87(2), 307&ndash;346, 2015.</li>
+    <li>A. Yu. Kitaev. "Fault-tolerant quantum computation by anyons." <em>Annals of Physics</em> 303(1), 2&ndash;30, 2003.</li>
+    <li>E. Dennis, A. Kitaev, A. Landahl, and J. Preskill. "Topological quantum memory." <em>Journal of Mathematical Physics</em> 43(9), 4452&ndash;4505, 2002.</li>
+    <li>A. G. Fowler, M. Mariantoni, J. M. Martinis, and A. N. Cleland. "Surface codes: Towards practical large-scale quantum computation." <em>Physical Review A</em> 86(3), 032324, 2012.</li>
+    <li>Google Quantum AI. "Suppressing quantum errors by scaling a surface code logical qubit." <em>Nature</em> 614(7949), 676&ndash;681, 2023.</li>
+    <li>O. Higgott. "PyMatching: A Python package for decoding quantum codes with minimum-weight perfect matching." <em>ACM Transactions on Quantum Computing</em> 3(3), 1&ndash;16, 2022.</li>
+    <li>J. Edmonds. "Paths, trees, and flowers." <em>Canadian Journal of Mathematics</em> 17, 449&ndash;467, 1965.</li>
+    <li>D. Poulin and Y. Chung. "Iterative quantum coding systems and the topological color code." <em>Quantum Information &amp; Computation</em> 8(10), 987&ndash;1000, 2008.</li>
+    <li>P. Panteleev and G. Kalachev. "Degenerate quantum LDPC codes with good finite length performance." <em>Quantum</em> 5, 585, 2021.</li>
+    <li>J. Roffe, D. R. White, S. Burton, and E. Campbell. "Decoding across the quantum low-density parity-check code landscape." <em>Physical Review Research</em> 2(4), 043423, 2020.</li>
+    <li>G. Torlai and R. G. Melko. "Neural decoder for topological codes." <em>Physical Review Letters</em> 119(3), 030501, 2017.</li>
+    <li>S. Varsamopoulos, B. Criger, and K. Bertels. "Decoding small surface codes with feedforward neural networks." <em>Quantum Science and Technology</em> 3(1), 015004, 2017.</li>
+    <li>P. Baireuther, T. E. O'Brien, B. Tarasinski, and C. W. J. Beenakker. "Machine-learning-assisted correction of correlated qubit errors in a topological code." <em>Quantum</em> 2, 48, 2018.</li>
+    <li>S. Krastanov and L. Jiang. "Deep neural network probabilistic decoder for stabilizer codes." <em>Scientific Reports</em> 7(1), 11003, 2017.</li>
+    <li>R. Sweke, M. S. Kesselring, E. P. L. van Nieuwenburg, and J. Eisert. "Reinforcement learning decoders for fault-tolerant quantum computation." <em>Machine Learning: Science and Technology</em> 2(2), 025005, 2020.</li>
+    <li>P. Andreasson, J. Johansson, S. Liljestrand, and M. Granath. "Quantum error correction for the toric code using deep reinforcement learning." <em>Quantum</em> 3, 183, 2019.</li>
+    <li>J. Bausch, A. W. Senior, F. J. H. Heras, et&nbsp;al. "Learning high-accuracy error decoding for quantum processors." <em>Nature</em> 635(8040), 834&ndash;840, 2024.</li>
+    <li>C. K. Chow. "On optimum recognition error and reject tradeoff." Vol.&nbsp;16, pp.&nbsp;41&ndash;46. IEEE, 1970.</li>
+    <li>R. El-Yaniv and Y. Wiener. "On the foundations of noise-free selective classification." <em>Journal of Machine Learning Research</em> 11, 1605&ndash;1641, 2010.</li>
+    <li>Y. Geifman and R. El-Yaniv. "Selective classification for deep neural networks." <em>Advances in Neural Information Processing Systems</em> 30, 2017.</li>
+    <li>C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger. "On calibration of modern neural networks." In <em>International Conference on Machine Learning</em>, pp.&nbsp;1321&ndash;1330. PMLR, 2017.</li>
+    <li>M. P. Naeini, G. Cooper, and M. Hauskrecht. "Obtaining well calibrated probabilities using Bayesian binning." In <em>Proceedings of the AAAI Conference on Artificial Intelligence</em>, Vol.&nbsp;29, 2015.</li>
+    <li>A. A. Hagberg, D. A. Schult, and P. J. Swart. "Exploring network structure, dynamics, and function using NetworkX." In <em>Proceedings of the 7th Python in Science Conference (SciPy)</em>, pp.&nbsp;11&ndash;15, 2008.</li>
+    <li>C. R. Harris, K. J. Millman, S. J. van der Walt, et&nbsp;al. "Array programming with NumPy." <em>Nature</em> 585(7825), 357&ndash;362, 2020.</li>
+    <li>F. Pedregosa, G. Varoquaux, A. Gramfort, et&nbsp;al. "Scikit-learn: Machine learning in Python." <em>Journal of Machine Learning Research</em> 12, 2825&ndash;2830, 2011.</li>
+    <li>L. Li, W. Chu, J. Langford, and R. E. Schapire. "A contextual-bandit approach to personalized news article recommendation." In <em>Proceedings of the 19th International Conference on World Wide Web</em>, pp.&nbsp;661&ndash;670, 2010.</li>
+    <li>R. S. Sutton and A. G. Barto. <em>Reinforcement Learning: An Introduction</em>. MIT Press, 2nd edition, 2018.</li>
+    <li>P. Virtanen, R. Gommers, T. E. Oliphant, et&nbsp;al. "SciPy 1.0: fundamental algorithms for scientific computing in Python." <em>Nature Methods</em> 17(3), 261&ndash;272, 2020.</li>
+    <li>J. D. Hunter. "Matplotlib: A 2D graphics environment." <em>Computing in Science &amp; Engineering</em> 9(3), 90&ndash;95, 2007.</li>
+    <li>M. Huynh. "Query-efficient quantum approximate optimization via graph-conditioned trust regions." <em>arXiv preprint</em> arXiv:2604.24803, 2026. <a href="https://doi.org/10.48550/arXiv.2604.24803" target="_blank" rel="noreferrer">doi:10.48550/arXiv.2604.24803</a></li>
+    <li>M. Huynh. "Topology-conditioned warm starts match spectral initialization for depth-one QAOA." Manuscript in preparation, 2026.</li>
+    <li>M. Huynh. "Commutator-graph term ordering reduces first-order Trotter error at matched gate cost." Manuscript in preparation, 2026.</li>
+    <li>M. Huynh. "Provable operator learning of size-transferable Trotter corrections for Hamiltonian simulation." Manuscript in preparation, 2026.</li>
+    <li>M. Huynh. "CPTP-Compiler-PINNs: structure-preserving residual learning and matrix-free compilation for open quantum dynamics." Manuscript in preparation, 2026.</li>
+    <li>M. Huynh. "Objective-aware sequence modelling for drift forecasting and anomaly detection in quantum hardware." Manuscript in preparation, 2026.</li>
+    <li>M. Nguyen and N. Jing. "Zassenhaus expansion in solving the Schr&ouml;dinger equation." <em>arXiv preprint</em> arXiv:2505.09441, 2025. <a href="https://doi.org/10.48550/arXiv.2505.09441" target="_blank" rel="noreferrer">doi:10.48550/arXiv.2505.09441</a></li>
+    <li>N. Jing and M. Nguyen. "Complexity bounds for Hamiltonian simulation in unitary representations." <em>arXiv preprint</em> arXiv:2603.07231, 2026. <a href="https://doi.org/10.48550/arXiv.2603.07231" target="_blank" rel="noreferrer">doi:10.48550/arXiv.2603.07231</a></li>
+  </ol>
 </section>
 
 </main>

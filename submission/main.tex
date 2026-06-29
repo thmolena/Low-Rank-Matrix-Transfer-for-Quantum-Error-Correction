@@ -58,7 +58,7 @@ On a distance-$d$ repetition code, eight otherwise dissimilar decoders---optimal
 
 We introduce the decoder that does not. The \emph{spectral} decoder casts decoding on the code's defect graph and represents the structured channel by a \emph{truncated transfer operator}---an inhomogeneous first-order Markov (classical matrix-product) model whose log-likelihood is a sum of local terms read along the chain---estimated from a small calibration sample of the operating channel, and it selects the maximum-a-posteriori coset (Secs.~\ref{sec:theory_structured} and~\ref{sec:methods_decoders}). It is Bayes-optimal for the structured channel [Eq.~\eqref{eq:map}] and provably reduces to the leader under i.i.d.\ noise, so it claims no advantage where none exists. Its plug-in estimator is consistent in the calibration-sample size (Sec.~\ref{sec:theory_structured}), and the confidence it reports is the exact model posterior, calibrated by construction [Eq.~\eqref{eq:calib}]. We evaluate it inside one fully reproducible benchmark that keeps three properties usually held apart: a single \texttt{decode(syndrome)\,$\to$\,(correction, confidence)} interface hosting all nine decoders across five regimes; selective decoding, so every decoder can abstain and we report risk--coverage curves rather than a single error number; and calibration as a reported metric. Every number carries an analytic $95\%$ confidence interval, and a code-level audit rejects any number without a generated artifact and any unevidenced superlative.
 
-We adopt a CPU-reproducible, fully resource-accounted protocol developed for related quantum-optimization, Hamiltonian-simulation, open-system-identification, and drift-forecasting studies~\cite{huynh2026uqqaoa,huynh2026topoqaoa,huynh2026topoham,huynh2026liergtc,huynh2026cptppinn,huynh2026drift}, in which calibration likewise appears as the confidence that decides whether a model should commit or abstain. Fixed-depth and representation-theoretic results for Hamiltonian simulation supply complementary context for the quantum circuits whose errors QEC must ultimately suppress~\cite{nguyen2025zassenhaus,jing2026complexity}.
+This study is the thirteenth in a single-author program on spectral truncation of operators, the common thread being that a high-dimensional operator---an objective landscape, a product-formula residual, a transfer channel---is replaced by a low-rank surrogate retained on its dominant modes and used to commit, abstain, or transfer under a calibrated confidence. The earlier entries develop graph-conditioned trust regions and their uncertainty calibration for query-efficient QAOA~\cite{huynh2026gctr,huynh2026gctrcal,huynh2026gctrcalpro}, the measurement cost and certified query budgets of low-depth QAOA~\cite{huynh2026meascost,huynh2026certqb}, topology-conditioned QAOA parameter transfer and its operator-spectral truncated priors~\cite{huynh2026paramxfer,huynh2026paramxferB,huynh2026ostqaoa,huynh2026topoqaoa}, zero-overhead and Lie-algebraic spectral truncation of the Trotter error for Hamiltonian simulation~\cite{huynh2026topoham,huynh2026lie}, and a topological graph neural decoder for correlated quantum errors~\cite{huynh2026gnndec}. The present work carries that thread to the structured-noise decoding problem: the truncated transfer operator is the spectral surrogate, and its model posterior is the calibrated confidence that decides whether the decoder commits or abstains, exactly as calibration gates the commit-or-abstain decision throughout the program~\cite{huynh2026cptppinn,huynh2026drift}. Fixed-depth and representation-theoretic results for Hamiltonian simulation supply complementary context for the quantum circuits whose errors QEC must ultimately suppress~\cite{nguyen2025zassenhaus,jing2026complexity}.
 
 The performance claim is single and precise. The spectral decoder reduces the logical error of the i.i.d.-optimal leader under each \emph{structured data-noise} regime---$\sync{44.0}\%$ under bias ($z=\sync{10.5}$), $\sync{33.0}\%$ under bursts ($z=\sync{16.6}$), and $\sync{21.8}\%$ under neighbour correlations ($z=\sync{11.6}$), pooling to $\sync{0.1291}$ against $\sync{0.1508}$--$\sync{0.1542}$ for all eight structure-agnostic decoders (Sec.~\ref{sec:headline}). The reduction vanishes where the channel-matched optimum [Eq.~\eqref{eq:map}] forbids a single-shot advantage: the decoder is statistically tied with the leader under i.i.d.\ noise ($z=\sync{2.0}$) and under read-out noise ($z=\sync{0.3}$), where a corrupted syndrome no longer carries recoverable structure. The eight structure-agnostic decoders remain mutually indistinguishable on raw accuracy (spread $\sync{0.0033}$, below $1.5$ interval widths)---the original tie, now understood as a shared i.i.d.\ target rather than a saturation of the problem. Two further findings hold: abstention buys a large, monotone reduction in committed logical error (Sec.~\ref{sec:risk_coverage}), and calibration quality is not predicted by decoder sophistication, spanning a factor of nearly six across the agnostic family (Sec.~\ref{sec:calibration}).
 
@@ -84,7 +84,7 @@ Three elementary facts make the line picture exact. First, $Hx=0$ forces $x_i=x_
 \end{equation}
 and by rank--nullity $\operatorname{rank}H=d-1$, so $H$ is surjective and every syndrome is realisable. Second, $s_i(e)=1$ exactly where $e_i\neq e_{i+1}$, i.e.\ at the boundaries between maximal constant runs of $e$; the lit checks $J=\{i:s_i=1\}$ therefore mark the \emph{endpoints} of the error chains, and $\abs J\equiv e_0\oplus e_{d-1}\pmod 2$ is even iff $e_0=e_{d-1}$. Decoding is thus a problem of pairing endpoints on a line---the picture every defect-graph decoder of Sec.~\ref{sec:methods_decoders} uses (Fig.~\ref{fig:schematic}).
 
-Third, two errors share a syndrome iff they differ by a stabilizer: $He=He'\iff e\oplus e'\in\ker H=\{0,\mathbf 1\}$. Each syndrome $s$ therefore labels a single \emph{coset}
+Third, two errors share a syndrome iff they differ by a stabilizer: by Eq.~\eqref{eq:kernel}, $He=He'\iff e\oplus e'\in\ker H=\{0,\mathbf 1\}$. Each syndrome $s$ therefore labels a single \emph{coset}
 \begin{equation}
   H^{-1}(s)=\{c_0,\,c_1\}, \qquad c_1=c_0\oplus\mathbf 1,
   \label{eq:coset}
@@ -131,7 +131,7 @@ specified by an initial law $\pi_0$ on $\F_2$ and per-site stochastic $2\times2$
 
 When the true channel factorises as $P=P_\theta$, maximising $\log P_\theta$ over the two-element coset is identical to Eq.~\eqref{eq:map}, so the plug-in transfer-operator decoder---the \emph{spectral} decoder---is channel-matched optimal. It is also consistent: the Laplace-smoothed transition counts $\hat T_i(a,b)=\bigl(\eps+\#\{e:e_i=a,e_{i+1}=b\}\bigr)/(\text{row total})$ converge almost surely to $T_i(a,b)$ as the calibration sample grows (and likewise $\hat\pi_0\to\pi_0$), and continuity of the $\arg\max$ off the measure-zero tie set carries this through to the decision. The spectral decoder thus ties the leader under i.i.d.\ noise, where $\mathcal B$ is empty, and strictly beats it whenever $\mathcal B$ carries mass.
 
-Its confidence is not a heuristic but the exact model posterior. With $\Delta\ell=\bigl|\log P_\theta(c_0)-\log P_\theta(c_1)\bigr|$, dividing Eq.~\eqref{eq:transfer} through by $P_\theta(\hat c)$ gives
+Its confidence is not a heuristic but the exact model posterior. Normalising the model probabilities over the two-element coset, the posterior of the chosen representative is $P_\theta(\hat c)/\bigl(P_\theta(c_0)+P_\theta(c_1)\bigr)$; with $\Delta\ell=\bigl|\log P_\theta(c_0)-\log P_\theta(c_1)\bigr|$, dividing numerator and denominator by $P_\theta(\hat c)$ gives
 \begin{equation}
   C=\sigma(\Delta\ell)=\bigl(1+e^{-\Delta\ell}\bigr)^{-1}=P_\theta(\hat c\mid s),
   \label{eq:calib}
@@ -141,7 +141,7 @@ the model posterior of the chosen coset. If $P_\theta$ equals the true channel t
 \subsection{Automorphism invariance of the logical error rate}
 \label{sec:theory_auto}
 
-The repetition code carries a cyclic (ring) symmetry, and a faithful decoder should respect it. For a shift $t$ let $\rho_t$ be the cyclic relabeling $(\rho_t e)_i=e_{(i-t)\bmod d}$, and call a decoder $\calD$ cyclically equivariant if $\calD(s(\rho_t e))=\rho_t(\calD(s(e)))$. The logical functional is shift-invariant, $L(\rho_t e)=L(e)$, and the shift commutes with the check structure, so for an equivariant decoder the residual transforms as $\rho_t e\oplus\calD(s(\rho_t e))=\rho_t\bigl(e\oplus\calD(s(e))\bigr)$; the shifted residual is a zero-logical-value stabilizer iff the original is, hence the failure indicator obeys $F(\rho_t e)=F(e)$ pointwise. If the noise is cyclically invariant, $\Pr(\rho_t e)=\Pr(e)$, as the i.i.d.\ channel is, taking expectations gives $\Pr[\calD\text{ fails on }\rho_t e]=\Pr[\calD\text{ fails on }e]$: the logical error rate is invariant under relabeling. The matching decoder is equivariant up to the boundary-closure convention, so its rate is invariant under shifts $\{1,2,d/2\}$ to within Monte-Carlo tolerance; the run reports this as the \texttt{automorphism\_invariant} flag, which is \sync{true} at reported scale (Sec.~\ref{sec:per_regime}).
+The repetition code carries a cyclic (ring) symmetry, and a faithful decoder should respect it. For a shift $t$ let $\rho_t$ be the cyclic relabeling $(\rho_t e)_i=e_{(i-t)\bmod d}$, and call a decoder $\calD$ cyclically equivariant if $\calD(s(\rho_t e))=\rho_t(\calD(s(e)))$. The logical functional is shift-invariant, $L(\rho_t e)=L(e)$, and the shift commutes with the check structure, so for an equivariant decoder the residual transforms as $\rho_t e\oplus\calD(s(\rho_t e))=\rho_t\bigl(e\oplus\calD(s(e))\bigr)$; the shifted residual is a zero-logical-value stabilizer iff the original is, hence the failure indicator obeys $F(\rho_t e)=F(e)$ pointwise. If the noise is cyclically invariant, $\Pr(\rho_t e)=\Pr(e)$ (as the i.i.d.\ channel is), then taking expectations gives $\Pr[\calD\text{ fails on }\rho_t e]=\Pr[\calD\text{ fails on }e]$: the logical error rate is invariant under relabeling. The matching decoder is equivariant up to the boundary-closure convention, so its rate is invariant under shifts $\{1,2,d/2\}$ to within Monte-Carlo tolerance; the run reports this as the \texttt{automorphism\_invariant} flag, which is \sync{true} at reported scale (Sec.~\ref{sec:per_regime}).
 
 \subsection{Honest intervals and statistical indistinguishability}
 \label{sec:theory_ci}
@@ -646,30 +646,78 @@ John~D. Hunter.
 \newblock \emph{Computing in Science \& Engineering}, 9\penalty0 (3):\penalty0
   90--95, 2007.
 
-\bibitem{huynh2026uqqaoa}
+\bibitem{huynh2026gctr}
 Molena Huynh.
 \newblock Query-efficient quantum approximate optimization via
   graph-conditioned trust regions.
 \newblock \emph{arXiv preprint arXiv:2604.24803}, 2026.
 \newblock \doi{10.48550/arXiv.2604.24803}.
 
+\bibitem{huynh2026gctrcal}
+Molena Huynh.
+\newblock Graph-conditioned trust regions for uncertainty-calibrated quantum
+  approximate optimization.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem{huynh2026gctrcalpro}
+Molena Huynh.
+\newblock Graph-conditioned trust regions for uncertainty-calibrated quantum
+  approximate optimization (extended).
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem{huynh2026meascost}
+Molena Huynh.
+\newblock The measurement cost of warm-started low-depth {QAOA}.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem{huynh2026certqb}
+Molena Huynh.
+\newblock Certified query budgets for the quantum approximate optimization
+  algorithm.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem{huynh2026paramxfer}
+Molena Huynh.
+\newblock Topology-conditioned {QAOA} parameter transfer for budgeted graph
+  optimization.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem{huynh2026paramxferB}
+Molena Huynh.
+\newblock Topology-conditioned {QAOA} parameter transfer for budgeted graph
+  optimization (companion).
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem{huynh2026ostqaoa}
+Molena Huynh.
+\newblock Operator-spectral truncated priors for query-efficient {QAOA}
+  parameter search.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
 \bibitem{huynh2026topoqaoa}
 Molena Huynh.
-\newblock Topology-conditioned warm starts match spectral initialization for
-  depth-one {QAOA}.
-\newblock Manuscript in preparation, 2026.
+\newblock Spectral-truncation graph kernels for {QAOA} warm starts:
+  topology-conditioned schedule transfer beyond depth one.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem{huynh2026topoham}
 Molena Huynh.
-\newblock Commutator-graph term ordering reduces first-order {Trotter} error at
-  matched gate cost.
-\newblock Manuscript in preparation, 2026.
+\newblock Zero-overhead cancellation of the leading {Trotter} error via
+  commutator-graph scheduling.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
-\bibitem{huynh2026liergtc}
+\bibitem{huynh2026lie}
 Molena Huynh.
-\newblock Provable operator learning of size-transferable {Trotter}
-  corrections for {Hamiltonian} simulation.
-\newblock Manuscript in preparation, 2026.
+\newblock Advancing the product-formula error--cost frontier with a
+  {Lie}-algebraic spectral truncation of the residual.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem{huynh2026gnndec}
+Molena Huynh.
+\newblock Learning to decode correlated quantum errors: a topological graph
+  neural decoder that surpasses minimum-weight matching under structured
+  circuit-level noise.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem{huynh2026cptppinn}
 Molena Huynh.
