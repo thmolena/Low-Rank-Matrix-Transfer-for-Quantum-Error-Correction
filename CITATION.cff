@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-title: "Channel-Adaptive Spectral Decoding for Quantum Error Correction: A Transfer-Operator Decoder on the Defect Graph that Breaks the Decoder Tie under Structured Noise"
+title: "Transfer-Operator Decoding of Structured Noise in Quantum Error Correction"
 authors:
   - family-names: Huynh
     given-names: Molena

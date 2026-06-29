@@ -214,9 +214,8 @@ package.
 
 ```bibtex
 @misc{huynh_topoqec_2027,
-  title        = {Channel-Adaptive Spectral Decoding for Quantum Error Correction:
-                  A Transfer-Operator Decoder on the Defect Graph that Breaks the
-                  Decoder Tie under Structured Noise},
+  title        = {Transfer-Operator Decoding of Structured Noise in
+                  Quantum Error Correction},
   author       = {Huynh, Molena},
   year         = {2027},
   organization = {North Carolina State University},

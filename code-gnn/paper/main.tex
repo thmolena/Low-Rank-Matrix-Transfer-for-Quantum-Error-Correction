@@ -15,7 +15,7 @@
 \usepackage{enumitem}
 \usepackage{microtype}
 \usepackage{xcolor}
-\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage[hidelinks]{hyperref}
 
 \graphicspath{{figures/}{../figures/}}
 
@@ -53,29 +53,29 @@ noise}
 \date{\today}
 
 \begin{abstract}
-Minimum-weight perfect matching (MWPM) is the standard surface-code decoder, but
-it rests on an independence assumption: it scores a correction by summing
-per-edge weights of a graphlike error model. Hardware noise is correlated,
-because crosstalk and correlated two-qubit faults flip several detectors jointly,
-and such faults are exactly those a sum of independent edge weights cannot
-represent. We make this precise and exploitable. We prove that MWPM is
-maximum-likelihood if and only if the fault distribution factorizes over
+We show that the standard surface-code decoder is provably suboptimal under
+realistic correlated noise, and we close the gap with a learned decoder that
+never sees the noise model. Minimum-weight perfect matching (MWPM) scores a
+correction by summing per-edge weights of a graphlike error model, an
+independence assumption that hardware violates: crosstalk and correlated
+two-qubit faults flip several detectors jointly, and such hyperedge faults are
+exactly what a sum of independent edge weights cannot represent. We prove that
+MWPM is maximum-likelihood if and only if the fault distribution factorizes over
 graphlike edges, and we construct correlated instances on which the MWPM logical
 error rate is bounded away from optimal by the probability mass on
 logical-flipping hyperedges. We then introduce a topological graph neural
-decoder: a message-passing network on the detector graph, with one node per
-detector and edges joining detectors that share a fault mechanism, so that
-correlated hyperedge faults appear as denser local subgraphs. Trained only on
-samples, with no knowledge of the noise model, it estimates the Bayes posterior
-over the logical class and returns a calibrated confidence. On Stim
-circuit-level rotated surface-code memory experiments decoded head-to-head on
-identical shots, the learned decoder is statistically indistinguishable from
-MWPM under independent noise and cuts the logical error rate by $\res{44.0}\%$ at
-distance $3$ under correlated noise (paired McNemar $p=\res{3.8\times10^{-141}}$),
-recovering most of the gap to the model-aware BP+OSD ceiling without being given
-the model. We report Wilson and paired-bootstrap intervals and release the full
-pipeline; the advantage scales with correlation strength and code distance and is
-largest in the near-term regime.
+decoder, a message-passing network on the detector graph with one node per
+detector and edges joining detectors that share a fault mechanism, so correlated
+hyperedge faults appear as denser local subgraphs. Trained only on samples, it
+estimates the Bayes posterior over the logical class and returns a calibrated
+confidence. On Stim circuit-level rotated surface-code memory experiments decoded
+head-to-head on identical shots, the learned decoder is statistically
+indistinguishable from MWPM under independent noise and cuts the logical error
+rate by $\res{44.0}\%$ at distance $3$ under correlated noise (paired McNemar
+$p=\res{3.8\times10^{-141}}$), recovering most of the gap to the model-aware
+BP+OSD ceiling without being given the model. The advantage scales with
+correlation strength and code distance and is largest in the near-term regime. We
+report Wilson and paired-bootstrap intervals and release the full pipeline.
 \end{abstract}
 
 \maketitle
@@ -84,64 +84,80 @@ largest in the near-term regime.
 \section{Introduction}
 \label{sec:introduction}
 
-Quantum error correction (QEC) protects logical information by encoding it
-across many physical qubits and repeatedly measuring stabilizers, whose outcomes
-form a \emph{syndrome}~\cite{shor1995scheme,nielsen2010quantum,terhal2015quantum}.
-Topological codes---toric and surface codes~\cite{kitaev2003fault,dennis2002topological,fowler2012surface}---are
-the leading route to scalable fault tolerance, and recent hardware has driven
-the logical error rate below the physical one by scaling a surface
-code~\cite{google2023suppressing}. The component that converts a syndrome into a
-correction is the \emph{decoder}; it is where classical algorithms and machine
-learning meet device physics, and its quality directly sets the achievable
-logical error rate.
+Fault-tolerant quantum computing rests on a classical inference problem: turning
+a stream of stabilizer measurements into a correction. Quantum error correction
+(QEC) encodes logical information across many physical qubits and repeatedly
+measures stabilizers, whose outcomes form a
+\emph{syndrome}~\cite{shor1995scheme,nielsen2010quantum,terhal2015quantum,calderbank1996good,steane1996error,gottesman1997stabilizer}.
+A threshold theorem guarantees that, below a critical physical error rate,
+arbitrarily long computations can be protected~\cite{aharonov2008fault}.
+Topological codes---toric and surface codes~\cite{kitaev2003fault,dennis2002topological,fowler2012surface,bravyi1998quantum}---are
+the leading route to scalable fault tolerance, with thresholds set by an
+underlying statistical-mechanical phase transition~\cite{wang2003confinement};
+related topological color codes offer transversal gate
+sets~\cite{bombin2006topological}. Recent hardware has driven the
+logical error rate below the physical one by scaling a surface
+code~\cite{google2023suppressing,google2025below}, following repeated-correction
+demonstrations at distance three~\cite{krinner2022realizing}. The component that converts a syndrome into a
+correction is the \emph{decoder}, where classical algorithms and machine learning
+meet device physics, and its quality directly sets the achievable logical error
+rate.
 
 The dominant surface-code decoder is minimum-weight perfect matching
-(MWPM)~\cite{dennis2002topological,fowler2012surface,higgott2022pymatching},
+(MWPM)~\cite{dennis2002topological,fowler2012surface,higgott2022pymatching,higgott2025sparse},
 built on Edmonds' blossom algorithm~\cite{edmonds1965paths} and, in practice, on
 the detector error model (DEM) that a tool such as Stim~\cite{gidney2021stim}
-extracts from a noisy circuit. MWPM is fast, near-optimal under independent
-noise, and has excellent thresholds. But its optimality rests on a specific
+extracts from a noisy circuit. Alternative graphlike decoders such as union-find
+trade a small accuracy loss for near-linear runtime~\cite{delfosse2021almost}, and
+exact maximum-likelihood decoders are known but scale unfavourably with code
+size~\cite{bravyi2014efficient,wootton2012high}. MWPM is fast, near-optimal under
+independent noise, and has excellent thresholds. Its optimality, however, hinges on one structural
 assumption: it represents the error model as a \emph{graph}, with one weighted
 edge per fault that flips at most two detectors, and it scores a correction by
-\emph{summing} those weights. This is exactly maximum-likelihood decoding when
-faults are independent and graphlike---and \emph{only} then.
+\emph{summing} those weights. This coincides with maximum-likelihood decoding
+when faults are independent and graphlike---and \emph{only} then.
 
 Hardware noise is neither independent nor graphlike. Crosstalk, leakage, and
 correlated two-qubit gate faults produce errors that flip three or four detectors
-jointly~\cite{google2023suppressing,bausch2024learning}. Such a correlated fault
-is a hyperedge in the DEM. Matching cannot represent a hyperedge; at best it
+jointly~\cite{google2023suppressing,bausch2024learning}---each such correlated
+fault a hyperedge in the DEM. Reweighting the matching graph to absorb likely
+correlations~\cite{fowler2013optimal} or estimating those weights adaptively from
+data~\cite{spitz2018adaptive,nickerson2019analysing}, and tailoring the code to
+biased noise~\cite{tuckett2018ultrahigh}, mitigate but do not remove this
+limitation. Matching cannot represent a hyperedge: at best it
 decomposes the hyperedge into independent graphlike edges and sums their weights
-as if they were unrelated, so the joint structure is discarded. Belief-propagation
-decoders with ordered-statistics post-processing (BP+OSD)~\cite{panteleev2021degenerate,roffe2020decoding}
+as if unrelated, discarding the joint structure. Belief-propagation decoders with
+ordered-statistics post-processing (BP+OSD)~\cite{panteleev2021degenerate,roffe2020decoding}
 use the full hyperedge model and are the strong baseline for correlated and
-quantum-LDPC codes, but they require the correct model as input and are heavier
-at inference. A large literature applies neural networks and reinforcement
-learning to decoding~\cite{torlai2017neural,varsamopoulos2017decoding,baireuther2018machine,krastanov2017deep,sweke2020reinforcement,andreasson2019quantum},
-and learned decoders now exceed matching on hardware
-syndromes~\cite{bausch2024learning}. What has been missing is a controlled,
+quantum-LDPC codes, but they require the correct model as input and are heavier at
+inference. A large literature applies neural networks and reinforcement learning
+to decoding~\cite{torlai2017neural,varsamopoulos2017decoding,baireuther2018machine,krastanov2017deep,sweke2020reinforcement,andreasson2019quantum,chamberland2018deep,varsamopoulos2020comparing,overwater2022neural},
+including graph- and equivariance-aware architectures matched to the detector
+structure~\cite{lange2025data,egorov2023end}, and learned decoders now exceed
+matching on hardware syndromes~\cite{bausch2024learning}. What has been missing is a controlled,
 reproducible account of why and by how much a learned decoder helps precisely
 where the matching independence assumption breaks, evaluated head-to-head against
 both MWPM and a correctly specified BP+OSD on identical shots.
 
 We treat decoding as inference on the code detector graph and make the
-matching-learning gap both provable and exploitable. In Sec.~\ref{sec:theory} we
-prove that MWPM is maximum-likelihood if and only if the fault distribution
-factorizes over graphlike edges, and we exhibit correlated instances on which the
-MWPM logical error rate exceeds that of the optimal decoder by at least the
-probability mass on a logical-flipping hyperedge it cannot represent; this is the
-formal origin of the empirical gap. In Sec.~\ref{sec:method} we introduce a
-topological graph neural decoder, a message-passing network on the detector graph
-in which detectors are nodes and fault co-occurrence supplies edges, so that
-correlated hyperedges become denser subgraphs; it is trained only on samples,
-outputs the Bayes posterior over the logical class, and yields a calibrated
-confidence for selective decoding. In Sec.~\ref{sec:results} we evaluate on Stim
-circuit-level rotated surface-code memory experiments across distances $3,5,7$
-and two noise regimes, with all decoders scoring identical shots under paired
-McNemar and bootstrap statistics; the learned decoder matches MWPM under
-independent noise and beats it under correlated noise, closing most of the gap to
-BP+OSD without knowing the model. Every reported number is computed by the
-released pipeline and traced to a single \texttt{summary.json}, with Wilson and
-paired-bootstrap intervals.
+matching-learning gap both provable and exploitable. Our contributions are three.
+First, in Sec.~\ref{sec:theory} we prove that MWPM is maximum-likelihood if and
+only if the fault distribution factorizes over graphlike edges, and we exhibit
+correlated instances on which the MWPM logical error rate exceeds that of the
+optimal decoder by at least the probability mass on a logical-flipping hyperedge
+it cannot represent---the formal origin of the empirical gap. Second, in
+Sec.~\ref{sec:method} we introduce a topological graph neural decoder, a
+message-passing network on the detector graph in which detectors are nodes and
+fault co-occurrence supplies edges, so correlated hyperedges become denser
+subgraphs; trained only on samples, it outputs the Bayes posterior over the
+logical class and yields a calibrated confidence for selective decoding. Third, in
+Sec.~\ref{sec:results} we evaluate on Stim circuit-level rotated surface-code
+memory experiments across distances $3,5,7$ and two noise regimes, with all
+decoders scoring identical shots under paired McNemar and bootstrap statistics:
+the learned decoder matches MWPM under independent noise and beats it under
+correlated noise, closing most of the gap to BP+OSD without knowing the model.
+Every reported number is computed by the released pipeline and traced to a single
+\texttt{summary.json}, with Wilson and paired-bootstrap intervals.
 
 This manuscript belongs to a single-author program on spectral truncation of
 operators for query-efficient and resource-accounted quantum computation, and it
@@ -155,8 +171,9 @@ operator-spectral truncated priors and spectral-truncation graph kernels for
 schedule transfer~\cite{huynh2026ostqaoa,huynh2026topoqaoa}, and the
 commutator-graph and Lie-algebraic spectral-truncation treatments of
 product-formula error~\cite{huynh2026topoham,huynh2026lie}. The present work
-applies the same operator-graph viewpoint to decoding, where the detector graph
-plays the role of the truncated operator structure. The Hamiltonian-simulation
+carries that same operator-graph viewpoint into quantum error correction, where the
+detector graph plays the role of the truncated operator structure and correlated
+fault mechanisms appear as its denser local subgraphs. The Hamiltonian-simulation
 work of Nguyen and Jing supplies complementary fixed-depth and
 representation-theoretic context for the circuits whose errors QEC must
 suppress~\cite{nguyen2025zassenhaus,jing2026complexity}.
@@ -319,10 +336,12 @@ reason the learned decoder matches matching where $\mu$ is graphlike
 \label{sec:method}
 
 \paragraph{Detector graph.}
-We place one node per detector. Two nodes are joined by an edge whenever some
-fault mechanism in the \emph{full} DEM flips both detectors; thus a correlated
-hyperedge that flips three or four detectors contributes a small clique, and the
-local graph density encodes exactly the correlation structure matching discards.
+We place one node per detector and assemble the detector graph as a
+\textsc{NetworkX} structure~\cite{hagberg2008exploring}. Two nodes are joined by an
+edge whenever some fault mechanism in the \emph{full} DEM flips both detectors; thus
+a correlated hyperedge that flips three or four detectors contributes a small clique,
+and the local graph density encodes exactly the correlation structure matching
+discards.
 Each node carries a static feature vector of its spacetime coordinates
 $(x,y,t)$, normalized per axis. We use the symmetric-normalized adjacency
 $\hat A=\tilde D^{-1/2}\tilde A\tilde D^{-1/2}$ with self-loops $\tilde A=A+I$. The
@@ -348,21 +367,21 @@ for selective decoding (Sec.~\ref{sec:results-calib}).
 \paragraph{Training.}
 We train with binary cross-entropy---a strictly proper scoring rule, so the
 optimum is the true posterior and the output stays calibrated---on samples drawn
-from the \emph{same} circuit and regime under test. This is the crux: the
-network sees the true joint fault distribution through data, which is exactly the
-information matching is denied when it is handed only marginal edge weights. We
-use Adam with early stopping on validation loss. Because the graph topology is
-shared across all shots, an epoch is a handful of batched matmuls.
+from the \emph{same} circuit and regime under test. This is the crux: the network
+sees the true joint fault distribution through data, exactly the information
+matching is denied when it is handed only marginal edge weights. We use
+Adam~\cite{kingma2015adam} with early stopping on validation loss. Because the graph topology is shared across all
+shots, an epoch is a handful of batched matmuls.
 
-\paragraph{Why this is the honest, fair comparison.}
-Every decoder is regime-aware: MWPM and BP+OSD receive the DEM of the circuit
-they decode, and the learned decoder receives samples from that same circuit. The
+\paragraph{A controlled, like-for-like comparison.}
+Every decoder is regime-aware: MWPM and BP+OSD receive the DEM of the circuit they
+decode, and the learned decoder receives samples from that same circuit. The
 \emph{only} structural difference is representational: matching scores corrections
-additively over graphlike edges (Proposition~\ref{prop:mwpm-ml}), while BP+OSD
-and the learned decoder can use the joint hyperedge structure. We evaluate all
-three on identical test shots and report paired McNemar and bootstrap statistics,
-so any difference is attributable to representational power, not to a sampling
-advantage or a hidden model mismatch.
+additively over graphlike edges (Proposition~\ref{prop:mwpm-ml}), while BP+OSD and
+the learned decoder use the joint hyperedge structure. We evaluate all three on
+identical test shots and report paired McNemar and bootstrap statistics, so any
+difference is attributable to representational power, not to a sampling advantage
+or a hidden model mismatch.
 
 % ============================================================
 \section{Experiments}
@@ -434,13 +453,13 @@ other. Values are generated from \texttt{summary.json}.}
 \subsection{The advantage scales with correlation strength and distance}
 \label{sec:results-scaling}
 Figure~\ref{fig:gain} reports the relative GNN-versus-MWPM error reduction under
-correlated noise at each distance. The advantage is real at every distance we
-study but is largest at small distance and shrinks as the code grows, because at
+correlated noise at each distance. The advantage is present at every distance we
+study, largest at small distance and shrinking as the code grows, because at
 larger distance the independent component of the noise accumulates faster than the
-injected correlations. We state this plainly: the correlated-noise advantage is
-greatest in the strongly-correlated, small-distance regime characteristic of
-near-term hardware, and a true asymptotic claim would require a dedicated
-sub-threshold scaling study (Sec.~\ref{sec:limitations}).
+injected correlations. The correlated-noise advantage is therefore greatest in the
+strongly-correlated, small-distance regime characteristic of near-term hardware; a
+true asymptotic claim would require a dedicated sub-threshold scaling study
+(Sec.~\ref{sec:limitations}).
 
 \begin{figure}[t]
 \centering
@@ -476,19 +495,20 @@ Values are generated from \texttt{summary.json}.}
 \section{Discussion}
 \label{sec:discussion}
 
-We gave a provable and empirical, statistically honest account of \emph{where}
-and \emph{why} a learned decoder beats matching. The where is precise: at
-correlated faults that flip detectors jointly, which a sum of independent
-graphlike edge weights cannot represent (Proposition~\ref{prop:mwpm-ml}). The why
-is the same statement read forward: matching is maximum-likelihood exactly when
-the model factorizes, and correlation breaks factorization
-(Proposition~\ref{prop:separation}). A message-passing network on the detector
-graph---where correlated hyperedges appear as denser subgraphs---learns the joint
-structure from samples and recovers most of the BP+OSD gap without ever being
-told the model, while remaining statistically tied to the provably optimal MWPM
-under independent noise. The advantage is not free or universal: it tracks the
-correlation strength and shrinks with code distance, so it is largest in exactly
-the near-term, strongly-correlated regime where it is most useful.
+We gave a provable and empirical account of \emph{where} and \emph{why} a learned
+decoder beats matching, backed by paired statistics on identical shots. The where
+is precise: at correlated faults that flip detectors jointly, which a sum of
+independent graphlike edge weights cannot represent
+(Proposition~\ref{prop:mwpm-ml}). The why is the same statement read forward:
+matching is maximum-likelihood exactly when the model factorizes, and correlation
+breaks factorization (Proposition~\ref{prop:separation}). A message-passing
+network on the detector graph---where correlated hyperedges appear as denser
+subgraphs---learns the joint structure from samples and recovers most of the
+BP+OSD gap without ever being told the model, while remaining statistically tied
+to the provably optimal MWPM under independent noise. The advantage is neither
+free nor universal: it tracks the correlation strength and shrinks with code
+distance, so it is largest in exactly the near-term, strongly-correlated regime
+where it is most useful.
 
 \paragraph{Relation to prior work.}
 Matching~\cite{dennis2002topological,fowler2012surface,higgott2022pymatching},
@@ -500,9 +520,9 @@ supply, is a \emph{controlled} dissection: a noise knob that interpolates from
 independent to correlated, all decoders scored on identical shots with paired
 statistics, and a theorem that pins the advantage to the precise structural
 feature (hyperedges) matching cannot represent. Our decoder is a deliberately
-lightweight message-passing network~\cite{kipf2017semi,gilmer2017neural} on the
-detector graph; the point is not architectural novelty for its own sake but that
-even a small graph network, trained only on data, realizes the provable
+lightweight message-passing network~\cite{kipf2017semi,gilmer2017neural,velickovic2018graph,hamilton2017inductive}
+on the detector graph; the point is not architectural novelty for its own sake but
+that even a small graph network, trained only on data, realizes the provable
 advantage.
 
 \subsection{Limitations}
@@ -561,17 +581,19 @@ never sees the DEM.
 All decoders decode the \emph{identical} test shots within each seed, enabling
 paired tests. Per (distance, regime) we run \PH{seeds} independent seeds (fresh
 train/validation/test samples each), report the pooled logical error rate with a
-$95\%$ Wilson score interval, the across-seed mean and standard error, the paired
-McNemar exact test of GNN versus each baseline, and a paired bootstrap interval
+$95\%$ Wilson score interval~\cite{wilson1927probable}, the across-seed mean and
+standard error, the paired McNemar exact test~\cite{mcnemar1947note} of GNN versus
+each baseline, and a paired bootstrap interval~\cite{efron1979bootstrap}
 for the LER difference. Calibration is summarized by the expected calibration
-error of the learned posterior over ten confidence bins.
+error of the learned posterior over ten confidence bins~\cite{guo2017calibration}.
 
 \subsection{Reproducibility and provenance}
 All randomness derives from recorded seeds. The runner writes a single
 source-of-truth \texttt{results/summary.json} from which every table, figure, and
 in-text number is generated; the manuscript's numeric placeholders are filled
 only from that file. Platform, library versions (Stim, PyMatching, \texttt{ldpc},
-PyTorch, NumPy, SciPy), and runtime are recorded as provenance. Reported run:
+PyTorch~\cite{paszke2019pytorch}, NumPy~\cite{harris2020array},
+SciPy~\cite{virtanen2020scipy}), and runtime are recorded as provenance. Reported run:
 \PH{platform/versions/runtime}; CPU only.
 
 % ============================================================
@@ -591,7 +613,7 @@ M.H. conceived the study, developed the theory, implemented the benchmark,
 decoders and statistics, ran and analysed the experiments, and wrote the paper.
 
 % ============================================================
-\begin{thebibliography}{40}
+\begin{thebibliography}{67}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\doi}[1]{doi: #1}
 
@@ -713,17 +735,146 @@ Chuan Guo, Geoff Pleiss, Yu~Sun, and Kilian~Q. Weinberger. On calibration of
 modern neural networks. \emph{International Conference on Machine Learning
 (ICML)}, pages 1321--1330, 2017.
 
+\bibitem[Calderbank and Shor(1996)]{calderbank1996good}
+A.~Robert Calderbank and Peter~W. Shor. Good quantum error-correcting codes
+exist. \emph{Physical Review A}, 54(2):1098--1105, 1996.
+
+\bibitem[Steane(1996)]{steane1996error}
+Andrew~M. Steane. Error correcting codes in quantum theory. \emph{Physical
+Review Letters}, 77(5):793--797, 1996.
+
+\bibitem[Gottesman(1997)]{gottesman1997stabilizer}
+Daniel Gottesman. \emph{Stabilizer Codes and Quantum Error Correction}. PhD
+thesis, California Institute of Technology, 1997.
+\newblock arXiv:quant-ph/9705052.
+
+\bibitem[Bravyi and Kitaev(1998)]{bravyi1998quantum}
+Sergey~B. Bravyi and Alexei~Yu. Kitaev. Quantum codes on a lattice with
+boundary. \emph{arXiv preprint arXiv:quant-ph/9811052}, 1998.
+
+\bibitem[Aharonov and Ben-Or(2008)]{aharonov2008fault}
+Dorit Aharonov and Michael Ben-Or. Fault-tolerant quantum computation with
+constant error rate. \emph{SIAM Journal on Computing}, 38(4):1207--1282, 2008.
+
+\bibitem[Wang et~al.(2003)]{wang2003confinement}
+Chenyang Wang, Jim Harrington, and John Preskill. Confinement-{Higgs}
+transition in a disordered gauge theory and the accuracy threshold for quantum
+memory. \emph{Annals of Physics}, 303(1):31--58, 2003.
+
+\bibitem[Bombin and Martin-Delgado(2006)]{bombin2006topological}
+H.~Bombin and M.~A. Martin-Delgado. Topological quantum distillation.
+\emph{Physical Review Letters}, 97(18):180501, 2006.
+
+\bibitem[Wootton and Loss(2012)]{wootton2012high}
+James~R. Wootton and Daniel Loss. High threshold error correction for the
+surface code. \emph{Physical Review Letters}, 109(16):160503, 2012.
+
+\bibitem[Tuckett et~al.(2018)]{tuckett2018ultrahigh}
+David~K. Tuckett, Stephen~D. Bartlett, and Steven~T. Flammia. Ultrahigh error
+threshold for surface codes with biased noise. \emph{Physical Review Letters},
+120(5):050505, 2018.
+
+\bibitem[Bravyi et~al.(2014)]{bravyi2014efficient}
+Sergey Bravyi, Martin Suchara, and Alexander Vargo. Efficient algorithms for
+maximum likelihood decoding in the surface code. \emph{Physical Review A},
+90(3):032326, 2014.
+
+\bibitem[Fowler(2013)]{fowler2013optimal}
+Austin~G. Fowler. Optimal complexity correction of correlated errors in the
+surface code. \emph{arXiv preprint arXiv:1310.0863}, 2013.
+
+\bibitem[Delfosse and Nickerson(2021)]{delfosse2021almost}
+Nicolas Delfosse and Naomi~H. Nickerson. Almost-linear time decoding algorithm
+for topological codes. \emph{Quantum}, 5:595, 2021.
+
+\bibitem[Higgott and Gidney(2025)]{higgott2025sparse}
+Oscar Higgott and Craig Gidney. Sparse blossom: correcting a million errors
+per core second with minimum-weight matching. \emph{Quantum}, 9:1600, 2025.
+
+\bibitem[Nickerson and Brown(2019)]{nickerson2019analysing}
+Naomi~H. Nickerson and Benjamin~J. Brown. Analysing correlated noise on the
+surface code using adaptive decoding algorithms. \emph{Quantum}, 3:131, 2019.
+
+\bibitem[Spitz et~al.(2018)]{spitz2018adaptive}
+Sebastian~T. Spitz, Boris Tarasinski, Carlo W.~J. Beenakker, and Thomas~E.
+O'Brien. Adaptive weight estimator for quantum error correction in a
+time-dependent environment. \emph{Advanced Quantum Technologies},
+1(1):1800012, 2018.
+
+\bibitem[Krinner et~al.(2022)]{krinner2022realizing}
+Sebastian Krinner, Nathan Lacroix, Ants Remm, et~al. Realizing repeated quantum
+error correction in a distance-three surface code. \emph{Nature},
+605(7911):669--674, 2022.
+
+\bibitem[{Google Quantum AI}(2025)]{google2025below}
+{Google Quantum AI and Collaborators}. Quantum error correction below the
+surface code threshold. \emph{Nature}, 638(8052):920--926, 2025.
+
+\bibitem[Varsamopoulos et~al.(2020)]{varsamopoulos2020comparing}
+Savvas Varsamopoulos, Koen Bertels, and Carmen~G. Almudever. Comparing neural
+network based decoders for the surface code. \emph{IEEE Transactions on
+Computers}, 69(2):300--311, 2020.
+
+\bibitem[Chamberland and Ronagh(2018)]{chamberland2018deep}
+Christopher Chamberland and Pooya Ronagh. Deep neural decoders for near term
+fault-tolerant experiments. \emph{Quantum Science and Technology},
+3(4):044002, 2018.
+
+\bibitem[Overwater et~al.(2022)]{overwater2022neural}
+Ramon W.~J. Overwater, Masoud Babaie, and Fabio Sebastiano. Neural-network
+decoders for quantum error correction using surface codes: A space exploration
+of the hardware cost-performance tradeoffs. \emph{IEEE Transactions on Quantum
+Engineering}, 3:1--19, 2022.
+
+\bibitem[Lange et~al.(2025)]{lange2025data}
+Moritz Lange, Pontus Havstr{\"o}m, Basudha Srivastava, Isak Bengtsson, Valdemar
+Bergentall, Karl Hammar, Olivia Heuts, Evert van~Nieuwenburg, and Mats Granath.
+Data-driven decoding of quantum error correcting codes using graph neural
+networks. \emph{Physical Review Research}, 7(2):023181, 2025.
+
+\bibitem[Egorov et~al.(2023)]{egorov2023end}
+Evgenii Egorov, Roberto Bondesan, and Max Welling. The {END}: An equivariant
+neural decoder for quantum error correction. \emph{arXiv preprint
+arXiv:2304.07362}, 2023.
+
+\bibitem[Veli{\v{c}}kovi{\'c} et~al.(2018)]{velickovic2018graph}
+Petar Veli{\v{c}}kovi{\'c}, Guillem Cucurull, Arantxa Casanova, Adriana Romero,
+Pietro Li{\`o}, and Yoshua Bengio. Graph attention networks. \emph{International
+Conference on Learning Representations (ICLR)}, 2018.
+
+\bibitem[Hamilton et~al.(2017)]{hamilton2017inductive}
+William~L. Hamilton, Rex Ying, and Jure Leskovec. Inductive representation
+learning on large graphs. \emph{Advances in Neural Information Processing
+Systems}, 30, 2017.
+
+\bibitem[Kingma and Ba(2015)]{kingma2015adam}
+Diederik~P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization.
+\emph{International Conference on Learning Representations (ICLR)}, 2015.
+
+\bibitem[McNemar(1947)]{mcnemar1947note}
+Quinn McNemar. Note on the sampling error of the difference between correlated
+proportions or percentages. \emph{Psychometrika}, 12(2):153--157, 1947.
+
+\bibitem[Efron(1979)]{efron1979bootstrap}
+Bradley Efron. Bootstrap methods: another look at the jackknife. \emph{The
+Annals of Statistics}, 7(1):1--26, 1979.
+
+\bibitem[Wilson(1927)]{wilson1927probable}
+Edwin~B. Wilson. Probable inference, the law of succession, and statistical
+inference. \emph{Journal of the American Statistical Association},
+22(158):209--212, 1927.
+
 \bibitem{huynh2026gctr} M.~Huynh. Query-Efficient Quantum Approximate Optimization via Graph-Conditioned Trust Regions. arXiv:2604.24803 (2026).
-\bibitem{huynh2026gctrcal} M.~Huynh. Graph-conditioned trust regions for uncertainty-calibrated quantum approximate optimization. arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026gctrcalpro} M.~Huynh. Graph-conditioned trust regions for uncertainty-calibrated quantum approximate optimization (extended). arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026meascost} M.~Huynh. The measurement cost of warm-started low-depth QAOA. arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026certqb} M.~Huynh. Certified query budgets for the quantum approximate optimization algorithm. arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026paramxfer} M.~Huynh. Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph Optimization. arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026paramxferB} M.~Huynh. Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph Optimization (companion). arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026ostqaoa} M.~Huynh. Operator-Spectral Truncated Priors for Query-Efficient QAOA Parameter Search. arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026topoqaoa} M.~Huynh. Spectral-truncation graph kernels for QAOA warm starts: topology-conditioned schedule transfer beyond depth one. arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026topoham} M.~Huynh. Zero-Overhead Cancellation of the Leading Trotter Error via Commutator-Graph Scheduling. arXiv:2026.XXXXX (2026).
-\bibitem{huynh2026lie} M.~Huynh. Advancing the product-formula error--cost frontier with a Lie-algebraic spectral truncation of the residual. arXiv:2026.XXXXX (2026).
+\bibitem{huynh2026gctrcal} M.~Huynh. Graph-conditioned trust regions for uncertainty-calibrated quantum approximate optimization. Manuscript in preparation (2026).
+\bibitem{huynh2026gctrcalpro} M.~Huynh. Graph-conditioned trust regions for uncertainty-calibrated quantum approximate optimization (extended). Manuscript in preparation (2026).
+\bibitem{huynh2026meascost} M.~Huynh. The measurement cost of warm-started low-depth QAOA. Manuscript in preparation (2026).
+\bibitem{huynh2026certqb} M.~Huynh. Certified query budgets for the quantum approximate optimization algorithm. Manuscript in preparation (2026).
+\bibitem{huynh2026paramxfer} M.~Huynh. Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph Optimization. Manuscript in preparation (2026).
+\bibitem{huynh2026paramxferB} M.~Huynh. Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph Optimization (companion). Manuscript in preparation (2026).
+\bibitem{huynh2026ostqaoa} M.~Huynh. Operator-Spectral Truncated Priors for Query-Efficient QAOA Parameter Search. Manuscript in preparation (2026).
+\bibitem{huynh2026topoqaoa} M.~Huynh. Spectral-truncation graph kernels for QAOA warm starts: topology-conditioned schedule transfer beyond depth one. Manuscript in preparation (2026).
+\bibitem{huynh2026topoham} M.~Huynh. Zero-Overhead Cancellation of the Leading Trotter Error via Commutator-Graph Scheduling. Manuscript in preparation (2026).
+\bibitem{huynh2026lie} M.~Huynh. Advancing the product-formula error--cost frontier with a Lie-algebraic spectral truncation of the residual. Manuscript in preparation (2026).
 
 \bibitem[Nguyen and Jing(2025)]{nguyen2025zassenhaus}
 M.~Nguyen and Naihuan Jing. Zassenhaus expansion in solving the {Schr\"odinger}
