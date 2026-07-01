@@ -1,0 +1,45 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite the paper below."
+title: "Transfer-Operator Decoding of Structured Noise in Quantum Error Correction"
+abstract: >-
+  A channel-adaptive spectral decoder that represents the structured error channel
+  by a truncated transfer operator (an inhomogeneous first-order Markov / classical
+  matrix-product model on the code's defect graph) estimated from a small calibration
+  sample, and selects the maximum-a-posteriori coset. The decoder is Bayes-optimal for
+  the structured channel, reduces to the minimum-weight leader under i.i.d. noise, and
+  reports the exact model posterior as a confidence that is calibrated by construction.
+  This work is part of the "spectral-truncation operators" program.
+type: software
+authors:
+  - family-names: Huynh
+    given-names: Molena
+    affiliation: "North Carolina State University, Raleigh, North Carolina 27695, USA"
+    email: molena.huynh@jmp.com
+version: "0.1.0"
+license: MIT
+keywords:
+  - quantum error correction
+  - decoding
+  - transfer operator
+  - spectral truncation operators
+  - structured noise
+  - calibration
+repository-code: "https://github.com/thmolena/P2-Topology-Aware-Graph-RL-Decoding-for-QEC"
+preferred-citation:
+  type: article
+  title: "Transfer-Operator Decoding of Structured Noise in Quantum Error Correction"
+  authors:
+    - family-names: Huynh
+      given-names: Molena
+      affiliation: "North Carolina State University, Raleigh, North Carolina 27695, USA"
+  year: 2026
+  notes: >-
+    Part of the "spectral-truncation operators" program. BibTeX key: huynh2026topoqec.
+references:
+  - type: article
+    title: "Transfer-Operator Decoding of Structured Noise in Quantum Error Correction"
+    authors:
+      - family-names: Huynh
+        given-names: Molena
+    year: 2026
+    notes: "BibTeX key: huynh2026topoqec"

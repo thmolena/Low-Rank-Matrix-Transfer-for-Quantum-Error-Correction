@@ -32,19 +32,19 @@
   },
   "provenance": {
     "seed": 0,
-    "command": "scripts/run.py --config configs/full.yaml --out results",
-    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "command": "scripts/run.py --config configs/full.yaml --out /tmp/full_results",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
     "versions": {
-      "python": "3.13.12",
-      "numpy": "2.4.3",
-      "scipy": "1.17.1",
-      "networkx": "3.6.1",
-      "sklearn": "1.8.0",
-      "matplotlib": "3.10.8"
+      "python": "3.9.6",
+      "numpy": "1.26.4",
+      "scipy": "1.13.1",
+      "networkx": "3.2.1",
+      "sklearn": "1.6.1",
+      "matplotlib": "3.9.4"
     },
-    "timestamp_utc": "2026-06-27T18:01:29Z",
-    "runtime_sec": 136.0188,
-    "peak_memory_mb": 261.92
+    "timestamp_utc": "2026-07-01T05:32:12Z",
+    "runtime_sec": 277.0166,
+    "peak_memory_mb": 206.23
   },
   "p_grid": [
     0.01,

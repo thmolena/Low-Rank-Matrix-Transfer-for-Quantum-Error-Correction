@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite the paper below."
+title: >-
+  Learning to decode correlated quantum errors: a topological graph neural
+  decoder that surpasses minimum-weight matching under structured circuit-level
+  noise
+authors:
+  - family-names: Huynh
+    given-names: Molena
+    email: molena.huynh@jmp.com
+type: software
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/molenahuynh/Topological-Graph-for-Decoding-in-QEC"
+abstract: >-
+  A learned surface-code decoder that matches minimum-weight perfect matching
+  (MWPM) under independent circuit-level noise and beats it under structured
+  correlated noise, benchmarked head-to-head against MWPM and BP+OSD on Stim
+  circuits with paired statistics (Wilson intervals, McNemar, paired bootstrap).
+  Part of the "spectral-truncation operators" (SpecOps) research program.
+keywords:
+  - quantum error correction
+  - surface code
+  - graph neural network
+  - decoder
+  - spectral-truncation operators
+preferred-citation:
+  type: article
+  title: >-
+    Learning to decode correlated quantum errors: a topological graph neural
+    decoder that surpasses minimum-weight matching under structured circuit-level
+    noise
+  authors:
+    - family-names: Huynh
+      given-names: Molena
+      email: molena.huynh@jmp.com
+  year: 2026
+  notes: >-
+    Part of the "spectral-truncation operators" (SpecOps) program. BibTeX key:
+    huynh2026gnndec.

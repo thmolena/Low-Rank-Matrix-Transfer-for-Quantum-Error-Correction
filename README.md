@@ -100,9 +100,9 @@ with equal emphasis where it (honestly) does not appear:
 
 *Repetition code `d = 9`; nine decoders; five structured-noise regimes; 20,000 trials per
 regime; `n = 100,000` shots per decoder; `p = 0.12`. The reported run completes end-to-end in
-136 s at 262 MB peak memory on a single CPU (provenance recorded in `code/results/summary.json`:
-macOS-26.5.1-arm64, Python 3.13.12, numpy 2.4.3, scipy 1.17.1, networkx 3.6.1, scikit-learn
-1.8.0, matplotlib 3.10.8, master seed 0).* The integrity flag `automorphism_invariant` is
+277 s at 206 MB peak memory on a single CPU (provenance recorded in `code/results/summary.json`:
+macOS-26.5.2-arm64, Python 3.9.6, numpy 1.26.4, scipy 1.13.1, networkx 3.2.1, scikit-learn
+1.6.1, matplotlib 3.9.4, master seed 0).* The integrity flag `automorphism_invariant` is
 **true**. Because the spectral decoder's confidence is the exact model posterior, it is also the
 best-calibrated decoder *where its model matches the channel* — ECE `0.00069` (i.i.d.), `0.00159`
 (biased), `0.02538` (burst) — and over-confident only under read-out noise (ECE `0.32359`),
@@ -145,7 +145,7 @@ few seconds.
 ├── LICENSE                     MIT
 ├── CITATION.cff                Machine-readable citation metadata
 └── code/                       Runnable Python package + reproducibility pipeline
-    ├── pyproject.toml          Package metadata: name "topoqec", console entry point topoqec-reproduce
+    ├── pyproject.toml          Package metadata: name "specops-transfer-decoder", console entry point transfer-decoder-reproduce
     ├── Makefile                One-word targets: install · test · demo · tables · figures · audit · full-run
     ├── environment.yml         Conda environment (CPU-only)
     ├── requirements.txt        Core dependencies
@@ -173,25 +173,34 @@ few seconds.
 
 ## Installation
 
+The distribution is published as **`specops-transfer-decoder`** (part of the
+*spectral-truncation operators* program). The importable package is `topoqec`.
+
 ```bash
-pip install topoqec
+pip install specops-transfer-decoder
 ```
 
 For a source checkout with the reproducibility pipeline:
 
 ```bash
 cd code
-pip install -e .            # core deps: numpy / scipy / networkx / scikit-learn / matplotlib / pyyaml
+pip install .              # or: pip install -e .   (editable)
+                           # core deps: numpy / scipy / networkx / scikit-learn / matplotlib / pyyaml
+python -c "import topoqec; print(topoqec.__file__)"   # confirm the import works
 ```
 
 ## Reproduction
 
-The installed console entry point deterministically regenerates the tables and figures:
+The installed console entry point deterministically regenerates every table and
+figure in the manuscript (run · tables · figures · sync to `submission/`):
 
 ```bash
-topoqec-reproduce --config configs/full.yaml     # reported-scale tables + figures
-topoqec-reproduce --config configs/smoke.yaml    # laptop-scale demo
+transfer-decoder-reproduce --config configs/full.yaml     # reported-scale tables + figures
+transfer-decoder-reproduce --config configs/smoke.yaml    # laptop-scale demo
+transfer-decoder-reproduce --skip-run                     # re-render tables/figures from an existing summary.json
 ```
+
+(The legacy alias `topoqec-reproduce` is kept for backward compatibility.)
 
 Equivalently, from the source tree:
 
@@ -210,16 +219,75 @@ samplers, the minimum-weight leader, and the spectral transfer-operator decoder 
 JavaScript, so the logical error rates shown on the page follow the same mechanism as the Python
 package.
 
+## Extend / tweak
+
+Everything a user can change lives in a single YAML config
+([`code/configs/full.yaml`](code/configs/full.yaml),
+[`code/configs/smoke.yaml`](code/configs/smoke.yaml)); the console entry point
+loads it and regenerates every artifact. Copy a config, edit the fields below,
+and run `transfer-decoder-reproduce --config configs/my.yaml`.
+
+| Parameter | Meaning | Default (full) |
+|---|---|---|
+| `name` | Run label, echoed into provenance | `full` |
+| `seed` | Master seed; all randomness derives from it (fully deterministic) | `0` |
+| `code` | Code family: `repetition` or `surface` (toy lattice) | `repetition` |
+| `distance` | Code distance `d` | `9` |
+| `regimes` | Structured-noise regimes to evaluate (subset of `iid`, `biased`, `burst`, `correlated`, `measurement_error`) | all five |
+| `p_eval` | Physical error rate at which the headline table is reported | `0.12` |
+| `p_grid` | Physical-error grid for the threshold sweep (Fig. threshold) | 11 points |
+| `trials` | Monte-Carlo shots per (regime, decoder) | `20000` |
+| `train_trials` | Calibration/training shots (spectral transfer operator + neural decoder) | `12000` |
+| `abstain_threshold` | Fixed operating threshold `τ` for the coverage table | `0.5` |
+| `q_meas` | Read-out flip probability for the `measurement_error` regime | `0.05` |
+
+**How to add a new parameter.** Add the field to your YAML, then expose it on
+`Config` in [`code/src/topoqec/config.py`](code/src/topoqec/config.py) (add the
+attribute + default in `Config.load`), and consume it in
+[`code/src/topoqec/runner.py`](code/src/topoqec/runner.py). All downstream
+tables/figures read from `results/summary.json`, so no plotting code needs to
+change for a new scalar knob.
+
+**How to add a new noise regime.** Implement a sampler in
+[`code/src/topoqec/noise.py`](code/src/topoqec/noise.py) (signature
+`sampler(rng, n_shots, d, p) -> data_errors[, meas_errors]`), register it in the
+regime dispatch, and list its name under `regimes:` in your config.
+
+**How to add a new decoder.** Implement a class in
+[`code/src/topoqec/decoders.py`](code/src/topoqec/decoders.py) exposing
+`decode(syndrome) -> (correction, confidence)`, register it in the decoder
+factory, and it is automatically benchmarked (logical error, ECE, coverage,
+risk–coverage) alongside the existing family.
+
+**How to plug the decoder into your own project.** Import the library directly —
+you do not need the benchmark harness:
+
+```python
+from topoqec.codes import RepetitionCode
+from topoqec.decoders import SpectralDecoder
+
+code = RepetitionCode(distance=9)
+dec = SpectralDecoder(code)
+dec.fit(calibration_errors)                 # estimate the transfer operator from your channel
+correction, confidence = dec.decode(syndrome)   # channel-matched MAP coset + calibrated confidence
+```
+
+`fit` takes a labelled calibration sample of bit-flip error vectors from your
+operating channel; `decode` returns the maximum-a-posteriori coset correction and
+a posterior confidence you can threshold for abstention.
+
 ## Citation
 
+If you use this software or its results, please cite the paper:
+
 ```bibtex
-@misc{huynh_topoqec_2027,
+@article{huynh2026topoqec,
   title        = {Transfer-Operator Decoding of Structured Noise in
                   Quantum Error Correction},
   author       = {Huynh, Molena},
-  year         = {2027},
+  year         = {2026},
   organization = {North Carolina State University},
-  note         = {In review},
+  note         = {Part of the spectral-truncation operators program},
   howpublished = {\url{https://github.com/thmolena/P2-Topology-Aware-Graph-RL-Decoding-for-QEC}}
 }
 ```

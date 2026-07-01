@@ -1,0 +1,20 @@
+{
+  "ler_mwpm_independent_d3": 0.0025,
+  "ler_bposd_independent_d3": 0.0026,
+  "ler_gnn_independent_d3": 0.024,
+  "gain_gnn_vs_mwpm_independent_d3": -860.0,
+  "gap_recovered_independent_d3": 17200.0,
+  "mcnemar_p_gnn_vs_mwpm_independent_d3": 1.2225831787200552e-86,
+  "gnn_ece_independent_d3": 0.008,
+  "ler_mwpm_correlated_d3": 0.1985,
+  "ler_bposd_correlated_d3": 0.0757,
+  "ler_gnn_correlated_d3": 0.1111,
+  "gain_gnn_vs_mwpm_correlated_d3": 44.0,
+  "gap_recovered_correlated_d3": 71.2,
+  "mcnemar_p_gnn_vs_mwpm_correlated_d3": 3.809474419771397e-141,
+  "gnn_ece_correlated_d3": 0.0136,
+  "runtime_s": 48.8,
+  "seeds": 2,
+  "p": 0.002,
+  "p_corr": 0.01
+}

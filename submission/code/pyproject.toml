@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "topoqec"
+name = "specops-transfer-decoder"
 version = "0.1.0"
 description = "Channel-adaptive spectral (transfer-operator) decoding for quantum error correction under structured noise"
 readme = { text = "Channel-adaptive spectral decoding for QEC: a transfer-operator decoder on the defect graph that breaks the decoder tie under structured noise, with selective decoding and calibration as first-class metrics.", content-type = "text/plain" }
@@ -20,6 +20,7 @@ gpu = ["torch>=2.0"]
 dev = ["pytest>=7.0"]
 
 [project.scripts]
+transfer-decoder-reproduce = "topoqec.reproduce:main"
 topoqec-reproduce = "topoqec.reproduce:main"
 
 [tool.setuptools.packages.find]

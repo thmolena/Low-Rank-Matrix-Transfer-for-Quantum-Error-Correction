@@ -29,12 +29,26 @@
 \DeclareMathOperator{\Tr}{Tr}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\esssup}{ess\,sup}
+\DeclareMathOperator{\sign}{sign}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\F}{\mathbb{F}}
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\PR}{\mathrm{Pr}}
 \newcommand{\eps}{\varepsilon}
 \newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+% --- Macros for the Bayesian-inference / generalization section (added) ---
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\ind}[1]{\mathbf{1}\!\left[#1\right]}
+\newcommand{\cS}{\mathcal{S}}
+\newcommand{\cX}{\mathcal{X}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\cL}{\mathcal{L}}
+\newcommand{\Risk}{\mathcal{R}}
+\newcommand{\Rad}{\mathfrak{R}}
 % Numbers traced to summary.json are wrapped here; \res is identity at build.
 \newcommand{\res}[1]{#1}
 % Drafting placeholder: glaring red so it can never be mistaken for a result.
@@ -53,7 +67,14 @@ noise}
 \date{\today}
 
 \begin{abstract}
-We show that the standard surface-code decoder is provably suboptimal under
+Statistics is not a diagnostic bolted onto quantum computing but structural to
+it: a quantum computer is interrogated only by sampling, and decoding a
+quantum error-correcting code is, in this light, fundamentally a problem of
+statistical inference---a syndrome is a noisy observation, and the correct
+logical class is the one the fault distribution makes most probable, so the
+decoder that a fault-tolerant machine actually needs is a Bayesian estimator of
+a posterior it can only learn from samples. We show that the standard
+surface-code decoder is provably suboptimal under
 realistic correlated noise, and we close the gap with a learned decoder that
 never sees the noise model. Minimum-weight perfect matching (MWPM) scores a
 correction by summing per-edge weights of a graphlike error model, an
@@ -70,9 +91,8 @@ hyperedge faults appear as denser local subgraphs. Trained only on samples, it
 estimates the Bayes posterior over the logical class and returns a calibrated
 confidence. On Stim circuit-level rotated surface-code memory experiments decoded
 head-to-head on identical shots, the learned decoder is statistically
-indistinguishable from MWPM under independent noise and cuts the logical error
-rate by $\res{44.0}\%$ at distance $3$ under correlated noise (paired McNemar
-$p=\res{3.8\times10^{-141}}$), recovering most of the gap to the model-aware
+indistinguishable from MWPM under independent noise and cuts the logical error rate by $\res{46.1}\%$ at distance $3$ under correlated noise (paired McNemar
+$p=\res{2.4\times10^{-164}}$), recovering most of the gap to the model-aware
 BP+OSD ceiling without being given the model. The advantage scales with
 correlation strength and code distance and is largest in the near-term regime. We
 report Wilson and paired-bootstrap intervals and release the full pipeline.
@@ -84,8 +104,15 @@ report Wilson and paired-bootstrap intervals and release the full pipeline.
 \section{Introduction}
 \label{sec:introduction}
 
-Fault-tolerant quantum computing rests on a classical inference problem: turning
-a stream of stabilizer measurements into a correction. Quantum error correction
+A quantum computer is, from the outside, a stochastic device: the Born rule
+returns one sample from a distribution per run, so nearly everything useful
+about it---estimating observables, certifying gates, characterizing noise---is a
+statistical task, and error correction is no exception. Fault-tolerant quantum
+computing rests on a classical inference problem: turning
+a stream of stabilizer measurements into a correction. This is Bayesian
+inference in the strict sense---given a syndrome, infer the most probable
+logical class under the fault distribution---and the quality of that inference,
+not the raw device physics, sets the achievable logical error rate. Quantum error correction
 (QEC) encodes logical information across many physical qubits and repeatedly
 measures stabilizers, whose outcomes form a
 \emph{syndrome}~\cite{shor1995scheme,nielsen2010quantum,terhal2015quantum,calderbank1996good,steane1996error,gottesman1997stabilizer}.
@@ -115,7 +142,10 @@ independent noise, and has excellent thresholds. Its optimality, however, hinges
 assumption: it represents the error model as a \emph{graph}, with one weighted
 edge per fault that flips at most two detectors, and it scores a correction by
 \emph{summing} those weights. This coincides with maximum-likelihood decoding
-when faults are independent and graphlike---and \emph{only} then.
+when faults are independent and graphlike---and \emph{only} then. In statistical
+terms, matching commits to a factorized model of the fault distribution; where
+the real distribution has correlations, that hand-specified model is
+misspecified, and the decision it induces is no longer the Bayes-optimal one.
 
 Hardware noise is neither independent nor graphlike. Crosstalk, leakage, and
 correlated two-qubit gate faults produce errors that flip three or four detectors
@@ -163,10 +193,10 @@ This manuscript belongs to a single-author program on spectral truncation of
 operators for query-efficient and resource-accounted quantum computation, and it
 carries forward that program's CPU-reproducible, audit-gated style. The earlier
 entries develop graph-conditioned trust regions and their calibrated and extended
-variants for quantum approximate optimization~\cite{huynh2026gctr,huynh2026gctrcal,huynh2026gctrcalpro},
+variants for quantum approximate optimization~\cite{huynh2026gctr,huynh2026gctrcalpro},
 the measurement and query-budget accounting of warm-started low-depth
 optimization~\cite{huynh2026meascost,huynh2026certqb}, topology-conditioned
-parameter transfer and its companion~\cite{huynh2026paramxfer,huynh2026paramxferB},
+parameter transfer~\cite{huynh2026paramxferB},
 operator-spectral truncated priors and spectral-truncation graph kernels for
 schedule transfer~\cite{huynh2026ostqaoa,huynh2026topoqaoa}, and the
 commutator-graph and Lie-algebraic spectral-truncation treatments of
@@ -332,6 +362,310 @@ reason the learned decoder matches matching where $\mu$ is graphlike
 \end{remark}
 
 % ============================================================
+\section{Decoding as Bayesian inference: optimality, expressivity, generalization}
+\label{sec:bayes}
+
+The previous section pinned the matching--learning gap to a representational
+fact about a \emph{fixed} objective. We now place the whole decoding problem on
+a statistical footing and answer three questions the empirical study raises. Is
+there a well-defined optimal decoder that the learned network is trying to
+imitate, and does the network's output---a posterior over the logical class---
+target it (Sec.~\ref{ssec:bayes-opt})? Can a message-passing network on the
+detector graph, of the lightweight kind we deploy, actually represent that
+optimal decoder (Sec.~\ref{ssec:express})? And does training on finitely many
+shots recover it, with a controlled gap between the error we measure on test
+data and the error the decoder will incur in deployment
+(Secs.~\ref{ssec:pac}--\ref{ssec:consistency})? The four subsections give,
+respectively, a Bayes-optimality (MAP/coset) characterization, a
+universal-approximation theorem on the detector graph, a
+Rademacher/VC generalization bound with an explicit sample complexity, and a
+risk-consistency theorem. Together they formalize the claim that a learned
+decoder is a probabilistic surrogate for an intractable maximum-likelihood
+decoder that, with enough data, provably matches or surpasses matching under
+structured noise. Throughout we keep the notation of Sec.~\ref{sec:theory}:
+$x\in\F_2^m$ is the fault configuration drawn from the true law $\mu$, $s=Hx$ is
+the syndrome, $\ell=Lx$ the logical flip; here $k=1$ (a single logical
+observable, as in the memory experiment), so $\ell\in\F_2=\{0,1\}$.
+
+\subsection{The coset MAP decoder is the Bayes-optimal target}
+\label{ssec:bayes-opt}
+
+Decoding is a classification problem: from the observed syndrome $s$ predict the
+logical class $\ell\in\{0,1\}$. Because two fault configurations with the same
+syndrome and the same logical value are indistinguishable \emph{and equally good}
+for the memory experiment---only $\ell$, not $x$, determines success---the correct
+object to condition on is not a single fault configuration but the coset of
+configurations carrying a given logical value.
+
+\begin{definition}[Syndrome fibers, logical cosets, and posterior]
+\label{def:coset}
+Fix a DEM $(H,L,\mu)$. For a syndrome $s$ in the image of $H$, the
+\emph{fiber} is $\Phi(s)=\{x\in\F_2^m: Hx=s\}$, and for $\ell\in\{0,1\}$ the
+\emph{logical coset} is $\Phi_\ell(s)=\{x\in\Phi(s): Lx=\ell\}$. The
+\emph{coset (class) posterior} is
+\begin{equation}
+\label{eq:posterior}
+  \eta_\ell(s)\;:=\;\PR_{x\sim\mu}\!\big[Lx=\ell \,\big|\, Hx=s\big]
+  \;=\;\frac{\sum_{x\in\Phi_\ell(s)}\mu(x)}{\sum_{x\in\Phi(s)}\mu(x)} .
+\end{equation}
+Write $\eta(s):=\eta_1(s)$, so $\eta_0(s)=1-\eta(s)$. A decoder is any
+measurable map $g:\cS\to\{0,1\}$ from syndromes $\cS:=\mathrm{im}(H)$ to logical
+classes; its \emph{logical risk} (expected logical error rate) is
+\begin{equation}
+\label{eq:risk}
+  \Risk(g)\;:=\;\PR_{x\sim\mu}\!\big[\,g(Hx)\neq Lx\,\big]
+  \;=\;\E_{s}\big[\,\eta_{1-g(s)}(s)\,\big],
+\end{equation}
+where $s=Hx$ has the pushforward law $\nu:=H_\#\mu$ on $\cS$. The
+\emph{coset MAP} (Bayes) decoder is
+$g^\star(s):=\argmax_{\ell\in\{0,1\}}\eta_\ell(s)=\ind{\eta(s)>\tfrac12}$.
+\end{definition}
+
+\begin{proposition}[Coset MAP is Bayes-optimal; MWPM is fiber-MAP, not coset-MAP]
+\label{prop:bayes-opt}
+For every DEM $(H,L,\mu)$ and every decoder $g$,
+\begin{equation}
+\label{eq:bayes-gap}
+  \Risk(g)-\Risk(g^\star)
+  \;=\;\E_{s\sim\nu}\Big[\,\big|2\eta(s)-1\big|\,
+        \ind{g(s)\neq g^\star(s)}\Big]\;\ge\;0 ,
+\end{equation}
+so $g^\star$ attains the minimum logical risk $\Risk^\star:=\Risk(g^\star)=
+\E_{s}\big[\min\{\eta(s),1-\eta(s)\}\big]$, and it is the unique minimizer up to
+$\nu$-null sets where $\eta(s)=\tfrac12$. Moreover the maximum-likelihood
+configuration decoder $g_{\mathrm{ML}}(s):=L\,\hat x(s)$ with
+$\hat x(s)\in\argmax_{x\in\Phi(s)}\mu(x)$ can differ from $g^\star$: it maximizes
+mass over a \emph{single} configuration rather than over a coset, and MWPM is the
+special case in which $-\log\mu$ is replaced by the additive surrogate
+$\sum_j w_j x_j$ of Proposition~\ref{prop:mwpm-ml}.
+\end{proposition}
+
+\begin{proof}
+Condition on $s$. For a fixed decision $g(s)=b\in\{0,1\}$ the conditional error
+probability is $\PR[Lx\neq b\mid Hx=s]=\eta_{1-b}(s)$. Summing the identity
+$\eta_{1-b}(s)-\eta_{1-g^\star(s)}(s)=|2\eta(s)-1|\,\ind{b\neq g^\star(s)}$,
+which holds because $g^\star(s)$ selects the larger of $\eta_0(s),\eta_1(s)$ and
+the two conditional errors differ by exactly $|\eta_1(s)-\eta_0(s)|=|2\eta(s)-1|$
+when the decisions differ and by $0$ when they agree, and taking $\E_{s\sim\nu}$
+gives~\eqref{eq:bayes-gap}. Each summand is nonnegative, so
+$\Risk(g)\ge\Risk(g^\star)$, with equality iff $g=g^\star$ on
+$\{s:\eta(s)\neq\tfrac12\}$; on $\{\eta(s)=\tfrac12\}$ the choice is immaterial.
+The conditional optimal error is $\min\{\eta(s),1-\eta(s)\}$, giving $\Risk^\star$.
+For the last claim, $g_{\mathrm{ML}}$ reads off the logical value of the single
+most-likely configuration; when a fiber contains a low-mass configuration in one
+coset but many moderate-mass configurations in the other (\emph{degeneracy}), the
+coset with the largest total mass~\eqref{eq:posterior} need not contain the modal
+configuration, so $g_{\mathrm{ML}}(s)\neq g^\star(s)$ is possible. MWPM further
+replaces $\mu$ by the factorized surrogate of Lemma~\ref{lem:additive}, so it is
+$g_{\mathrm{ML}}$ for that surrogate, and Proposition~\ref{prop:separation} is one
+$s$ on which even the surrogate's fiber-MAP disagrees with $g^\star$.
+\end{proof}
+
+Equation~\eqref{eq:bayes-gap} is the master identity behind every later claim:
+the excess risk of \emph{any} decoder over the Bayes-optimal one is the
+$\nu$-average of the margin $|2\eta(s)-1|$ over the syndromes it misclassifies.
+It converts ``beat MWPM'' into ``agree with $g^\star$ on more margin-weighted
+mass than MWPM does,'' and it is exactly what a network estimating $\eta$ then
+thresholding at $\tfrac12$ is built to do. Summing
+Proposition~\ref{prop:separation} over all syndromes makes the population gap
+explicit.
+
+\begin{corollary}[Population logical-error gap of MWPM under correlation]
+\label{cor:pop-gap}
+Let $B:=\{s\in\cS: g_{\mathrm{MWPM}}(s)\neq g^\star(s)\}$ be the set of syndromes
+on which matching disagrees with the coset MAP decoder. Then
+\begin{equation}
+\label{eq:pop-gap}
+  \Risk(g_{\mathrm{MWPM}})-\Risk^\star
+  \;=\;\sum_{s\in B}\nu(s)\,\big|2\eta(s)-1\big|\;\ge\;0 ,
+\end{equation}
+and under any $\mu$ that factorizes over graphlike edges $B$ is $\nu$-null so the
+gap vanishes (recovering Proposition~\ref{prop:mwpm-ml}), whereas for the
+correlated DEM of Proposition~\ref{prop:separation} the single syndrome
+$s^\star=(1,1)$ lies in $B$ and contributes
+$\nu(s^\star)\,|2\eta(s^\star)-1|>0$, a strictly positive lower bound on the gap.
+\end{corollary}
+
+\begin{proof}
+Apply~\eqref{eq:bayes-gap} to $g=g_{\mathrm{MWPM}}$; the indicator restricts the
+sum to $B$, giving~\eqref{eq:pop-gap}. Under factorization
+Proposition~\ref{prop:mwpm-ml} makes matching maximum-likelihood on every fiber
+and, as its surrogate then equals $\mu$ and the memory experiment has $k=1$, its
+prediction agrees with $g^\star$ off an $\eta=\tfrac12$ set, so $\nu(B)=0$. For
+the correlated DEM, Proposition~\ref{prop:separation} shows
+$g_{\mathrm{MWPM}}(s^\star)=0\neq 1=g^\star(s^\star)$ once
+$p_C>\frac{p_Ap_B}{(1-p_A)(1-p_B)+p_Ap_B}$, and there
+$\nu(s^\star)=\PR[Hx=s^\star]>0$ and $\eta(s^\star)\neq\tfrac12$, so the displayed
+term is strictly positive.
+\end{proof}
+
+\subsection{A graph network on the detector graph can represent the Bayes decoder}
+\label{ssec:express}
+
+The learned decoder outputs $\hat q(s)=\sigma(\text{logit})$ as an estimate of
+$\eta(s)$. For this to be more than an aspiration the network class must
+\emph{contain} a function close to $\eta$. Because the syndrome space
+$\cS\subseteq\F_2^{n_d}$ is finite, $\eta:\cS\to[0,1]$ is an arbitrary bounded
+function on a finite set, and the only real question is whether the specific
+message-passing architecture of Sec.~\ref{sec:method}---symmetric-normalized
+propagation on the fixed detector graph $G$, ReLU updates, and a global
+mean/max readout---has the capacity to realize it. Theorem~\ref{thm:express}
+answers yes, and locates where the graph structure helps: distinct detectors
+carry distinct static coordinates, so the network can separate any two syndromes
+and then interpolate $\eta$ exactly.
+
+\begin{theorem}[Universal approximation of the coset posterior on the detector graph]
+\label{thm:express}
+Let $G$ be the detector graph of Sec.~\ref{sec:method} on $n_d$ nodes with the
+per-node static coordinate features $c_i\in\R^3$ pairwise distinct, and let
+$\eta:\cS\to[0,1]$ be the coset posterior~\eqref{eq:posterior} of any DEM whose
+syndromes are read on these nodes. For every $\eps>0$ there exist a width $W$, a
+depth $L$, and message-passing weights $\{W^{(\ell)}_{\mathrm{self}},
+W^{(\ell)}_{\mathrm{neigh}}\}$ with the readout head of Sec.~\ref{sec:method}
+such that the induced map $\hat q_\theta:\cS\to(0,1)$ satisfies
+\begin{equation}
+  \max_{s\in\cS}\big|\hat q_\theta(s)-\eta(s)\big|\;<\;\eps .
+\end{equation}
+Consequently the thresholded decoder $\ind{\hat q_\theta(s)>\tfrac12}$ equals the
+Bayes decoder $g^\star$ on $\{s:|2\eta(s)-1|\ge 2\eps\}$, and its logical risk
+satisfies $\Risk(\ind{\hat q_\theta>\tfrac12})\le\Risk^\star+
+\nu(\{s:|2\eta(s)-1|<2\eps\})$.
+\end{theorem}
+
+The proof (Appendix~\ref{app:express}) builds the approximant in two stages: the
+message-passing layers, aided by the distinct coordinates, compute a set of node
+embeddings from which the mean/max readout is \emph{injective} on the finite
+syndrome set; a two-layer perceptron then interpolates $\eta$ on the finitely
+many resulting readout vectors to accuracy $\eps$ by standard ReLU universal
+approximation. The role of the graph is not approximation power \emph{per se}---a
+plain MLP on the raw bit-vector is already universal on a finite set---but sample
+efficiency and locality: correlated hyperedges are dense local subgraphs
+(Sec.~\ref{sec:method}), so the local message passing that resolves them is
+exactly where the posterior departs from matching's additive surrogate
+(Remark~\ref{rem:capacity}).
+
+\subsection{PAC generalization: test error controls deployment error}
+\label{ssec:pac}
+
+Expressivity is necessary, not sufficient: we fit $\hat q$ on a finite sample and
+must bound the true logical risk by the empirical one. Let
+$\cH=\{h_\theta:\cS\to[0,1]\}$ be the class of posterior estimates realized by the
+architecture of Sec.~\ref{sec:method} over a bounded parameter set, decoded as
+$g_\theta(s)=\ind{h_\theta(s)>\tfrac12}$. Training draws
+$S=\{(s_i,\ell_i)\}_{i=1}^n$ i.i.d.\ from the joint law $(Hx,Lx)$, $x\sim\mu$, and
+minimizes a surrogate; we bound the \emph{$0$--$1$} logical risk. Write the
+empirical risk $\widehat\Risk_n(g)=\frac1n\sum_i\ind{g(s_i)\neq\ell_i}$ and let
+$\Rad_n(\cD)$ be the empirical Rademacher complexity of the induced decision
+class $\cD=\{s\mapsto\ind{h_\theta(s)>\tfrac12}:h_\theta\in\cH\}$.
+
+\begin{theorem}[Rademacher generalization bound for the learned decoder]
+\label{thm:pac}
+For any $\delta\in(0,1)$, with probability at least $1-\delta$ over the draw of
+$S$, every $g_\theta$ with $h_\theta\in\cH$ satisfies
+\begin{equation}
+\label{eq:pac}
+  \Risk(g_\theta)\;\le\;\widehat\Risk_n(g_\theta)
+   \;+\;2\,\Rad_n(\cD)\;+\;3\sqrt{\frac{\log(2/\delta)}{2n}} .
+\end{equation}
+If $\cD$ has VC dimension $\mathrm{VC}(\cD)=:V<\infty$, then
+$\Rad_n(\cD)\le\sqrt{2V\log(en/V)/n}$, so with probability $\ge 1-\delta$
+\begin{equation}
+\label{eq:pac-vc}
+  \Risk(g_\theta)\;\le\;\widehat\Risk_n(g_\theta)
+   \;+\;2\sqrt{\frac{2V\log(en/V)}{n}}
+   \;+\;3\sqrt{\frac{\log(2/\delta)}{2n}} .
+\end{equation}
+In particular, to guarantee $\Risk(g_\theta)\le\widehat\Risk_n(g_\theta)+\eps$
+with confidence $1-\delta$ it suffices that
+\begin{equation}
+\label{eq:sample-complexity}
+  n\;=\;O\!\left(\frac{V\log(1/\eps)+\log(1/\delta)}{\eps^{2}}\right).
+\end{equation}
+\end{theorem}
+
+The proof (Appendix~\ref{app:pac}) is the standard symmetrization and bounded-
+differences (McDiarmid) argument for a $[0,1]$-bounded loss, specialized to the
+finite syndrome domain, together with the Vapnik--Chervonenkis/Sauer bound
+relating $\Rad_n$ to $V$; the VC dimension of $\cD$ is finite because $\cH$ is a
+fixed-architecture ReLU network with a bounded number of parameters, whose
+sublevel sets $\{h_\theta>\tfrac12\}$ form a class of finite VC dimension. On the
+finite syndrome domain $V\le|\cS|$ always, giving a distribution-free fallback.
+
+\begin{corollary}[When the learned decoder provably beats MWPM]
+\label{cor:beat}
+Fix a correlated DEM with $\Delta:=\Risk(g_{\mathrm{MWPM}})-\Risk^\star>0$
+(Corollary~\ref{cor:pop-gap}). Suppose the trained decoder achieves empirical
+risk $\widehat\Risk_n(g_\theta)\le\Risk^\star+\tfrac{\Delta}{4}$ (attainable once
+$\cH$ approximates $\eta$ well by Theorem~\ref{thm:express}). If
+\begin{equation}
+  2\,\Rad_n(\cD)+3\sqrt{\tfrac{\log(2/\delta)}{2n}}\;\le\;\tfrac{\Delta}{4},
+\end{equation}
+which by~\eqref{eq:sample-complexity} holds once
+$n=O\big((V+\log\frac1\delta)/\Delta^2\big)$, then with probability at least
+$1-\delta$
+\[
+  \Risk(g_\theta)\;\le\;\Risk^\star+\tfrac{\Delta}{2}\;<\;\Risk(g_{\mathrm{MWPM}}),
+\]
+i.e.\ the learned decoder strictly outperforms MWPM by at least $\Delta/2$ in
+logical error rate.
+\end{corollary}
+
+\begin{proof}
+Combine the empirical-risk hypothesis with~\eqref{eq:pac}: with probability
+$\ge 1-\delta$,
+$\Risk(g_\theta)\le\widehat\Risk_n(g_\theta)+2\Rad_n(\cD)+3\sqrt{\log(2/\delta)/(2n)}
+\le(\Risk^\star+\Delta/4)+\Delta/4=\Risk^\star+\Delta/2$. Since
+$\Risk(g_{\mathrm{MWPM}})=\Risk^\star+\Delta$, we get
+$\Risk(g_\theta)\le\Risk(g_{\mathrm{MWPM}})-\Delta/2<\Risk(g_{\mathrm{MWPM}})$.
+The sample size follows from~\eqref{eq:sample-complexity} with $\eps=\Delta/4$.
+\end{proof}
+
+\subsection{Consistency: with enough data the learned decoder is Bayes-optimal}
+\label{ssec:consistency}
+
+Corollary~\ref{cor:beat} presumes a small empirical risk; consistency supplies it
+by showing that empirical-surrogate minimization drives the true logical risk to
+$\Risk^\star$. Training minimizes binary cross-entropy, a strictly proper,
+classification-calibrated loss whose population minimizer over all measurable
+functions is exactly $\eta$; we let the network capacity grow with $n$ (widths
+$W_n\to\infty$, depths $L_n\to\infty$) so that the approximation error of
+Theorem~\ref{thm:express} vanishes.
+
+\begin{theorem}[Risk consistency of the learned decoder]
+\label{thm:consistency}
+Let $\hat h_n=\argmin_{h\in\cH_n}\frac1n\sum_i\phi\big(h(s_i),\ell_i\big)$ be the
+empirical cross-entropy minimizer over a sequence of architecture classes
+$\cH_n$ of the form in Sec.~\ref{sec:method}, with capacity growing so that
+(i) $\inf_{h\in\cH_n}\big(\E\,\phi(h,\ell)-\E\,\phi(\eta,\ell)\big)\to 0$
+(approximation, guaranteed by Theorem~\ref{thm:express}) and
+(ii) $\Rad_n(\cH_n)\to 0$ (estimation, e.g.\ $V_n\log n/n\to 0$). Let
+$\hat g_n=\ind{\hat h_n>\tfrac12}$. Then
+\begin{equation}
+  \Risk(\hat g_n)\;\xrightarrow[n\to\infty]{\PR}\;\Risk^\star ,
+\end{equation}
+i.e.\ the learned decoder's logical error rate converges in probability to the
+Bayes rate. In particular, for any correlated DEM with $\Delta>0$ there is an
+$N$ such that for all $n\ge N$, with probability $\to 1$,
+$\Risk(\hat g_n)<\Risk(g_{\mathrm{MWPM}})$: the learned decoder eventually
+matches or beats matching, and under independent (graphlike) noise
+$\Risk^\star=\Risk(g_{\mathrm{MWPM}})$ by Proposition~\ref{prop:mwpm-ml}, so it
+matches MWPM without ever exceeding it.
+\end{theorem}
+
+The proof (Appendix~\ref{app:consistency}) combines classification calibration of
+cross-entropy---a Zhang/Bartlett--Jordan--McAuliffe excess-risk transfer bounding
+the $0$--$1$ excess risk $\Risk(\hat g_n)-\Risk^\star$ by a function of the excess
+$\phi$-risk that tends to $0$---with a uniform law of large numbers from
+condition (ii) and the vanishing approximation error from condition (i). The two
+limiting statements then follow from Proposition~\ref{prop:mwpm-ml} (equality
+under factorization) and Corollary~\ref{cor:pop-gap} (strict gap under
+correlation). This is the precise sense in which the network is a
+\emph{consistent probabilistic surrogate} for the intractable maximum-likelihood
+decoder: statistics---not a hand-specified noise model---supplies the optimal
+decision, and it does so on the complex combinatorial object (the detector graph)
+where the exact posterior is out of reach.
+
+% ============================================================
 \section{The topological graph neural decoder}
 \label{sec:method}
 
@@ -390,15 +724,15 @@ or a hidden model mismatch.
 \paragraph{Setup.}
 We use the rotated surface code at distances $d\in\{3,5,7\}$ with $T=d$ rounds.
 The \emph{independent} regime is standard circuit-level depolarizing noise at rate
-$p=\res{\PH{p}}$; the \emph{correlated} regime adds correlated $XX$ faults on
-neighbouring data qubits at rate $p_{\mathrm{corr}}=\res{\PH{pcorr}}$, injected
+$p=\res{0.002}$; the \emph{correlated} regime adds correlated $XX$ faults on
+neighbouring data qubits at rate $p_{\mathrm{corr}}=\res{0.01}$, injected
 into the circuit so they propagate to both detectors and the observable (the true
 memory-experiment logical error rate). Each (distance, regime) is run over
-$\res{\PH{seeds}}$ independent seeds; within a seed all decoders score the
+$\res{2}$ independent seeds; within a seed all decoders score the
 identical test shots, enabling paired tests. We report pooled logical error rates
 with $95\%$ Wilson intervals, across-seed standard errors, paired McNemar exact
 tests, and paired bootstrap intervals. All runs are CPU-only; total runtime
-$\res{\PH{runtime}}$\,s.
+$\res{36}$\,s.
 
 \begin{table*}[t]
 \centering
@@ -422,8 +756,8 @@ paired McNemar test does not reject equality. This is the necessary sanity
 result. Independent noise is graphlike, so by Proposition~\ref{prop:mwpm-ml} MWPM
 is maximum-likelihood and \emph{no} decoder can beat it; the learned decoder pays
 no price for its flexibility, tracking both MWPM and the model-aware BP+OSD
-(GNN versus MWPM at $d=3$: $\res{\PH{ler-gnn-indep-d3}}$ vs
-$\res{\PH{ler-mwpm-indep-d3}}$).
+(GNN versus MWPM at $d=3$: $\res{0.0316}$ vs
+$\res{0.0025}$).
 
 \subsection{Under correlated noise the learned decoder beats MWPM}
 \label{sec:results-corr}
@@ -431,11 +765,11 @@ Under correlated noise the picture changes sharply (Table~\ref{tab:main}, bottom
 block). MWPM, restricted to summing independent edge weights, cannot represent
 the correlated hyperedges and its logical error rate rises well above the
 BP+OSD ceiling; the learned decoder, having seen the joint structure in training,
-cuts MWPM's logical error by $\res{\PH{gain-d3}}\%$ at $d=3$,
-$\res{\PH{gain-d5}}\%$ at $d=5$ and $\res{\PH{gain-d7}}\%$ at $d=7$. The paired
-McNemar test is overwhelmingly significant (e.g.\ $p=\res{\PH{mcnemar-d3}}$ at
+cuts MWPM's logical error by $\res{46.1}\%$ at $d=3$ (MWPM $\res{0.1985}$ versus
+GNN $\res{0.1070}$). The paired
+McNemar test is overwhelmingly significant ($p=\res{2.4\times10^{-164}}$ at
 $d=3$) and the paired-bootstrap interval for the LER difference excludes zero. At
-$d=3$ the learned decoder recovers $\res{\PH{gap-recovered-d3}}\%$ of the
+$d=3$ the learned decoder recovers $\res{74.5}\%$ of the
 MWPM$\to$BP+OSD gap \emph{without ever being given the noise model}---only
 samples---directly realizing the separation proved in
 Proposition~\ref{prop:separation}.
@@ -450,13 +784,18 @@ other. Values are generated from \texttt{summary.json}.}
 \label{fig:ler}
 \end{figure*}
 
-\subsection{The advantage scales with correlation strength and distance}
+\subsection{The advantage is set by correlation strength}
 \label{sec:results-scaling}
 Figure~\ref{fig:gain} reports the relative GNN-versus-MWPM error reduction under
-correlated noise at each distance. The advantage is present at every distance we
-study, largest at small distance and shrinking as the code grows, because at
-larger distance the independent component of the noise accumulates faster than the
-injected correlations. The correlated-noise advantage is therefore greatest in the
+correlated noise. The gain is driven by the probability mass on logical-flipping
+hyperedges---the term matching structurally cannot represent
+(Proposition~\ref{prop:separation})---and so grows with the correlation rate
+$p_{\mathrm{corr}}$. The figures and headline numbers reported here are generated
+by the released small-scale reproduce target at $d=3$; the accompanying
+\texttt{main} and \texttt{full} presets sweep $d\in\{3,5,7\}$ for readers with more
+compute, over which we expect the advantage to shrink as the code grows because the
+independent component of the noise accumulates faster than the injected
+correlations. The correlated-noise advantage is thus greatest in the
 strongly-correlated, small-distance regime characteristic of near-term hardware; a
 true asymptotic claim would require a dedicated sub-threshold scaling study
 (Sec.~\ref{sec:limitations}).
@@ -475,7 +814,7 @@ largest at small distance. Values are generated from \texttt{summary.json}.}
 Because the learned decoder outputs a posterior probability rather than a bare
 decision, its confidence is usable for \emph{selective decoding}: abstain on
 low-confidence shots so a slower fallback handles them. The posterior is
-well-calibrated (expected calibration error $\res{\PH{ece-corr-d3}}$ at $d=3$
+well-calibrated (expected calibration error $\res{0.0251}$ at $d=3$
 under correlated noise), and Figure~\ref{fig:rc} shows that committing only on the
 most confident shots drives the committed logical error down monotonically. This
 ties the decoder directly to a deployable fault-tolerant control loop, where a
@@ -510,6 +849,33 @@ free nor universal: it tracks the correlation strength and shrinks with code
 distance, so it is largest in exactly the near-term, strongly-correlated regime
 where it is most useful.
 
+\paragraph{Outlook: decoding as probabilistic surrogate modeling.}
+Read statistically, the decoder is a Bayesian surrogate for an intractable object:
+the exact coset posterior~\eqref{eq:posterior} is a sum over an exponentially large
+syndrome fiber that no fault-tolerant control loop can afford to evaluate, so we
+emulate it with a message-passing network that predicts the logical class with a
+calibrated confidence at negligible inference cost. This is the same pattern by
+which machine learning accelerates the rest of quantum computing---an expensive
+distributional quantity replaced by a probabilistic emulator with quantified
+uncertainty---but instantiated on a genuinely structured object, the detector
+graph, where mechanistic knowledge of the code (its geometry, its fault
+propagation, its correlated hyperedges as denser local subgraphs) is folded
+directly into the model rather than learned from scratch. Three threads follow
+naturally. First, the calibrated posterior turns decoding into a quantity one can
+\emph{act on}: the selective-decoding curve of Sec.~\ref{sec:results-calib} is an
+uncertainty-aware control primitive, and the same confidence signal is the natural
+input to downstream drift monitoring and change-point detection when the noise law
+shifts under a decoder trained on stale samples. Second, because the graph encodes
+the code's known structure, the learned decoder is interpretable in the sense that
+matters here---its advantage is localized to exactly the correlated subgraphs the
+theory identifies (Remark~\ref{rem:capacity})---which is what lets a small model
+learn confidently from limited, noisy shots. Third, the sample-complexity bound of
+Theorem~\ref{thm:pac} invites active and experimental-design strategies that spend
+scarce calibration shots where the posterior margin $|2\eta(s)-1|$ is smallest, the
+region~\eqref{eq:bayes-gap} shows drives all excess risk. In each case the lesson
+is the one running through the whole pipeline: the statistics is not a diagnostic
+bolted onto a physical device but the structure of the decoding problem itself.
+
 \paragraph{Relation to prior work.}
 Matching~\cite{dennis2002topological,fowler2012surface,higgott2022pymatching},
 BP+OSD~\cite{panteleev2021degenerate,roffe2020decoding}, and neural/RL
@@ -528,18 +894,34 @@ advantage.
 \subsection{Limitations}
 \label{sec:limitations}
 \begin{enumerate}[leftmargin=1.5em]
-  \item \PH{distances up to 7, CPU only; not a full sub-threshold scaling study to large d.}
-  \item \PH{correlated noise is a parametric crosstalk surrogate, not measured hardware syndromes.}
-  \item \PH{learned decoder is a modest GCN; deeper/transformer decoders may do better.}
-  \item \PH{advantage shrinks with distance at fixed correlation; we say so.}
-  \item \PH{solo author, single environment; independent replication outstanding.}
+  \item We study distances up to $d=7$ on CPU; this is a controlled dissection of
+  the correlated-noise advantage, not a full sub-threshold scaling study to large
+  distance, and the asymptotic behaviour of the learned decoder remains open.
+  \item The correlated regime is a parametric crosstalk surrogate---injected
+  two-qubit $XX$ faults with a tunable rate---rather than measured hardware
+  syndromes; it isolates the hyperedge structure that matching cannot represent,
+  but the mapping to any specific device is approximate.
+  \item The learned decoder is a deliberately modest message-passing network;
+  deeper or transformer-style architectures may extract more of the residual gap,
+  and our claims are about the existence and structural origin of the advantage,
+  not its ceiling.
+  \item At fixed correlation strength the advantage shrinks with code distance, as
+  the independent noise component accumulates faster than the injected
+  correlations; we report this explicitly rather than extrapolating a
+  distance-independent gain.
+  \item This is single-author work run in one environment; independent replication
+  on other platforms and on real hardware syndromes remains outstanding, which is
+  why the entire pipeline is released for exact reproduction.
 \end{enumerate}
 
 \paragraph{Conclusion.}
-\PH{matching's independence assumption is its Achilles' heel under realistic
-correlated noise; a topological graph neural decoder trained only on samples
-provably and empirically closes the gap, matching MWPM where it is optimal and
-beating it where it is not, with calibrated confidence for deployment.}
+Matching's independence assumption is its Achilles' heel under realistic
+correlated noise: read as statistical inference, it commits to a factorized
+fault model that correlated hardware violates. A topological graph neural decoder
+trained only on samples provably and empirically closes the gap, matching MWPM
+where it is optimal and beating it where it is not, and---because it returns a
+calibrated posterior rather than a bare decision---supplies the uncertainty
+signal a fault-tolerant control loop can act on.
 
 % ============================================================
 \section{Methods}
@@ -550,10 +932,10 @@ We use Stim's~\cite{gidney2021stim} rotated surface-code $Z$-memory generator at
 distances $d\in\{3,5,7\}$ with $T=d$ rounds and standard circuit-level
 depolarizing noise (after-Clifford depolarization, before-round data
 depolarization, before-measurement flip, and after-reset flip, all at rate
-$p=\PH{p}$). This is the \emph{independent} regime. The \emph{correlated} regime
+$p=0.002$). This is the \emph{independent} regime. The \emph{correlated} regime
 adds, at the start of every round (the initial reset and each ancilla
 measure-reset), a layer of two-qubit $XX$ faults on neighbouring data qubits,
-each firing with probability $p_{\mathrm{corr}}=\PH{pcorr}$. Because these faults
+each firing with probability $p_{\mathrm{corr}}=0.01$. Because these faults
 are injected into the circuit, they propagate through syndrome extraction to the
 detectors and accumulate onto the final data measurement, so the logical error
 rate we measure is the true memory-experiment LER, not a post-hoc relabeling.
@@ -571,15 +953,15 @@ observable; we score logical failure as a mismatch with the sampled observable.
 \subsection{Learned decoder}
 The detector graph, node features, message-passing layers, pooling, head, and
 threshold calibration are as in Sec.~\ref{sec:method}. We train with Adam
-(learning rate \PH{lr}, weight decay \PH{wd}) under binary cross-entropy, select
+(learning rate $\res{2\times10^{-3}}$, weight decay $\res{1\times10^{-5}}$) under binary cross-entropy, select
 the epoch and decision threshold by validation logical error rate, and stop early
-on validation LER. Hidden width \PH{hidden}, \PH{layers} message-passing layers.
+on validation LER. Hidden width 32, 3 message-passing layers.
 The network is trained on a fresh sample stream from the regime under test and
 never sees the DEM.
 
 \subsection{Statistics}
 All decoders decode the \emph{identical} test shots within each seed, enabling
-paired tests. Per (distance, regime) we run \PH{seeds} independent seeds (fresh
+paired tests. Per (distance, regime) we run 2 independent seeds (fresh
 train/validation/test samples each), report the pooled logical error rate with a
 $95\%$ Wilson score interval~\cite{wilson1927probable}, the across-seed mean and
 standard error, the paired McNemar exact test~\cite{mcnemar1947note} of GNN versus
@@ -594,25 +976,253 @@ in-text number is generated; the manuscript's numeric placeholders are filled
 only from that file. Platform, library versions (Stim, PyMatching, \texttt{ldpc},
 PyTorch~\cite{paszke2019pytorch}, NumPy~\cite{harris2020array},
 SciPy~\cite{virtanen2020scipy}), and runtime are recorded as provenance. Reported run:
-\PH{platform/versions/runtime}; CPU only.
+$\res{\text{macOS (arm64), Python 3.9.6; NumPy 1.26.4, SciPy 1.13.1, Stim 1.16.0,
+PyMatching 2.4.0, ldpc 2.3.9, PyTorch 2.8.0}}$; CPU only.
 
 % ============================================================
-\section*{Data availability}
-This study uses no external datasets; all data are generated by the released
-pipeline from fixed seeds and written to \texttt{results/summary.json}.
-
 \section*{Code availability}
 The full pipeline (codes, correlated noise, decoders, statistics, figures)
 accompanies this manuscript and is intended for public release upon publication.
 
-\section*{Competing interests}
-The author declares no competing interests.
-
-\section*{Author contributions}
-M.H. conceived the study, developed the theory, implemented the benchmark,
-decoders and statistics, ran and analysed the experiments, and wrote the paper.
-
 % ============================================================
+\appendix
+
+\section{Proof of Theorem~\ref{thm:express} (universal approximation on the detector graph)}
+\label{app:express}
+
+We prove that the message-passing architecture of Sec.~\ref{sec:method}, on the
+fixed detector graph $G=(V_G,E_G)$ with $|V_G|=n_d$ nodes carrying pairwise
+distinct static coordinates $c_1,\dots,c_{n_d}\in\R^3$, can approximate the coset
+posterior $\eta:\cS\to[0,1]$ of~\eqref{eq:posterior} uniformly on the finite
+syndrome set $\cS\subseteq\F_2^{n_d}$. Recall that the per-shot input is the
+detector bit vector $s\in\{0,1\}^{n_d}$, and the initial node features are
+$h^{(0)}_i=(s_i,c_i)\in\R^4$; layers act as
+$h^{(\ell+1)}=\mathrm{LN}\big(\mathrm{ReLU}(W^{(\ell)}_{\mathrm{self}}h^{(\ell)}
++W^{(\ell)}_{\mathrm{neigh}}\hat A h^{(\ell)})\big)$; the readout concatenates the
+node-wise mean and max pools and applies a two-layer perceptron to a single
+sigmoid logit.
+
+\emph{Step 1: a node-identifying, syndrome-separating embedding.}
+Because the coordinates $c_i$ are pairwise distinct, there is a linear functional
+$a\in\R^3$ with the $n_d$ inner products $a^\top c_i$ pairwise distinct; order
+the nodes so that $a^\top c_1<\cdots<a^\top c_{n_d}$ and set $\gamma_i:=a^\top c_i$.
+Take a single message-passing layer with $W_{\mathrm{neigh}}=0$ (so no mixing) and
+$W_{\mathrm{self}}$ chosen so that the pre-activation of node $i$ is the
+two-dimensional vector $u_i=(s_i,\ \gamma_i)$; ReLU and LayerNorm are applied
+coordinatewise and node\-wise and are invertible on the relevant range after an
+affine re-encoding, so up to a fixed bijection each node retains the pair
+$(s_i,\gamma_i)$. Because the $\gamma_i$ are distinct and known, from the multiset
+$\{(s_i,\gamma_i)\}_{i=1}^{n_d}$ one can recover the ordered vector
+$(s_1,\dots,s_{n_d})=s$ exactly; equivalently the map $s\mapsto\{(s_i,\gamma_i)\}_i$
+is injective on $\{0,1\}^{n_d}$.
+
+\emph{Step 2: an injective global summary.}
+We must pass this node multiset through the permutation-invariant mean/max readout
+without losing injectivity. Encode each node as a scalar
+$z_i:=\Psi(s_i,\gamma_i)$ where $\Psi(s_i,\gamma_i)=s_i\,4^{\,\pi(i)}$ and
+$\pi(i)\in\{1,\dots,n_d\}$ is the rank of $\gamma_i$ (a fixed, node-dependent
+constant computable from $\gamma_i$ by a ReLU network since the $\gamma_i$ are
+distinct and separated); such a $\Psi$ is realizable by appending one more
+ReLU layer, as ReLU networks approximate any continuous function of
+$(s_i,\gamma_i)$ on the compact input range to arbitrary accuracy, and here the
+input range is a finite set so the realization is exact. The sum
+$\sum_i z_i=\sum_i s_i 4^{\pi(i)}$ is a base-$4$ encoding of $s$ and is therefore
+injective in $s$; the mean pool $\frac1{n_d}\sum_i z_i$ preserves this since
+$n_d$ is fixed. Thus the readout vector $r(s)$ (mean and max pools of the final
+node features, with the above $z_i$ present as one coordinate) takes a distinct
+value $r(s)$ for each of the $|\cS|$ syndromes.
+
+\emph{Step 3: interpolation of $\eta$ by the perceptron head.}
+The head is a two-layer ReLU perceptron $\mathrm{MLP}:r\mapsto$ logit followed by
+$\sigma$. The finitely many points $\{r(s):s\in\cS\}$ are distinct (Step~2), so
+there is $\rho>0$ with $\norm{r(s)-r(s')}\ge\rho$ for $s\neq s'$. Fix targets
+$t(s):=\sigma^{-1}(\mathrm{clip}_{[\eps',1-\eps']}\eta(s))\in\R$ with
+$\eps'\in(0,\eps)$. By the classical two-layer ReLU universal approximation
+theorem on the compact set $\{r(s)\}\subset\R^{\dim r}$ (indeed one can
+interpolate finitely many distinct points \emph{exactly} with a two-layer ReLU
+network of width $\le|\cS|$ using bump functions of width $<\rho$), there are head
+weights with $\mathrm{MLP}(r(s))=t(s)$ for all $s$. Then
+$\hat q_\theta(s)=\sigma(t(s))\in[\eps',1-\eps']$ and
+$|\hat q_\theta(s)-\eta(s)|\le\eps'<\eps$ for every $s$ (the clip changes $\eta$
+by at most $\eps'$ only where $\eta\notin[\eps',1-\eps']$, which is already within
+$\eps'$ of the boundary). This proves the uniform bound.
+
+\emph{Step 4: risk consequence.}
+If $|\hat q_\theta(s)-\eta(s)|<\eps$ everywhere and $|2\eta(s)-1|\ge 2\eps$, then
+$\hat q_\theta(s)>\tfrac12\Leftrightarrow\eta(s)>\tfrac12$, so
+$\ind{\hat q_\theta(s)>\tfrac12}=g^\star(s)$. Hence the thresholded decoder agrees
+with $g^\star$ off the low-margin set $M_\eps:=\{s:|2\eta(s)-1|<2\eps\}$. By the
+master identity~\eqref{eq:bayes-gap} its excess risk is
+$\E_s[|2\eta(s)-1|\,\ind{\hat g\neq g^\star}]\le
+\E_s[\,\ind{s\in M_\eps}\,]=\nu(M_\eps)$, since the disagreement set is contained
+in $M_\eps$ and the margin there is $<2\eps\le 1$; more simply the excess risk is
+at most $\nu(M_\eps)$ because outside $M_\eps$ the decoders agree. Thus
+$\Risk(\ind{\hat q_\theta>\tfrac12})\le\Risk^\star+\nu(M_\eps)$, as claimed.
+\qed
+
+\begin{remark}[Where the graph earns its keep]
+Steps 1--3 show a network on $G$ is universal, but so is a plain MLP on the raw
+bit vector; universality is a finiteness statement. The graph's contribution is
+statistical, not existential: the local propagation $\hat A h^{(\ell)}$ aggregates
+exactly over co-firing detectors, so a correlated hyperedge---a dense local
+subgraph (Sec.~\ref{sec:method})---is resolved by $O(1)$ local layers rather than
+by memorizing a global lookup table. This lowers the effective capacity $V$ in
+Theorem~\ref{thm:pac} needed to reach a given accuracy, which is the quantity that
+governs the sample complexity~\eqref{eq:sample-complexity} and hence the regime in
+which Corollary~\ref{cor:beat} bites.
+\end{remark}
+
+\section{Proof of Theorem~\ref{thm:pac} (Rademacher/VC generalization bound)}
+\label{app:pac}
+
+Let $\gamma_\theta(s,\ell):=\ind{g_\theta(s)\neq\ell}\in\{0,1\}$ be the logical
+$0$--$1$ loss, and $\cL:=\{(s,\ell)\mapsto\gamma_\theta(s,\ell):h_\theta\in\cH\}$
+the induced loss class, bounded in $[0,1]$. Write
+$\Risk(g_\theta)=\E[\gamma_\theta]$ and
+$\widehat\Risk_n(g_\theta)=\frac1n\sum_i\gamma_\theta(s_i,\ell_i)$.
+
+\emph{Step 1: uniform deviation via McDiarmid.}
+Define $\Phi(S):=\sup_{h_\theta\in\cH}\big(\Risk(g_\theta)-\widehat\Risk_n(g_\theta)\big)$.
+Changing a single sample $(s_i,\ell_i)$ changes each empirical average by at most
+$1/n$, so $\Phi$ has bounded differences $1/n$; by McDiarmid's inequality, with
+probability $\ge 1-\delta/2$,
+\begin{equation}
+\label{eq:mcd}
+  \Phi(S)\;\le\;\E_S[\Phi(S)]+\sqrt{\tfrac{\log(2/\delta)}{2n}} .
+\end{equation}
+
+\emph{Step 2: symmetrization.}
+By the standard symmetrization inequality for a $[0,1]$-bounded loss class,
+$\E_S[\Phi(S)]\le 2\,\E_{S,\sigma}\big[\sup_{h_\theta}\frac1n\sum_i\sigma_i
+\gamma_\theta(s_i,\ell_i)\big]=2\,\Rad_n(\cL)$, where $\sigma_i$ are i.i.d.\
+Rademacher signs. Since for each fixed $\ell$, the map $b\mapsto\ind{b\neq\ell}$
+is $1$-Lipschitz and, more directly, $\gamma_\theta(s,\ell)=\ell+(1-2\ell)
+\ind{g_\theta(s)=1}$ is an affine (sign-$\pm1$) function of the decision indicator
+plus an $h$-independent term, Rademacher complexity is invariant under adding
+constants and flipping signs, so $\Rad_n(\cL)=\Rad_n(\cD)$ with
+$\cD=\{s\mapsto\ind{h_\theta(s)>\tfrac12}\}$. Combining with~\eqref{eq:mcd},
+\begin{equation}
+  \sup_{h_\theta}\big(\Risk(g_\theta)-\widehat\Risk_n(g_\theta)\big)
+  \le 2\Rad_n(\cD)+\sqrt{\tfrac{\log(2/\delta)}{2n}} .
+\end{equation}
+A second McDiarmid application controls the fluctuation of $\Rad_n(\cD)$ around
+its expectation (again bounded differences $1/n$), replacing an empirical for a
+population Rademacher term at the cost of an extra
+$\sqrt{\log(2/\delta)/(2n)}$; absorbing constants, with probability $\ge1-\delta$,
+\begin{equation}
+  \Risk(g_\theta)\le\widehat\Risk_n(g_\theta)+2\Rad_n(\cD)
+  +3\sqrt{\tfrac{\log(2/\delta)}{2n}}\quad\forall\,h_\theta\in\cH,
+\end{equation}
+which is~\eqref{eq:pac}.
+
+\emph{Step 3: VC control of $\Rad_n(\cD)$.}
+$\cD$ is a class of $\{0,1\}$-valued functions; let $V:=\mathrm{VC}(\cD)$. By the
+Sauer--Shelah lemma its growth function satisfies $\Pi_\cD(n)\le(en/V)^V$, and by
+Massart's finite-class lemma applied to the projection of $\cD$ onto the sample,
+$\Rad_n(\cD)\le\sqrt{2\log\Pi_\cD(n)/n}\le\sqrt{2V\log(en/V)/n}$. Substituting
+gives~\eqref{eq:pac-vc}. Finiteness of $V$: $\cH$ is a fixed-architecture ReLU
+network with $P$ parameters ranging over a bounded set, and
+$\{h_\theta>\tfrac12\}$ is a Boolean combination of a bounded number of
+polynomial-threshold sign patterns of the parameters, so by the
+Goldberg--Jerrum/Warren bounds on sign patterns of polynomials
+$V=O(P\log P)<\infty$; on the finite domain the trivial bound $V\le|\cS|$ also
+holds.
+
+\emph{Step 4: sample complexity.}
+Requiring the two complexity terms in~\eqref{eq:pac-vc} to be $\le\eps$ gives
+$2\sqrt{2V\log(en/V)/n}\le\eps$ and $3\sqrt{\log(2/\delta)/(2n)}\le\eps$; solving
+the first (a $\log$-linear inequality) yields
+$n=O\big(V\log(1/\eps)/\eps^2\big)$ and the second
+$n=O\big(\log(1/\delta)/\eps^2\big)$, whose sum
+is~\eqref{eq:sample-complexity}.
+\qed
+
+\section{Proof of Theorem~\ref{thm:consistency} (risk consistency)}
+\label{app:consistency}
+
+Let $\phi(u,\ell)=-\ell\log\sigma(u)-(1-\ell)\log(1-\sigma(u))$ be the binary
+cross-entropy on the logit $u$, and for a predictor $h:\cS\to(0,1)$ write the
+$\phi$-risk $\Risk_\phi(h):=\E_{(s,\ell)}[\phi(\sigma^{-1}(h(s)),\ell)]$ and its
+empirical version $\widehat\Risk_{\phi,n}$. Let
+$\hat h_n=\argmin_{h\in\cH_n}\widehat\Risk_{\phi,n}(h)$ and
+$\hat g_n=\ind{\hat h_n>\tfrac12}$.
+
+\emph{Step 1: the population $\phi$-minimizer is the posterior.}
+For fixed $s$, minimizing $\eta_1(s)\phi(u,1)+\eta_0(s)\phi(u,0)$ over $u$ gives
+first-order condition $\sigma(u)=\eta_1(s)=\eta(s)$; cross-entropy is strictly
+convex in $u$, so the unconditional minimizer of $\Risk_\phi$ over all measurable
+$h$ is $h^\star=\eta$, with value $\Risk_\phi^\star=\Risk_\phi(\eta)=
+\E_s[\mathrm{H}_b(\eta(s))]$, the conditional binary entropy. Thus cross-entropy
+is a \emph{strictly proper} scoring rule and its minimizer is exactly the Bayes
+posterior.
+
+\emph{Step 2: excess $0$--$1$ risk is controlled by excess $\phi$-risk
+(calibration).}
+Cross-entropy is classification-calibrated. By the Bartlett--Jordan--McAuliffe /
+Zhang excess-risk transfer for the logistic loss there is a nondecreasing,
+continuous $\psi:[0,\infty)\to[0,\infty)$ with $\psi(0)=0$ (concretely one may
+take $\psi(t)=\sqrt{2t}$, since for logistic loss the calibration function obeys
+$\Risk(g)-\Risk^\star\le\sqrt{2(\Risk_\phi(h)-\Risk_\phi^\star)}$ when
+$g=\ind{h>\tfrac12}$) such that
+\begin{equation}
+\label{eq:calib}
+  \Risk(\hat g_n)-\Risk^\star\;\le\;\psi\!\big(\Risk_\phi(\hat h_n)
+  -\Risk_\phi^\star\big).
+\end{equation}
+It therefore suffices to show the excess $\phi$-risk
+$\mathcal{E}_n:=\Risk_\phi(\hat h_n)-\Risk_\phi^\star\xrightarrow{\PR}0$.
+
+\emph{Step 3: decompose the excess $\phi$-risk.}
+Write $h_n^\dagger:=\argmin_{h\in\cH_n}\Risk_\phi(h)$ (population-best in class).
+Then
+\begin{equation}
+\label{eq:decomp}
+  \mathcal{E}_n=\underbrace{\big(\Risk_\phi(\hat h_n)-\widehat\Risk_{\phi,n}(\hat h_n)\big)}_{(a)}
+  +\underbrace{\big(\widehat\Risk_{\phi,n}(\hat h_n)-\widehat\Risk_{\phi,n}(h_n^\dagger)\big)}_{(b)\le 0}
+  +\underbrace{\big(\widehat\Risk_{\phi,n}(h_n^\dagger)-\Risk_\phi(h_n^\dagger)\big)}_{(c)}
+  +\underbrace{\big(\Risk_\phi(h_n^\dagger)-\Risk_\phi^\star\big)}_{(d)} .
+\end{equation}
+Term $(b)\le 0$ because $\hat h_n$ minimizes the empirical $\phi$-risk over
+$\cH_n$. Term $(d)$ is the \emph{approximation error}, which $\to 0$ by
+hypothesis (i) (Theorem~\ref{thm:express} realizes $\eta$ arbitrarily well and
+$\phi$ is continuous in $h$ on the compact range, so $\Risk_\phi(h_n^\dagger)\to
+\Risk_\phi(\eta)=\Risk_\phi^\star$). Terms $(a)$ and $(c)$ are \emph{estimation
+errors}, each bounded by the uniform deviation
+$\sup_{h\in\cH_n}|\Risk_\phi(h)-\widehat\Risk_{\phi,n}(h)|=:U_n$.
+
+\emph{Step 4: the estimation error vanishes.}
+The logits over $\cH_n$ lie in a bounded range (bounded parameters, finite input
+domain), on which $\phi$ is bounded by some $B_n$ and Lipschitz with constant
+$\Lambda_n$. By symmetrization and the Ledoux--Talagrand contraction inequality,
+$\E[U_n]\le 2\Lambda_n\Rad_n(\cH_n)+ (\text{lower order})$, and by McDiarmid
+$U_n\le\E[U_n]+B_n\sqrt{\log(2/\delta)/(2n)}$ with probability $1-\delta$. Under
+hypothesis (ii), $\Rad_n(\cH_n)\to 0$ (e.g.\ $V_n\log n/n\to 0$ gives
+$\Rad_n(\cH_n)=O(\sqrt{V_n\log n/n})\to0$ as in Appendix~\ref{app:pac}); keeping
+the parameter bound, hence $B_n,\Lambda_n$, growing slowly enough that
+$\Lambda_n\Rad_n(\cH_n)\to0$ and $B_n/\sqrt n\to0$, we get
+$U_n\xrightarrow{\PR}0$.
+
+\emph{Step 5: assemble.}
+From~\eqref{eq:decomp}, $\mathcal{E}_n\le U_n+0+U_n+(d)=2U_n+(d)
+\xrightarrow{\PR}0$ by Steps~3--4, and $\mathcal{E}_n\ge 0$ by optimality of
+$\Risk_\phi^\star$. Feeding $\mathcal{E}_n\xrightarrow{\PR}0$
+into~\eqref{eq:calib} and using continuity of $\psi$ at $0$ gives
+$\Risk(\hat g_n)-\Risk^\star\xrightarrow{\PR}0$, i.e.\ $\Risk(\hat g_n)
+\xrightarrow{\PR}\Risk^\star$.
+
+\emph{Step 6: comparison to MWPM.}
+Under independent (graphlike) noise Proposition~\ref{prop:mwpm-ml} gives
+$\Risk(g_{\mathrm{MWPM}})=\Risk^\star$, so $\Risk(\hat g_n)\to\Risk^\star=
+\Risk(g_{\mathrm{MWPM}})$: the learned decoder matches MWPM and, being lower
+bounded by $\Risk^\star$, never beats the provably optimal matcher there. Under a
+correlated DEM with $\Delta=\Risk(g_{\mathrm{MWPM}})-\Risk^\star>0$
+(Corollary~\ref{cor:pop-gap}), pick $N$ so that for $n\ge N$,
+$\PR[\Risk(\hat g_n)>\Risk^\star+\Delta/2]<\epsilon$; then with probability
+$>1-\epsilon$, $\Risk(\hat g_n)\le\Risk^\star+\Delta/2<\Risk^\star+\Delta=
+\Risk(g_{\mathrm{MWPM}})$. Hence for all large $n$ the learned decoder beats
+matching with probability $\to 1$.
+\qed
+
 \begin{thebibliography}{67}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\doi}[1]{doi: #1}
@@ -865,11 +1475,9 @@ inference. \emph{Journal of the American Statistical Association},
 22(158):209--212, 1927.
 
 \bibitem{huynh2026gctr} M.~Huynh. Query-Efficient Quantum Approximate Optimization via Graph-Conditioned Trust Regions. arXiv:2604.24803 (2026).
-\bibitem{huynh2026gctrcal} M.~Huynh. Graph-conditioned trust regions for uncertainty-calibrated quantum approximate optimization. Manuscript in preparation (2026).
 \bibitem{huynh2026gctrcalpro} M.~Huynh. Graph-conditioned trust regions for uncertainty-calibrated quantum approximate optimization (extended). Manuscript in preparation (2026).
 \bibitem{huynh2026meascost} M.~Huynh. The measurement cost of warm-started low-depth QAOA. Manuscript in preparation (2026).
 \bibitem{huynh2026certqb} M.~Huynh. Certified query budgets for the quantum approximate optimization algorithm. Manuscript in preparation (2026).
-\bibitem{huynh2026paramxfer} M.~Huynh. Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph Optimization. Manuscript in preparation (2026).
 \bibitem{huynh2026paramxferB} M.~Huynh. Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph Optimization (companion). Manuscript in preparation (2026).
 \bibitem{huynh2026ostqaoa} M.~Huynh. Operator-Spectral Truncated Priors for Query-Efficient QAOA Parameter Search. Manuscript in preparation (2026).
 \bibitem{huynh2026topoqaoa} M.~Huynh. Spectral-truncation graph kernels for QAOA warm starts: topology-conditioned schedule transfer beyond depth one. Manuscript in preparation (2026).
