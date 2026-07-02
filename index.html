@@ -119,9 +119,9 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 <header class="hero">
   <div class="wrap">
     <div class="kicker">Quantum Error Correction &middot; Channel-Adaptive Decoding &middot; Transfer Operators &middot; Calibration &middot; Part of a unified graph-learning program for quantum computation</div>
-    <h1>Channel-Adaptive Spectral Decoding for Quantum Error Correction</h1>
-    <div class="subtitle">The textbook and learned decoders all optimise the i.i.d. likelihood, so on a repetition code they are statistically tied. We introduce a channel-adaptive <em>spectral</em> decoder &mdash; a truncated transfer operator on the defect graph &mdash; that is Bayes-optimal for the structured channel and breaks the tie by <b>20&ndash;44%</b> under biased, bursty and correlated noise (<i>z</i>&nbsp;=&nbsp;10&ndash;17), while honestly tying the leader where no single-shot advantage is possible.</div>
-    <div class="authorline">Molena Huynh &middot; North Carolina State University &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a> &middot; manuscript prepared for submission to <em>Nature Machine Intelligence</em> &middot; artifact: <code>topoqec</code></div>
+    <h1>Transfer-Operator Decoding of Structured Noise in Quantum Error Correction</h1>
+    <div class="subtitle">The textbook and learned decoders all optimise the i.i.d. likelihood, so on a repetition code they are statistically tied. This work introduces a channel-adaptive <em>spectral</em> decoder &mdash; a truncated transfer operator on the defect graph &mdash; that is Bayes-optimal for the structured channel and breaks the tie by <b>20&ndash;44%</b> under biased, bursty and correlated noise (<i>z</i>&nbsp;=&nbsp;10&ndash;17), while honestly tying the leader where no single-shot advantage is possible.</div>
+    <div class="authorline">Molena Huynh &middot; North Carolina State University, Raleigh, North Carolina 27695, USA &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a> &middot; software artifact: <code>specops-transfer-decoder</code></div>
     <div class="badges">
       <span class="badge">channel-adaptive <b>spectral</b> decoder &middot; transfer operator on the defect graph</span>
       <span class="badge">pooled LER <b>0.1291</b> vs <b>0.151</b> baselines (&asymp;10 CI widths)</span>
@@ -149,6 +149,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
     <a href="#empirical">Empirical</a>
     <a href="#impact">Significance</a>
     <a href="#repro">Reproducibility</a>
+    <a href="#repro">Cite</a>
     <a href="#references">References</a>
   </div>
 </nav>
@@ -156,8 +157,8 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 <main class="wrap">
 
 <div style="margin:26px 0 6px;padding:18px 20px;border:1px solid rgba(127,140,170,.32);border-left:4px solid var(--accent,#1f6feb);border-radius:8px;background:rgba(127,140,170,.06);">
-  <strong style="display:block;font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent,#1f6feb);margin-bottom:7px;">AI for quantum, at HPC scale</strong>
-  <p style="margin:0;font-size:1.02rem;line-height:1.6;">The decoder <em>learns the noise</em>: it fits a truncated transfer-operator model of the operating channel from a small calibration sample and returns the channel-matched maximum-a-posteriori coset &mdash; calibrated by construction, benchmarked head-to-head against neural and reinforcement-learning decoders, and cutting logical error <strong>20&ndash;44%</strong> under structured noise. Decoding is embarrassingly parallel Monte-Carlo over syndromes, GPU-batchable to higher code distance and shot count; every number on this page regenerates from one seeded run.</p>
+  <strong style="display:block;font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent,#1f6feb);margin-bottom:7px;">Abstract</strong>
+  <p style="margin:0;font-size:1.02rem;line-height:1.6;">Decoding a quantum error-correcting code is a problem of statistical inference: a syndrome is a noisy measurement, and choosing a correction amounts to estimating the most probable logical class under the device's error distribution, so a decoder is only as good as the channel model it assumes. The dominant decoders&mdash;minimum-weight matching, belief propagation, and learned decoders&mdash;all approximate the minimum-weight coset leader, which is the maximum-likelihood rule only for independent and identically distributed (i.i.d.) noise; this shared target renders eight otherwise dissimilar decoders statistically indistinguishable on a distance-\(d\) repetition code. This work introduces a channel-adaptive <em>spectral</em> decoder that represents the structured error channel by a truncated transfer operator&mdash;an inhomogeneous first-order Markov (classical matrix-product) surrogate on the code's defect graph&mdash;estimated from a small calibration sample, and selects the maximum-a-posteriori coset. The decoder is Bayes-optimal for the structured channel, provably reduces to the leader under i.i.d. noise, and reports the exact model posterior as a confidence that is calibrated by construction. On a unified benchmark (distance 9; 100,000 pooled shots per decoder; five structured-noise regimes) it reduces the logical error of the i.i.d.-optimal leader by 44.0% under bias, 33.0% under bursts, and 21.8% under neighbour correlations, driving its pooled logical error to 0.1291 against 0.1508&ndash;0.1542 for the eight structure-agnostic decoders, while tying the leader honestly where no single-shot advantage exists.</p>
 </div>
 
 <section id="background">
@@ -420,7 +421,7 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
       <tr><td>lookup</td><td>0.1542</td><td>0.0022</td><td>0.0558</td></tr>
     </tbody>
   </table>
-  <p class="note">The eight structure-agnostic decoders lie within 1.5 CI widths of one another (spread 0.0033), so they are statistically tied &mdash; exactly as the i.i.d.-target theory predicts. The channel-adaptive spectral decoder is lower by \(\approx\!10\) CI widths: a significant, not marginal, separation. Calibration spans an eight-fold range across the agnostic family with no relationship to accuracy.</p>
+  <p class="note">The eight structure-agnostic decoders lie within 1.5 CI widths of one another (spread 0.0033), so they are statistically tied &mdash; exactly as the i.i.d.-target theory predicts. The channel-adaptive spectral decoder is lower by \(\approx\!10\) CI widths: a significant, not marginal, separation. Calibration spans a factor of nearly six across the agnostic family (0.0446&ndash;0.2624) with no relationship to accuracy.</p>
 
   <h3>Where the win is, and where it (honestly) is not</h3>
   <table class="mono">
@@ -473,14 +474,25 @@ hr.soft{border:none;border-top:1px solid var(--line);margin:22px 0}
 
 <section id="repro">
   <h2><span class="num">10</span>Reproducibility</h2>
-  <p>The full pipeline accompanies the manuscript at <code>submission/code</code>: it implements every code, noise model, decoder, and metric, including the audit gate, and regenerates every figure, table, and reported number. The package is <code>topoqec</code> (pip-installable, <code>pyproject.toml</code>). A single <code>runner.run()</code> writes <code>results/summary.json</code>, the authoritative artifact from which all tables and figures are generated; nothing is typed by hand.</p>
+  <p>The full pipeline accompanies the manuscript at <code>submission/code</code>: it implements every code, noise model, decoder, and metric, including the audit gate, and regenerates every figure, table, and reported number. The package is distributed as <code>specops-transfer-decoder</code> (pip-installable via <code>pyproject.toml</code>). A single reproduce entry point writes <code>results/summary.json</code>, the authoritative artifact from which all tables and figures are generated; no reported value is entered by hand.</p>
 
-  <div class="code-block">pip install -e .                      # installs topoqec from pyproject.toml
-export KMP_DUPLICATE_LIB_OK=TRUE      # conda + pip OpenMP runtimes on macOS
-bash scripts/reproduce_all.sh full    # reported scale (d=9, 20k trials/regime)
-bash scripts/reproduce_all.sh         # fast smoke config for CI (d=5)</div>
+  <div class="code-block">pip install specops-transfer-decoder   # or, from the source tree: pip install .
+export KMP_DUPLICATE_LIB_OK=TRUE        # conda + pip OpenMP runtimes on macOS
+transfer-decoder-reproduce             # full reproduce entry point -> figures, tables, summary.json
+# equivalently, from submission/code:
+bash scripts/reproduce_all.sh full     # reported scale (d=9, 20,000 trials/regime)
+bash scripts/reproduce_all.sh          # fast smoke config for continuous integration (d=5)</div>
 
-  <p>The reported run completes end-to-end in 136&nbsp;s at 262&nbsp;MB peak memory on a single CPU. Provenance is recorded alongside the results: <code>macOS-26.5.1-arm64</code>, Python&nbsp;3.13.12, numpy&nbsp;2.4.3, scipy&nbsp;1.17.1, networkx&nbsp;3.6.1, scikit-learn&nbsp;1.8.0, matplotlib&nbsp;3.10.8; master seed 0. A reviewer reproduces identical numbers by running the pipeline at reported scale, and the audit driver <code>scripts/audit_claims.py</code> runs in continuous integration, exiting non-zero if any reported number fails to trace to <code>summary.json</code>, if the central spectral-vs-leader claim is not statistically evidenced, or if an unevidenced superlative is detected.</p>
+  <p>The reported run completes end-to-end in 277&nbsp;s at 206&nbsp;MB peak memory on a single CPU. Provenance is recorded alongside the results: <code>macOS-26.5.2-arm64</code>, Python&nbsp;3.9.6, numpy&nbsp;1.26.4, scipy&nbsp;1.13.1, networkx&nbsp;3.2.1, scikit-learn&nbsp;1.6.1, matplotlib&nbsp;3.9.4; master seed 0. A reviewer reproduces identical numbers by running the pipeline at reported scale, and the audit driver <code>scripts/audit_claims.py</code> runs in continuous integration, exiting non-zero if any reported number fails to trace to <code>summary.json</code>, if the central spectral-versus-leader claim is not statistically evidenced, or if an unevidenced superlative is detected.</p>
+
+  <h3>Cite this work</h3>
+  <div class="code-block">@article{huynh2026topoqec,
+  title   = {Transfer-Operator Decoding of Structured Noise in Quantum Error Correction},
+  author  = {Huynh, Molena},
+  year    = {2026},
+  note    = {Manuscript in preparation},
+  url     = {https://thmolena.github.io/Topological-Graph-for-Decoding-in-QEC/submission/main.pdf}
+}</div>
 
   <hr class="soft" />
   <div class="footer">
