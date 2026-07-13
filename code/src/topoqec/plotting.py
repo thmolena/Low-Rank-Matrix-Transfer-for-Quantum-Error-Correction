@@ -334,10 +334,14 @@ def fig_schematic(summary: Dict, out: Path) -> Path:
     )
     y = 0.40
     h = 0.34
+    # Decoder count read from the artifact itself (8 structure-agnostic
+    # baselines + the channel-adaptive spectral decoder = 9 at reported scale).
+    n_dec = len(summary.get("decoders", {}))
+    dec_line = f"{n_dec} decoders" if n_dec else "decoder family"
     boxes = [
         (0.005, 0.150, "structured noise\n(iid, bias, burst,\ncorr., meas.)", blue),
         (0.190, 0.165, "syndrome on\ndefect graph\n$s_i=e_i\\oplus e_{i+1}$", green),
-        (0.400, 0.175, "decoder family\n$\\mathrm{decode}(s)\\to(\\hat c,\\,\\mathrm{conf})$\n8 decoders", orange),
+        (0.400, 0.175, "decoder family\n$\\mathrm{decode}(s)\\to(\\hat c,\\,\\mathrm{conf})$\n" + dec_line, orange),
         (0.625, 0.150, "abstain if\n$\\mathrm{conf}<\\tau$", purple),
         (0.810, 0.180, "logical error,\nECE, risk--coverage\n(95% CIs)", grey),
     ]

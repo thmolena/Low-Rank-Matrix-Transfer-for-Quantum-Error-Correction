@@ -42,7 +42,13 @@ PRESETS = {
 
 
 def find_repo_root(start: str | None = None) -> str:
-    """Locate the code-gnn checkout (has results/ or paper/main.tex)."""
+    """Locate the package root (has results/summary.json or paper/main.tex).
+
+    Works both for the historical layout (<root>/paper/main.tex,
+    <root>/results/) and for the submission layout in which this package
+    lives at <paper>/code, so the root is <paper>/code and the manuscript
+    is one level up.
+    """
     candidates = []
     if start:
         candidates.append(start)
@@ -126,7 +132,13 @@ def _placeholder_values(nums: dict) -> dict:
 def sync_paper(repo_root: str, nums: dict, fig_src: str, res_dir: str) -> list[str]:
     changes: list[str] = []
     paper = os.path.join(repo_root, "paper")
-    if not os.path.isdir(paper):
+    if not os.path.exists(os.path.join(paper, "main.tex")):
+        # submission layout: the package sits at <paper>/code, so the
+        # manuscript directory is the parent of the package root.
+        cand = os.path.abspath(os.path.join(repo_root, ".."))
+        if os.path.exists(os.path.join(cand, "main.tex")):
+            paper = cand
+    if not os.path.exists(os.path.join(paper, "main.tex")):
         return changes
 
     # 1) copy table

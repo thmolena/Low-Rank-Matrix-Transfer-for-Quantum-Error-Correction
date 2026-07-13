@@ -21,8 +21,11 @@ detectors jointly, forming *hyperedges* that a sum of independent edge weights
 cannot represent. This work (i) proves precisely when MWPM is optimal and
 constructs correlated instances on which it is provably suboptimal, and (ii)
 introduces a graph neural decoder that learns the joint fault structure from
-samples, matching MWPM where MWPM is optimal and surpassing it under correlated
-noise while recovering most of the gap to a correctly specified BP+OSD baseline.
+samples, surpassing MWPM under correlated noise (46.1% relative error reduction
+at distance 3) while recovering most of the gap to a correctly specified BP+OSD
+baseline. Under independent noise, where MWPM is provably maximum-likelihood, no
+decoder can beat matching; at the released reproduce scale the learned decoder
+pays a measurable finite-sample premium there (see Caveats).
 
 ## Background and problem setting
 
@@ -98,13 +101,14 @@ mechanism in the *full* DEM flips both; a correlated hyperedge therefore
 contributes a small clique, so local graph density encodes exactly the correlation
 structure matching discards. Each node carries its normalized space-time
 coordinates *(x, y, t)* as static features; the only per-shot input is the binary
-detector value. Message passing uses the symmetric-normalized adjacency with
-self-loops:
+detector value. A linear layer embeds the per-node input (detector bit +
+coordinates) into the hidden width; message passing then applies GIN-style
+residual layers on the symmetric-normalized adjacency Â (self-loops included):
 
-    h^{(l+1)} = LayerNorm( ReLU( W_self · h^{(l)} + W_neigh · Â · h^{(l)} ) )
+    h^{(l+1)} = LayerNorm( h^{(l)} + ReLU( MLP( (1+ε)·h^{(l)} + Â·h^{(l)} ) ) )
 
-followed by concatenated mean- and max-pooling over nodes and a two-layer
-perceptron to a single logit. A sigmoid yields q̂ = Pr[logical flip | detectors],
+followed by concatenated mean-, max- and sum-pooling over nodes and a two-layer
+perceptron head (with dropout) to a single logit. A sigmoid yields q̂ = Pr[logical flip | detectors],
 an estimate of the Bayes posterior. The decision threshold is calibrated on
 held-out validation data; max(q̂, 1−q̂) serves as the confidence for selective
 decoding. Training minimizes binary cross-entropy (a strictly proper scoring rule,
@@ -118,9 +122,10 @@ decode.
 
 ## Main results
 
-All figures below are the released small-scale reproduce target: the rotated
-surface code at distance *d = 3*, *T = d* rounds, over 2 independent seeds, with
-all decoders scoring identical test shots (CPU-only; total runtime ≈ 36 s). Pooled
+All figures below are the released small-scale reproduce target (`smoke` preset):
+the rotated surface code at distance *d = 3*, *T = d* rounds, over 2 independent
+seeds, with all decoders scoring identical test shots (CPU-only; total runtime
+42 s on an arm64 macOS laptop, as recorded in `results/summary.json`). Pooled
 logical error rates (LER) are reported with 95% Wilson intervals.
 
 **Under independent circuit-level depolarizing noise (rate p = 0.002).** MWPM is
@@ -144,54 +149,98 @@ model** — only samples.
 committing only on the most confident shots drives the committed logical error down
 monotonically, turning the decoder into an uncertainty-aware control primitive.
 
+## Caveats
+
+Read these before quoting any number.
+
+- **Independent noise is a control arm the GNN does not win.** MWPM is provably
+  maximum-likelihood there, and at the released reproduce scale (width 32,
+  3 layers, 20k training shots) the learned decoder attains LER 0.0316 vs
+  MWPM's 0.0025 at *d = 3* — a real finite-sample premium, not statistical noise
+  (paired McNemar p ≈ 1.7 × 10⁻¹²¹). The paper's consistency theorem says this
+  premium shrinks with training data and capacity, but it is nonzero here and we
+  report it as measured.
+- **The headline numbers are d = 3 only.** The `main`/`full` presets sweep
+  d ∈ {3, 5, 7} for readers with more compute; an interrupted larger run
+  (preserved in the project attic) indicates the small GNN configuration
+  degrades at d = 5, 7, so no claim is made that the correlated-noise advantage
+  persists at larger distance.
+- **One correlation strength was measured** (p_corr = 0.01 vs p = 0.002). The
+  growth of the advantage with p_corr is a theoretical statement
+  (Proposition "separation"), instantiated empirically at a single point.
+- **The correlated regime is a parametric crosstalk surrogate** (injected
+  two-qubit XX faults), not measured hardware syndromes.
+
 ## Significance
 
 The result isolates *where* and *why* a learned decoder helps and pins the
 advantage to a precise, provable structural feature — correlated hyperedges that a
-graphlike additive objective cannot represent. Because the advantage tracks
-correlation strength and is largest at small distance, it is concentrated in
-exactly the strongly-correlated, near-term hardware regime where a better decoder
-is most valuable, and because the decoder returns a calibrated posterior rather
+graphlike additive objective cannot represent. The measured advantage sits in
+exactly the strongly-correlated, small-distance regime characteristic of
+near-term hardware, where a better decoder is most valuable (the released
+measurement is at d = 3; see Caveats), and because the decoder returns a
+calibrated posterior rather
 than a bare decision, it supplies the abstention signal a fault-tolerant control
 loop can act on. More broadly, the work reframes decoding as consistent
 probabilistic surrogate modeling of an intractable coset posterior, folding the
 code's known geometry and fault propagation directly into the model.
 
-## Installation and reproduction
+## Installation and reproduction (for referees)
+
+This `code/` folder is a self-contained pip package, `specops-gnndec`. From the
+submission folder (the directory containing `main.tex`):
 
 ```bash
-pip install .
-# or, for development (editable):
-pip install -e .
+pip install ./code        # or: pip install specops-gnndec
 ```
 
 Heavy dependencies (`stim`, `pymatching`, `ldpc`, `torch`, `numpy`, `scipy`,
 `matplotlib`) are declared in `pyproject.toml` and pulled in automatically.
 CPU-only; no GPU required.
 
-The package ships a console entrypoint that runs the full head-to-head, rebuilds
-every figure and table, and syncs them into the manuscript:
+The package ships one console entrypoint, `gnndec-reproduce`, which runs the
+head-to-head experiment, rebuilds every figure, table and in-text number, and
+syncs them into the manuscript:
 
 ```bash
-gnndec-reproduce            # default preset "main"; runs the head-to-head
-gnndec-reproduce smoke      # quick sanity check (d = 3 only; minutes)
-gnndec-reproduce full       # archival high-fidelity preset (hours on CPU)
+gnndec-reproduce smoke      # EXACT command behind the paper's reported numbers
+                            # (d = 3, 2 seeds; ~1 minute on a laptop CPU)
+gnndec-reproduce            # default preset "main": d in {3,5,7} (hours on CPU)
+gnndec-reproduce full       # archival high-fidelity preset (many hours on CPU)
 
-gnndec-reproduce --skip-run # reuse results/summary.json; only rebuild outputs/paper
-gnndec-reproduce main --no-paper-sync   # don't touch paper/
+gnndec-reproduce smoke --skip-run       # reuse results/summary.json; rebuild
+                                        # figures/table/numbers only (~seconds)
+gnndec-reproduce smoke --no-paper-sync  # don't touch the manuscript
 ```
+
+Expected runtime: the reported run (`smoke`) completed in 42 s (recorded in
+`results/summary.json` provenance); allow ~1–2 minutes end-to-end. The quick
+`--skip-run` mode rebuilds every figure and table from the shipped
+`results/summary.json` in seconds without retraining.
 
 This writes `results/summary.json` (the single source of truth: all raw numbers
 plus platform/library/runtime provenance), the LaTeX table and numbers JSON, the
 three figures, and — unless `--no-paper-sync` — copies the table and figures into
-`paper/` and fills the manuscript's numeric placeholders from the fresh run. All
+the manuscript folder and fills its numeric placeholders from the fresh run. All
 randomness derives from recorded seeds.
 
-Equivalent low-level invocation:
+### Figure/table-by-figure mapping
+
+| Paper artifact | File | Generating function |
+| --- | --- | --- |
+| Fig. 1 (LER vs distance, both regimes) | `figures/fig_ler_vs_distance.pdf` | `surfgnn.outputs.figures` (panel loop over regimes) |
+| Fig. 2 (relative gain vs MWPM, correlated) | `figures/fig_gain_vs_distance.pdf` | `surfgnn.outputs.figures` (bar section) |
+| Fig. 3 (risk–coverage, selective decoding) | `figures/fig_risk_coverage.pdf` | `surfgnn.outputs.figures` (risk–coverage section) |
+| Table I (head-to-head LER + McNemar) | `results/main_table.tex` → `../main_table.tex` | `surfgnn.outputs.main_table` |
+| Every in-text number | `results/numbers.json` | `surfgnn.outputs.numbers` |
+| The experiment itself (`summary.json`) | `results/summary.json` | `surfgnn.runner.run` (per-cell: `surfgnn.runner.run_cell`) |
+| Statistics (Wilson/McNemar/bootstrap/ECE/risk–coverage) | — | `surfgnn.stats` |
+
+Equivalent low-level invocation (from this `code/` folder):
 
 ```bash
 export KMP_DUPLICATE_LIB_OK=TRUE          # conda+pip OpenMP clash on macOS
-PYTHONPATH=src python scripts/run.py main # writes results/summary.json
+PYTHONPATH=src python scripts/run.py smoke # writes results/summary.json
 PYTHONPATH=src python scripts/make_outputs.py
 ```
 
@@ -206,7 +255,10 @@ PYTHONPATH=src python scripts/make_outputs.py
 - `src/surfgnn/outputs.py` — tables + numbers + figures from `summary.json`.
 - `src/surfgnn/reproduce.py` — `gnndec-reproduce` entrypoint (run + build + paper sync).
 - `scripts/run.py`, `scripts/make_outputs.py` — thin CLI wrappers.
-- `paper/` — manuscript (staging) and theory notes.
+- `results/` — `summary.json` (single source of truth for every reported
+  number), `numbers.json`, `main_table.tex`.
+- `..` (the parent folder) — the manuscript `main.tex`, its `figures/`, and the
+  compiled `main.pdf`.
 
 ## Extend / tweak
 

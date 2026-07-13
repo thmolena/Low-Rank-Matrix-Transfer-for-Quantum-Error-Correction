@@ -24,7 +24,7 @@ keywords:
   - spectral truncation operators
   - structured noise
   - calibration
-repository-code: "https://github.com/thmolena/P2-Topology-Aware-Graph-RL-Decoding-for-QEC"
+repository-code: "https://github.com/thmolena/Topological-Graph-for-Decoding-in-QEC"
 preferred-citation:
   type: article
   title: "Transfer-Operator Decoding of Structured Noise in Quantum Error Correction"

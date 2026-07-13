@@ -135,7 +135,7 @@ def figures(summary, fig_dir: str) -> None:
         xs.append(str(d)); gains.append((m - g) / m * 100 if m else 0.0)
     ax.bar(xs, gains, color=OKABE["gnn"])
     ax.set_xlabel("code distance $d$")
-    ax.set_ylabel("GNN error reduction vs MWPM (\\%)")
+    ax.set_ylabel("GNN error reduction vs MWPM (%)")
     ax.axhline(0, color="k", lw=0.8)
     fig.tight_layout(); fig.savefig(os.path.join(fig_dir, "fig_gain_vs_distance.pdf"))
     plt.close(fig)

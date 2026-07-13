@@ -1,12 +1,12 @@
-% Manuscript prepared for submission to Physical Review Research (REVTeX 4-2,
-% two-column). Rigorous theory section, a Stim-based experimental head-to-head,
-% and paired statistics. Compiles with TeX Live or tectonic.
+% Manuscript prepared for submission to PRX Quantum (REVTeX 4-2, two-column).
+% Rigorous theory section, a Stim-based experimental head-to-head, and paired
+% statistics. Compiles with TeX Live or tectonic.
 %
 % INTEGRITY NOTE: every quantitative claim is wrapped in \res{...}. During
 % drafting these are GLARING RED PLACEHOLDERS via \PH; the finalization script
 % replaces them with values traced verbatim to results/summary.json. No number
 % is typed by hand into prose.
-\documentclass[aps,prresearch,twocolumn,superscriptaddress,nofootinbib,longbibliography]{revtex4-2}
+\documentclass[aps,prxquantum,twocolumn,superscriptaddress,nofootinbib,longbibliography]{revtex4-2}
 
 \usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools}
 \usepackage{bm}
@@ -75,8 +75,8 @@ logical class is the one the fault distribution makes most probable, so the
 decoder that a fault-tolerant machine actually needs is a Bayesian estimator of
 a posterior it can only learn from samples. We show that the standard
 surface-code decoder is provably suboptimal under
-realistic correlated noise, and we close the gap with a learned decoder that
-never sees the noise model. Minimum-weight perfect matching (MWPM) scores a
+realistic correlated noise, and we close most of the gap with a learned decoder
+that never sees the noise model. Minimum-weight perfect matching (MWPM) scores a
 correction by summing per-edge weights of a graphlike error model, an
 independence assumption that hardware violates: crosstalk and correlated
 two-qubit faults flip several detectors jointly, and such hyperedge faults are
@@ -90,12 +90,18 @@ detector and edges joining detectors that share a fault mechanism, so correlated
 hyperedge faults appear as denser local subgraphs. Trained only on samples, it
 estimates the Bayes posterior over the logical class and returns a calibrated
 confidence. On Stim circuit-level rotated surface-code memory experiments decoded
-head-to-head on identical shots, the learned decoder is statistically
-indistinguishable from MWPM under independent noise and cuts the logical error rate by $\res{46.1}\%$ at distance $3$ under correlated noise (paired McNemar
-$p=\res{2.4\times10^{-164}}$), recovering most of the gap to the model-aware
-BP+OSD ceiling without being given the model. The advantage scales with
-correlation strength and code distance and is largest in the near-term regime. We
-report Wilson and paired-bootstrap intervals and release the full pipeline.
+head-to-head on identical shots, the learned decoder cuts the logical error rate by $\res{46.1}\%$ at distance $3$ under correlated noise (paired McNemar
+$p=\res{2.4\times10^{-164}}$), recovering $\res{74.5}\%$ of the gap to the
+model-aware BP+OSD ceiling without being given the model; under independent
+noise, where we prove matching is optimal, the compact learned decoder concedes a
+finite-sample penalty ($\res{0.0316}$ versus $\res{0.0025}$) that our consistency
+theorem drives to zero with training data, and we report it as measured. Our
+contributions are a tight optimality characterization of matching with a provable
+separation under correlation, a Bayes/PAC/consistency theory of learned decoding
+on the detector graph, an open decoder released as the pip package
+\texttt{specops-gnndec} whose single command regenerates every reported number,
+and a paired, uncertainty-quantified head-to-head with Wilson and
+paired-bootstrap intervals.
 \end{abstract}
 
 \maketitle
@@ -170,24 +176,48 @@ where the matching independence assumption breaks, evaluated head-to-head agains
 both MWPM and a correctly specified BP+OSD on identical shots.
 
 We treat decoding as inference on the code detector graph and make the
-matching-learning gap both provable and exploitable. Our contributions are three.
-First, in Sec.~\ref{sec:theory} we prove that MWPM is maximum-likelihood if and
-only if the fault distribution factorizes over graphlike edges, and we exhibit
-correlated instances on which the MWPM logical error rate exceeds that of the
-optimal decoder by at least the probability mass on a logical-flipping hyperedge
-it cannot represent---the formal origin of the empirical gap. Second, in
-Sec.~\ref{sec:method} we introduce a topological graph neural decoder, a
-message-passing network on the detector graph in which detectors are nodes and
-fault co-occurrence supplies edges, so correlated hyperedges become denser
-subgraphs; trained only on samples, it outputs the Bayes posterior over the
-logical class and yields a calibrated confidence for selective decoding. Third, in
-Sec.~\ref{sec:results} we evaluate on Stim circuit-level rotated surface-code
-memory experiments across distances $3,5,7$ and two noise regimes, with all
-decoders scoring identical shots under paired McNemar and bootstrap statistics:
-the learned decoder matches MWPM under independent noise and beats it under
-correlated noise, closing most of the gap to BP+OSD without knowing the model.
-Every reported number is computed by the released pipeline and traced to a single
-\texttt{summary.json}, with Wilson and paired-bootstrap intervals.
+matching-learning gap both provable and exploitable. Our contributions are
+fourfold.
+\begin{enumerate}[leftmargin=1.6em]
+  \item \emph{A tight optimality theory for matching}
+  (Sec.~\ref{sec:theory}). We prove that MWPM is maximum-likelihood if and only
+  if the fault distribution factorizes over graphlike edges
+  (Lemma~\ref{lem:additive}, Proposition~\ref{prop:mwpm-ml}), exhibit correlated
+  instances on which its logical error rate exceeds the optimum by at least the
+  probability mass on a logical-flipping hyperedge it cannot represent
+  (Proposition~\ref{prop:separation}), and convert this into an exact
+  population-level excess-risk identity (Corollary~\ref{cor:pop-gap})---the
+  formal origin of the empirical gap.
+  \item \emph{A statistical theory of learned decoding}
+  (Sec.~\ref{sec:bayes}). Reading decoding as Born-rule-driven statistical
+  inference, we identify the Bayes-optimal target as the coset-MAP decoder
+  (Proposition~\ref{prop:bayes-opt}) and prove that the deployed network can
+  represent it (Theorem~\ref{thm:express}), generalizes from finitely many shots
+  with explicit sample complexity (Theorem~\ref{thm:pac},
+  Corollary~\ref{cor:beat}), and is risk-consistent
+  (Theorem~\ref{thm:consistency}): a consistent, calibrated Bayesian surrogate
+  for an intractable maximum-likelihood decoder.
+  \item \emph{An open algorithm} (Sec.~\ref{sec:method}). We introduce the
+  topological graph neural decoder---detectors as nodes, fault co-occurrence as
+  edges, correlated hyperedges as denser subgraphs---trained only on samples and
+  returning a calibrated confidence for selective decoding. It is released as
+  the pip-installable package \texttt{specops-gnndec}, whose single console
+  command \texttt{gnndec-reproduce} regenerates every figure, table, and
+  in-text number of this paper from scratch.
+  \item \emph{A paired, uncertainty-quantified head-to-head}
+  (Sec.~\ref{sec:results}). On Stim circuit-level rotated surface-code memory
+  experiments, with all decoders scoring identical shots: under correlated
+  noise at distance $3$ the learned decoder cuts MWPM's logical error rate by
+  $\res{46.1}\%$ ($\res{0.1985}\to\res{0.1070}$; paired McNemar
+  $p=\res{2.4\times10^{-164}}$), recovering $\res{74.5}\%$ of the
+  MWPM$\to$BP+OSD gap without being given the model, with a calibrated
+  posterior (expected calibration error $\res{0.0251}$). Under independent
+  noise, where matching is provably optimal, the compact network concedes a
+  real finite-sample penalty ($\res{0.0316}$ versus $\res{0.0025}$), which we
+  report as measured rather than smooth over. Every number is computed by the
+  released pipeline and traced to a single \texttt{summary.json}, with Wilson
+  and paired-bootstrap intervals.
+\end{enumerate}
 
 This manuscript belongs to a single-author program on spectral truncation of
 operators for query-efficient and resource-accounted quantum computation, and it
@@ -356,9 +386,12 @@ data, approximates any such posterior; in particular it can represent the
 correlated explanation $f_C$ that matching's additive edge objective cannot. It
 learns this posterior directly from samples of $\mu$---exactly the information
 matching is denied when handed only marginal edge weights. This is the formal
-reason the learned decoder matches matching where $\mu$ is graphlike
-(Proposition~\ref{prop:mwpm-ml}) and beats it where $\mu$ is correlated
-(Proposition~\ref{prop:separation}), as the experiments confirm.
+reason the learned decoder can asymptotically match matching where $\mu$ is
+graphlike (Proposition~\ref{prop:mwpm-ml}) and beat it where $\mu$ is correlated
+(Proposition~\ref{prop:separation}); the correlated-noise experiments confirm
+the beat, while under graphlike noise the guarantee is asymptotic and a
+finite-sample penalty remains at the scale we deploy
+(Sec.~\ref{sec:results-indep}).
 \end{remark}
 
 % ============================================================
@@ -509,7 +542,7 @@ $\cS\subseteq\F_2^{n_d}$ is finite, $\eta:\cS\to[0,1]$ is an arbitrary bounded
 function on a finite set, and the only real question is whether the specific
 message-passing architecture of Sec.~\ref{sec:method}---symmetric-normalized
 propagation on the fixed detector graph $G$, ReLU updates, and a global
-mean/max readout---has the capacity to realize it. Theorem~\ref{thm:express}
+mean/max/sum readout---has the capacity to realize it. Theorem~\ref{thm:express}
 answers yes, and locates where the graph structure helps: distinct detectors
 carry distinct static coordinates, so the network can separate any two syndromes
 and then interpolate $\eta$ exactly.
@@ -520,9 +553,9 @@ Let $G$ be the detector graph of Sec.~\ref{sec:method} on $n_d$ nodes with the
 per-node static coordinate features $c_i\in\R^3$ pairwise distinct, and let
 $\eta:\cS\to[0,1]$ be the coset posterior~\eqref{eq:posterior} of any DEM whose
 syndromes are read on these nodes. For every $\eps>0$ there exist a width $W$, a
-depth $L$, and message-passing weights $\{W^{(\ell)}_{\mathrm{self}},
-W^{(\ell)}_{\mathrm{neigh}}\}$ with the readout head of Sec.~\ref{sec:method}
-such that the induced map $\hat q_\theta:\cS\to(0,1)$ satisfies
+depth $L$, and message-passing parameters $\theta$ with the readout head of
+Sec.~\ref{sec:method} such that the induced map
+$\hat q_\theta:\cS\to(0,1)$ satisfies
 \begin{equation}
   \max_{s\in\cS}\big|\hat q_\theta(s)-\eta(s)\big|\;<\;\eps .
 \end{equation}
@@ -534,7 +567,7 @@ satisfies $\Risk(\ind{\hat q_\theta>\tfrac12})\le\Risk^\star+
 
 The proof (Appendix~\ref{app:express}) builds the approximant in two stages: the
 message-passing layers, aided by the distinct coordinates, compute a set of node
-embeddings from which the mean/max readout is \emph{injective} on the finite
+embeddings from which the pooled readout is \emph{injective} on the finite
 syndrome set; a two-layer perceptron then interpolates $\eta$ on the finitely
 many resulting readout vectors to accuracy $\eps$ by standard ReLU universal
 approximation. The role of the graph is not approximation power \emph{per se}---a
@@ -670,12 +703,12 @@ where the exact posterior is out of reach.
 \label{sec:method}
 
 \paragraph{Detector graph.}
-We place one node per detector and assemble the detector graph as a
-\textsc{NetworkX} structure~\cite{hagberg2008exploring}. Two nodes are joined by an
-edge whenever some fault mechanism in the \emph{full} DEM flips both detectors; thus
-a correlated hyperedge that flips three or four detectors contributes a small clique,
-and the local graph density encodes exactly the correlation structure matching
-discards.
+We place one node per detector and assemble the detector graph directly as a
+dense adjacency matrix over the detectors of the \emph{full} DEM. Two nodes are
+joined by an edge whenever some fault mechanism in the full DEM flips both
+detectors; thus a correlated hyperedge that flips three or four detectors
+contributes a small clique, and the local graph density encodes exactly the
+correlation structure matching discards.
 Each node carries a static feature vector of its spacetime coordinates
 $(x,y,t)$, normalized per axis. We use the symmetric-normalized adjacency
 $\hat A=\tilde D^{-1/2}\tilde A\tilde D^{-1/2}$ with self-loops $\tilde A=A+I$. The
@@ -685,13 +718,17 @@ few dense matrix products and runs on a CPU.
 \paragraph{Architecture.}
 The only per-shot input is the binary value of each detector, concatenated with
 its static coordinates to form the initial node features
-$h^{(0)}\in\R^{n_d\times 4}$. We apply $L$ message-passing layers
+$h^{(0)}_i=(s_i,c_i)\in\R^{4}$, which a linear layer embeds into the hidden
+width. We then apply $L$ GIN-style residual message-passing layers
 \[
-  h^{(\ell+1)} = \mathrm{LayerNorm}\!\Big(\mathrm{ReLU}\big(W^{(\ell)}_{\mathrm{self}}\,h^{(\ell)}
-  + W^{(\ell)}_{\mathrm{neigh}}\,\hat A\,h^{(\ell)}\big)\Big),
+  h^{(\ell+1)} = \mathrm{LayerNorm}\!\Big(h^{(\ell)}+\mathrm{ReLU}\big(
+  \mathrm{MLP}^{(\ell)}\big((1+\eps^{(\ell)})\,h^{(\ell)}
+  + \hat A\,h^{(\ell)}\big)\big)\Big),
 \]
-read out by concatenating a mean- and a max-pool over nodes, and pass the result
-through a two-layer perceptron to a single logit. A sigmoid yields
+with $\eps^{(\ell)}$ a learned scalar and $\mathrm{MLP}^{(\ell)}$ a two-layer
+perceptron, read out by concatenating a mean-, a max-, and a sum-pool over
+nodes, and pass the result through a two-layer perceptron head (with dropout) to
+a single logit. A sigmoid yields
 $\hat q=\PR[\text{logical flip}\mid\text{detectors}]$, an estimate of the Bayes
 posterior of Remark~\ref{rem:capacity}. We decode by thresholding $\hat q$, with
 the threshold calibrated on held-out validation data to minimize point logical
@@ -704,7 +741,9 @@ optimum is the true posterior and the output stays calibrated---on samples drawn
 from the \emph{same} circuit and regime under test. This is the crux: the network
 sees the true joint fault distribution through data, exactly the information
 matching is denied when it is handed only marginal edge weights. We use
-Adam~\cite{kingma2015adam} with early stopping on validation loss. Because the graph topology is shared across all
+Adam~\cite{kingma2015adam}, selecting the model checkpoint and stopping early on
+validation \emph{logical error rate}---the deployed metric---rather than on the
+surrogate loss. Because the graph topology is shared across all
 shots, an epoch is a handful of batched matmuls.
 
 \paragraph{A controlled, like-for-like comparison.}
@@ -722,8 +761,11 @@ or a hidden model mismatch.
 \label{sec:results}
 
 \paragraph{Setup.}
-We use the rotated surface code at distances $d\in\{3,5,7\}$ with $T=d$ rounds.
-The \emph{independent} regime is standard circuit-level depolarizing noise at rate
+We use the rotated surface code with $T=d$ rounds. All numbers reported in this
+paper come from the released reproduce target at distance $d=3$ (the packaged
+\texttt{main} and \texttt{full} presets sweep $d\in\{3,5,7\}$ for readers with
+more compute). The \emph{independent} regime is standard circuit-level
+depolarizing noise at rate
 $p=\res{0.002}$; the \emph{correlated} regime adds correlated $XX$ faults on
 neighbouring data qubits at rate $p_{\mathrm{corr}}=\res{0.01}$, injected
 into the circuit so they propagate to both detectors and the observable (the true
@@ -732,7 +774,7 @@ $\res{2}$ independent seeds; within a seed all decoders score the
 identical test shots, enabling paired tests. We report pooled logical error rates
 with $95\%$ Wilson intervals, across-seed standard errors, paired McNemar exact
 tests, and paired bootstrap intervals. All runs are CPU-only; total runtime
-$\res{36}$\,s.
+$\res{42}$\,s.
 
 \begin{table*}[t]
 \centering
@@ -740,24 +782,30 @@ $\res{36}$\,s.
 Each entry is the pooled logical error rate with its $95\%$ Wilson interval; the
 last column is the relative error reduction of the GNN versus MWPM with the paired
 McNemar $p$-value. Under independent noise MWPM is provably maximum-likelihood
-(Proposition~\ref{prop:mwpm-ml}) and the GNN matches it; under correlated noise
-the GNN beats it and approaches BP+OSD. Values are generated verbatim from
+(Proposition~\ref{prop:mwpm-ml}) and the compact GNN concedes a finite-sample
+penalty there, reported as measured; under correlated noise the GNN beats MWPM
+and approaches BP+OSD. Values are generated verbatim from
 \texttt{summary.json}.}
 \label{tab:main}
 \input{main_table.tex}
 \end{table*}
 
-\subsection{Under independent noise the learned decoder matches MWPM}
+\subsection{Under independent noise matching is optimal and the learned decoder
+pays a finite-sample premium}
 \label{sec:results-indep}
-Table~\ref{tab:main} (top block) shows that under independent circuit-level noise
-the three decoders are statistically indistinguishable: at every distance the
-GNN's logical error rate lies within MWPM's $95\%$ Wilson interval, and the
-paired McNemar test does not reject equality. This is the necessary sanity
-result. Independent noise is graphlike, so by Proposition~\ref{prop:mwpm-ml} MWPM
-is maximum-likelihood and \emph{no} decoder can beat it; the learned decoder pays
-no price for its flexibility, tracking both MWPM and the model-aware BP+OSD
-(GNN versus MWPM at $d=3$: $\res{0.0316}$ vs
-$\res{0.0025}$).
+Independent noise is the control arm, and we report it exactly as measured.
+It is graphlike, so by Proposition~\ref{prop:mwpm-ml} MWPM is maximum-likelihood
+and \emph{no} decoder can beat it; indeed MWPM and the model-aware BP+OSD agree
+to within their Wilson intervals (Table~\ref{tab:main}, top block). The compact
+learned decoder does \emph{not} match them at this scale: it attains
+$\res{0.0316}$ versus MWPM's $\res{0.0025}$ at $d=3$, a real finite-sample
+premium (the paired McNemar test rejects equality) paid for model-freeness by a
+width-32, three-layer network trained on $2\times10^4$ shots. This is precisely
+what the theory predicts: Theorem~\ref{thm:consistency} guarantees the premium
+vanishes as training data and capacity grow, but it is not zero at the released
+reproduce scale, and no claim of parity under independent noise is made here.
+The regime where the learned decoder earns its keep is the correlated one, to
+which we now turn.
 
 \subsection{Under correlated noise the learned decoder beats MWPM}
 \label{sec:results-corr}
@@ -918,10 +966,14 @@ advantage.
 Matching's independence assumption is its Achilles' heel under realistic
 correlated noise: read as statistical inference, it commits to a factorized
 fault model that correlated hardware violates. A topological graph neural decoder
-trained only on samples provably and empirically closes the gap, matching MWPM
-where it is optimal and beating it where it is not, and---because it returns a
-calibrated posterior rather than a bare decision---supplies the uncertainty
-signal a fault-tolerant control loop can act on.
+trained only on samples closes most of that gap in practice---cutting MWPM's
+logical error rate by $\res{46.1}\%$ under correlated noise and recovering
+$\res{74.5}\%$ of the distance to the model-aware BP+OSD ceiling---while under
+independent noise, where matching is provably optimal, the compact network
+concedes a measured finite-sample penalty that our consistency theorem removes
+only in the large-data limit. Because it returns a calibrated posterior rather
+than a bare decision, it also supplies the uncertainty signal a fault-tolerant
+control loop can act on.
 
 % ============================================================
 \section{Methods}

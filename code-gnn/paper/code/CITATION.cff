@@ -11,13 +11,18 @@ authors:
 type: software
 version: 1.0.0
 license: MIT
-repository-code: "https://github.com/molenahuynh/Topological-Graph-for-Decoding-in-QEC"
+repository-code: "https://github.com/thmolena/Topological-Graph-for-Decoding-in-QEC"
 abstract: >-
-  A learned surface-code decoder that matches minimum-weight perfect matching
-  (MWPM) under independent circuit-level noise and beats it under structured
-  correlated noise, benchmarked head-to-head against MWPM and BP+OSD on Stim
-  circuits with paired statistics (Wilson intervals, McNemar, paired bootstrap).
-  Part of the "spectral-truncation operators" (SpecOps) research program.
+  A learned surface-code decoder benchmarked head-to-head against MWPM and
+  BP+OSD on identical Stim shots with paired statistics (Wilson intervals,
+  McNemar exact tests, paired bootstrap). Under structured correlated
+  circuit-level noise, where matching's independence assumption fails, the
+  learned decoder cuts MWPM's logical error rate by 46.1% at distance 3 and
+  recovers 74.5% of the gap to the model-aware BP+OSD ceiling without being
+  given the noise model; under independent noise, where MWPM is provably
+  maximum-likelihood, the learned decoder pays a finite-sample premium and
+  does not match it at the released reproduce scale. Part of the
+  "spectral-truncation operators" (SpecOps) research program.
 keywords:
   - quantum error correction
   - surface code

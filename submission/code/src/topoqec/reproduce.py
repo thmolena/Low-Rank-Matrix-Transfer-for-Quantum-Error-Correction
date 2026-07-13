@@ -37,14 +37,30 @@ def _sync_submission() -> None:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="configs/full.yaml")
+    parser.add_argument(
+        "--config",
+        default="configs/full.yaml",
+        help="experiment config (default: the reported-scale configs/full.yaml, ~5 min on one CPU)",
+    )
+    parser.add_argument(
+        "--quick",
+        action="store_true",
+        help="run the same pipeline at reduced scale (configs/smoke.yaml, "
+        "distance 5, 1,500 trials/regime; ~30 s). Overwrites the package's "
+        "results/ and figures/ with quick-scale outputs but does NOT sync "
+        "them into the manuscript's submission/figures and submission/tables "
+        "-- rerun without --quick to regenerate and sync the reported-scale "
+        "artifacts.",
+    )
     parser.add_argument("--skip-run", action="store_true")
     args = parser.parse_args(argv)
+    config = "configs/smoke.yaml" if args.quick else args.config
     if not args.skip_run:
-        _run("scripts/run.py", "--config", args.config, "--out", "results")
+        _run("scripts/run.py", "--config", config, "--out", "results")
     _run("scripts/make_tables.py")
     _run("scripts/make_figures.py")
-    _sync_submission()
+    if not args.quick:
+        _sync_submission()
 
 
 if __name__ == "__main__":

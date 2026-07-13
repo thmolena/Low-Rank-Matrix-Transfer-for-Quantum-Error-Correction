@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/molenahuynh/Topological-Graph-for-Decoding-in-QEC"
+Homepage = "https://github.com/thmolena/Topological-Graph-for-Decoding-in-QEC"
 
 [project.scripts]
 gnndec-reproduce = "surfgnn.reproduce:main"
