@@ -5,9 +5,5 @@ __pycache__/
 .venv/
 build/
 dist/
-# Generated artifacts are reproducible via `make demo`; keep the dirs, not the noise.
-results/summary.json
-results/*.tex
-results/*.md
-figures/*.pdf
+# The locked JSON, TeX macros, and four PDF figures are release artifacts.
 .DS_Store

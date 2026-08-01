@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this audit package, please cite the manuscript and Zenodo dataset."
+title: "Negative audit of hierarchical QEC rate transfer"
+type: software
+authors:
+  - family-names: Huynh
+    given-names: Molena
+version: 1.1.0
+date-released: 2026-07-31
+license: MIT
+repository-code: "https://github.com/thmolena/Low-Rank-Matrix-Transfer-for-Quantum-Error-Correction"
+references:
+  - type: dataset
+    title: "A Memristive Neural Decoder for Cryogenic Fault-Tolerant Quantum Error Correction - Syndromes Dataset"
+    doi: "10.5281/zenodo.11166209"
+    authors:
+      - family-names: Yon
+        given-names: Victor
+      - family-names: Dagnew
+        given-names: Gebremedhin A.

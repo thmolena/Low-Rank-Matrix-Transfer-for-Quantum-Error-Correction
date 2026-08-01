@@ -1,0 +1,56 @@
+{
+  "schema_version": 4,
+  "title": "A Negative Audit of Hierarchical Low-Rank Transfer on Distance-Three Surface-Code Data",
+  "package": "hqml-transfer-qec",
+  "package_version": "1.1.0",
+  "seed": 1707,
+  "disposition": "negative: Hamming kernel beats repaired hierarchy; dense BLAS wins all audited apply timings",
+  "public_data": {
+    "name": "A Memristive Neural Decoder for Cryogenic Fault-Tolerant Quantum Error Correction - Syndromes Dataset",
+    "version": "1.0.1",
+    "doi": "10.5281/zenodo.11166209",
+    "license": "CC-BY-4.0",
+    "origin": "Stim simulation; not quantum-hardware measurements",
+    "file": "data/source/syndromes_dataset.zip",
+    "sha256": "bdfce36a71f04295ac78fb372d9c2e381801c05e3be119f919750ef59026d072",
+    "aggregated_rows": 75598,
+    "shots": 70000000
+  },
+  "split": {
+    "selection": "rolling lower-rate holdout at rate indices 2, 3, and 4",
+    "final_test_rate_indices": [5, 6],
+    "final_test_shots": 20000000,
+    "test_labels_used_in_hierarchy": false,
+    "hierarchy_is_transductive": true
+  },
+  "locked_results": {
+    "file": "results/results.json",
+    "mirror": "results/locked_results.json",
+    "sha256": "914eae77280751547ad5a92afea7755182eca220f86ce44b3a2494fc8364c421"
+  },
+  "manuscript": {
+    "source": "../main.tex",
+    "source_sha256": "94518d4fc4cfb7a4b5d7dbd58383e52f857fff23ba233c1dd641d2c0c1c28ddd",
+    "pdf": "../main.pdf",
+    "pdf_sha256": "f9ba659b317efa01499060774c43d9db10fe9239e82cab0d0da8807201e146af",
+    "pages": 5,
+    "tables": 2,
+    "figures": 4,
+    "theorems": 4,
+    "propositions": 1,
+    "proofs": 5
+  },
+  "figures": {
+    "fig_method_audit.pdf": "aee1823ff29d61d5c60137570cb079f7ea64e557f05e18c79b307f8f76684000",
+    "fig_rank_audit.pdf": "0e5a1a8ccb998ee66bfd2c16349a289950ffdd482f58680e493face1ed5edbae",
+    "fig_rate_audit.pdf": "643e0e3006a818b265d64dbe9561ee9b97fa88a2901f69f8f11d19b00e1d660d",
+    "fig_runtime_audit.pdf": "92a922f54a6acf979e3ced2daa3f7ccbef494cf3ad376f29908cbe28b0f53cdd"
+  },
+  "verification": {
+    "install": "python -m pip install ./code",
+    "replay": "transfer-qec-reproduce --verify",
+    "tests": "python -m pytest -q code/tests",
+    "release": "python code/scripts/validate_release.py",
+    "build_pdf": "tectonic main.tex"
+  }
+}

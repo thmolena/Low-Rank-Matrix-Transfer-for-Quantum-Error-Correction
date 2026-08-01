@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "result": "negative audit",
+  "results": {
+    "path": "code/results/results.json",
+    "locked_copy": "code/results/locked_results.json",
+    "sha256": "914eae77280751547ad5a92afea7755182eca220f86ce44b3a2494fc8364c421"
+  },
+  "data": {
+    "path": "code/data/source/syndromes_dataset.zip",
+    "sha256": "bdfce36a71f04295ac78fb372d9c2e381801c05e3be119f919750ef59026d072",
+    "doi": "10.5281/zenodo.11166209"
+  },
+  "registered_findings": {
+    "hamming_test_log_loss": 0.287052249596,
+    "hierarchy_test_log_loss": 0.535765338681,
+    "rank_two_contraction_condition_observed": false,
+    "dense_apply_wins_reported_sizes": 4,
+    "reported_sizes": [256, 512, 1024, 2048]
+  },
+  "commands": {
+    "reproduce": "transfer-qec-reproduce --verify",
+    "tests": "python -m pytest -q code/tests",
+    "validate": "python code/scripts/validate_release.py"
+  }
+}

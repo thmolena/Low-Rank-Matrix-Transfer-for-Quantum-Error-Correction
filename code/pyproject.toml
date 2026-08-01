@@ -1,29 +1,38 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "topoqec"
-version = "0.1.0"
-description = "Channel-adaptive spectral (transfer-operator) decoding for quantum error correction under structured noise"
-readme = { text = "Channel-adaptive spectral decoding for QEC: a transfer-operator decoder on the defect graph that breaks the decoder tie under structured noise, with selective decoding and calibration as first-class metrics.", content-type = "text/plain" }
+name = "hqml-transfer-qec"
+version = "1.1.0"
+description = "Reproducible negative audit of hierarchical QEC rate transfer"
+readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
-authors = [{ name = "Molena Huynh" }]
-dependencies = [
-  "numpy>=1.24", "scipy>=1.10", "networkx>=3.0",
-  "scikit-learn>=1.2", "matplotlib>=3.6", "pyyaml>=6.0",
+license = "MIT"
+dependencies = ["numpy>=1.24,<3", "matplotlib>=3.7,<4"]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Physics",
 ]
 
 [project.optional-dependencies]
-gpu = ["torch>=2.0"]
-dev = ["pytest>=7.0"]
+test = ["pytest>=8,<10"]
 
 [project.scripts]
-topoqec-reproduce = "topoqec.reproduce:main"
+transfer-qec-reproduce = "hqml_transfer_qec.experiment:main"
+transfer-qec-figures = "hqml_transfer_qec.figures:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["hqml_transfer_qec*"]
+
+[tool.setuptools.package-data]
+"hqml_transfer_qec" = ["data/source/*", "results/*", "results/figures/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
